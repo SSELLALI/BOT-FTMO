@@ -546,6 +546,8 @@ function App() {
   const [settings, setSettings] = useState(null);
   const [activeTab, setActiveTab] = useState("dashboard");
   const [trades, setTrades] = useState([]);
+  const [showConnection, setShowConnection] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState("disconnected");
 
   // Fetch dashboard data
   const fetchDashboard = useCallback(async () => {
