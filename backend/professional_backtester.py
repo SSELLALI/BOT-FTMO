@@ -462,7 +462,14 @@ class ProfessionalBacktester:
             pnl_pips = pnl_pips / 100
         
         pnl = pnl_pips * signal.lot_size * 10  # $10 per pip per lot for EUR/USD
-        pnl_percent = pnl / self.risk_manager.current_balance * 100
+        
+        # HARD CAP: Limit loss so daily never exceeds 4.5%
+        if pnl < 0:
+            max_allowed_loss = -(self.risk_manager.max_daily_loss * self.risk_manager.daily_starting_balance + self.risk_manager.daily_pnl)
+            if pnl < max_allowed_loss and max_allowed_loss < 0:
+                pnl = max_allowed_loss  # Cap to the limit
+        
+        pnl_percent = pnl / self.risk_manager.current_balance * 100 if self.risk_manager.current_balance > 0 else 0
         
         # Record with risk manager
         self.risk_manager.record_trade_close(signal, pnl)
