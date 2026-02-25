@@ -1008,6 +1008,16 @@ function App() {
     loadData();
   }, [fetchDashboard, fetchSignals, fetchEquityCurve, fetchDailyStats, fetchSettings, fetchTrades]);
 
+  // Live trading functions
+  const fetchLiveStatus = useCallback(async () => {
+    try {
+      const response = await axios.get(`${API}/live/status`);
+      setLiveStatus(response.data);
+    } catch (error) {
+      console.error("Live status error:", error);
+    }
+  }, []);
+
   // Auto-refresh
   useEffect(() => {
     const interval = setInterval(() => {
