@@ -1188,6 +1188,14 @@ function App() {
             <Zap size={14} className="inline mr-2" />
             Signaux
           </button>
+          <button
+            className={`tab-item ${activeTab === "live" ? "tab-item-active" : ""}`}
+            onClick={() => setActiveTab("live")}
+            data-testid="tab-live"
+          >
+            <Activity size={14} className="inline mr-2" />
+            Trading Live
+          </button>
         </div>
       </div>
 
