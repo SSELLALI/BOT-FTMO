@@ -272,49 +272,44 @@ class ScalpingStrategy:
         rsi_ok_buy = 30 <= rsi <= 72
 
         if ema_bullish and rsi_ok_buy:
-            # Confluence scoring: need at least 2 points to trigger
-            confluence = 0
-            reasons = []
-
-            # Factor 1: EMA9 pullback bounce
+            # Aggressive: EMA trend is already filtering. Need just 1 confirmation
+            entry_triggered = False
+            reason = ""
             prev_candle = candles[current_index - 1]
-            touched_ema9 = prev_candle["low"] <= prev_ema9 * 1.0004
-            bounced_up = current_price > prev_candle["high"]
-            if touched_ema9 and bounced_up:
-                confluence += 1
-                reasons.append("EMA9 pullback")
 
-            # Factor 2: Bollinger lower band proximity
-            if current_price <= bb_lower * 1.001:
-                confluence += 1
-                reasons.append("BB lower")
+            # Signal 1: Price bounced from EMA9 area
+            near_ema9 = abs(prev_candle["low"] - prev_ema9) / current_price < 0.0006
+            if near_ema9 and current_price > prev_candle["high"]:
+                entry_triggered = True
+                reason = f"EMA9 bounce, RSI {rsi:.0f}"
 
-            # Factor 3: Bullish candle pattern
-            if (TechnicalAnalysis.is_bullish_engulfing(candles, current_index) or
-                    TechnicalAnalysis.is_bullish_rejection(current_candle)):
-                confluence += 1
-                reasons.append("pattern")
+            # Signal 2: Bullish candle pattern
+            if not entry_triggered:
+                if (TechnicalAnalysis.is_bullish_engulfing(candles, current_index) or
+                        TechnicalAnalysis.is_bullish_rejection(current_candle)):
+                    entry_triggered = True
+                    reason = f"Bullish pattern, RSI {rsi:.0f}"
 
-            # Factor 4: Positive momentum
-            if momentum > 0.01:
-                confluence += 1
-                reasons.append("momentum")
-
-            # Factor 5: Strong bullish candle
-            if TechnicalAnalysis.is_bullish_candle(current_candle):
+            # Signal 3: Strong momentum candle in trend
+            if not entry_triggered and TechnicalAnalysis.is_bullish_candle(current_candle):
                 body = current_candle["close"] - current_candle["open"]
-                if body > atr * 0.5:
-                    confluence += 1
-                    reasons.append("strong candle")
+                if body > atr * 0.4 and momentum > 0:
+                    entry_triggered = True
+                    reason = f"Momentum candle, RSI {rsi:.0f}"
 
-            # Factor 6: RSI sweet spot
-            if 40 <= rsi <= 58:
-                confluence += 1
-                reasons.append("RSI optimal")
+            # Signal 4: Price crossed above EMA21 with momentum
+            if not entry_triggered:
+                if prev_candle["close"] <= cur_ema21 and current_price > cur_ema21 and momentum > 0:
+                    entry_triggered = True
+                    reason = f"EMA21 breakout, RSI {rsi:.0f}"
 
-            # Need at least 2 confluences
-            if confluence >= 2:
-                reason = f"{'+'.join(reasons)}, RSI {rsi:.0f}"
+            # Signal 5: BB lower band reversal
+            if not entry_triggered and current_price <= bb_lower * 1.001:
+                if TechnicalAnalysis.is_bullish_candle(current_candle):
+                    entry_triggered = True
+                    reason = f"BB lower reversal, RSI {rsi:.0f}"
+
+            if entry_triggered:
                 # Dynamic SL based on ATR
                 sl_distance = max(atr * 1.2, self.min_sl_pips / 10000)
                 sl_price = current_price - sl_distance
