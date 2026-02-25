@@ -630,7 +630,8 @@ function App() {
         fetchEquityCurve(),
         fetchDailyStats(),
         fetchSettings(),
-        fetchTrades()
+        fetchTrades(),
+        fetchConnectionStatus()
       ]);
       setLoading(false);
     };
