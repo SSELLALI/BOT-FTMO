@@ -675,6 +675,197 @@ async def generate_demo_trades():
     return {"success": True, "trades_created": len(demo_trades)}
 
 
+# ---------- Connection Endpoints ----------
+
+class FIXConnectionRequest(BaseModel):
+    password: str
+    
+class OpenAPIConnectionRequest(BaseModel):
+    client_id: str
+    client_secret: str
+    access_token: str
+    account_id: int
+    is_live: bool = False
+
+
+@api_router.get("/connection/status")
+async def get_connection_status():
+    """Get current connection status"""
+    global fix_client
+    
+    return {
+        "status": bot_state.get("connection_status", "disconnected"),
+        "fix_configured": bool(FTMO_CONFIG.get("password")),
+        "fix_host": FTMO_CONFIG.get("host"),
+        "fix_account": FTMO_CONFIG.get("sender_comp_id", "").split(".")[-1] if FTMO_CONFIG.get("sender_comp_id") else None,
+        "use_real_data": bot_state.get("use_real_data", True),
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
+
+
+@api_router.post("/connection/fix/connect")
+async def connect_fix(request: FIXConnectionRequest):
+    """Connect to cTrader via FIX Protocol"""
+    global fix_client
+    
+    try:
+        # Create client with provided password
+        fix_client = create_ftmo_client(request.password)
+        
+        # Try to connect
+        if fix_client.connect():
+            # Try to login
+            if fix_client.login():
+                bot_state["connection_status"] = "connected"
+                bot_state["fix_client"] = True
+                
+                # Subscribe to market data
+                fix_client.subscribe_market_data(["EURUSD", "GBPUSD", "USDJPY"])
+                
+                await create_alert("SUCCESS", "FIX Connected", 
+                    f"Connected to {FTMO_CONFIG['host']}")
+                
+                return {
+                    "success": True,
+                    "status": "connected",
+                    "message": "Successfully connected to cTrader FIX API"
+                }
+            else:
+                fix_client.logout()
+                return {
+                    "success": False,
+                    "status": "login_failed",
+                    "message": "Connection established but login failed. Check your password."
+                }
+        else:
+            return {
+                "success": False,
+                "status": "connection_failed",
+                "message": "Could not establish connection to FIX server"
+            }
+            
+    except Exception as e:
+        logger.error(f"FIX connection error: {e}")
+        bot_state["connection_status"] = "error"
+        return {
+            "success": False,
+            "status": "error",
+            "message": str(e)
+        }
+
+
+@api_router.post("/connection/fix/disconnect")
+async def disconnect_fix():
+    """Disconnect from cTrader FIX"""
+    global fix_client
+    
+    if fix_client:
+        fix_client.logout()
+        fix_client = None
+    
+    bot_state["connection_status"] = "disconnected"
+    bot_state["fix_client"] = None
+    
+    await create_alert("INFO", "FIX Disconnected", "Disconnected from cTrader")
+    
+    return {"success": True, "status": "disconnected"}
+
+
+@api_router.get("/connection/openapi/guide")
+async def get_openapi_guide():
+    """Get the Open API setup guide"""
+    return {
+        "guide": OPEN_API_SETUP_GUIDE,
+        "auth_url_template": "https://openapi.ctrader.com/apps/auth?client_id={CLIENT_ID}&redirect_uri=http://localhost:5000/callback&scope=trading",
+        "steps": [
+            "1. Go to https://openapi.ctrader.com",
+            "2. Create a new application",
+            "3. Note the Client ID and Client Secret",
+            "4. Visit the authorization URL",
+            "5. Authorize and copy the code",
+            "6. Use /connection/openapi/connect with your credentials"
+        ]
+    }
+
+
+@api_router.post("/connection/openapi/connect")
+async def connect_openapi(request: OpenAPIConnectionRequest):
+    """Connect using cTrader Open API"""
+    try:
+        config = OpenAPIConfig(
+            client_id=request.client_id,
+            client_secret=request.client_secret,
+            access_token=request.access_token,
+            account_id=request.account_id,
+            is_live=request.is_live
+        )
+        
+        client = CTraderOpenAPIClient(config)
+        
+        if await client.connect():
+            if await client.authenticate():
+                bot_state["connection_status"] = "connected_openapi"
+                
+                await create_alert("SUCCESS", "Open API Connected",
+                    f"Connected to cTrader Open API (Account: {request.account_id})")
+                
+                return {
+                    "success": True,
+                    "status": "connected",
+                    "message": "Successfully connected via Open API"
+                }
+            else:
+                await client.disconnect()
+                return {
+                    "success": False,
+                    "status": "auth_failed",
+                    "message": "Connection ok but authentication failed"
+                }
+        else:
+            return {
+                "success": False,
+                "status": "connection_failed",
+                "message": "Could not connect to Open API server"
+            }
+            
+    except Exception as e:
+        logger.error(f"Open API connection error: {e}")
+        return {
+            "success": False,
+            "status": "error",
+            "message": str(e)
+        }
+
+
+@api_router.post("/connection/toggle-real-data")
+async def toggle_real_data():
+    """Toggle between real market data and simulation"""
+    bot_state["use_real_data"] = not bot_state.get("use_real_data", True)
+    
+    return {
+        "use_real_data": bot_state["use_real_data"],
+        "message": "Using real market data" if bot_state["use_real_data"] else "Using simulated data"
+    }
+
+
+@api_router.post("/market/refresh-real-prices")
+async def refresh_real_prices():
+    """Manually refresh real market prices"""
+    try:
+        rates = await real_market_data.fetch_rates()
+        return {
+            "success": True,
+            "rates": rates,
+            "source": "real" if real_market_data.last_update else "cached",
+            "last_update": real_market_data.last_update.isoformat() if real_market_data.last_update else None
+        }
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
+
 # ==================== APP SETUP ====================
 
 # Include router
