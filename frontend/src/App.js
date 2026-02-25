@@ -916,6 +916,8 @@ function App() {
   const [showConnection, setShowConnection] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState("disconnected");
   const [showBacktest, setShowBacktest] = useState(false);
+  const [liveStatus, setLiveStatus] = useState(null);
+  const [liveConnecting, setLiveConnecting] = useState(false);
 
   // Fetch dashboard data
   const fetchDashboard = useCallback(async () => {
