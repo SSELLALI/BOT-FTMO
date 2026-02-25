@@ -865,9 +865,9 @@ class ProfessionalRiskManager:
         total_dd_pct = (self.initial_balance - self.current_balance) / self.initial_balance if self.current_balance < self.initial_balance else 0
         if total_dd_pct >= self.max_total_drawdown:
             self.scalping_state.is_stopped_global = True
-            self.scalping_state.stop_reason = f"Max drawdown post-trade ({total_dd * 100:.2f}%)"
+            self.scalping_state.stop_reason = f"Max drawdown post-trade ({total_dd_pct * 100:.2f}%)"
             self.intraday_state.is_stopped_global = True
-            self.intraday_state.stop_reason = f"Max drawdown post-trade ({total_dd * 100:.2f}%)"
+            self.intraday_state.stop_reason = f"Max drawdown post-trade ({total_dd_pct * 100:.2f}%)"
 
     def get_status(self) -> Dict:
         daily_loss_pct = abs(self.daily_pnl) / self.daily_starting_balance * 100 if self.daily_pnl < 0 else 0
