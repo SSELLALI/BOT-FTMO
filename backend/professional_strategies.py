@@ -726,6 +726,10 @@ class ProfessionalRiskManager:
         self.scalping_state = StrategyState()
         self.intraday_state = StrategyState()
         self.active_positions: Dict[str, str] = {}
+        self.open_trade_count = 0
+        self.max_concurrent_scalping = 2
+        self.max_concurrent_intraday = 1
+        self.max_concurrent_total = 2
 
     def reset_daily(self):
         self.daily_starting_balance = self.current_balance
@@ -798,7 +802,25 @@ class ProfessionalRiskManager:
         if potential_loss > remaining_daily:
             return False, "Insufficient daily risk capacity"
 
-        # BARRIER 6: No correlated positions
+        # BARRIER 6: Max concurrent positions
+        if self.open_trade_count >= self.max_concurrent_total:
+            return False, f"Max concurrent positions ({self.max_concurrent_total})"
+
+        # Count by strategy
+        scalp_open = sum(1 for s, d in self.active_positions.items() if True)  # simplified
+        if signal.strategy == "SCALPING" and self.open_trade_count >= self.max_concurrent_scalping:
+            return False, "Max concurrent scalping positions"
+        if signal.strategy == "INTRADAY" and self.open_trade_count >= self.max_concurrent_intraday:
+            return False, "Max concurrent intraday positions"
+
+        # BARRIER 7: Pre-trade exposure check
+        # If all current open trades + this new one hit SL, would we breach 4.5% daily?
+        total_potential_loss = (self.open_trade_count + 1) * self.current_balance * self.max_risk_per_trade
+        current_daily_loss = abs(min(0, self.daily_pnl))
+        if (current_daily_loss + total_potential_loss) / self.daily_starting_balance > self.max_daily_loss:
+            return False, "Would exceed daily exposure limit with open positions"
+
+        # BARRIER 8: No correlated positions
         for active_symbol in self.active_positions:
             if active_symbol != signal.symbol:
                 base = signal.symbol[:3]
@@ -810,12 +832,14 @@ class ProfessionalRiskManager:
 
     def record_trade_open(self, signal: TradeSignal):
         self.active_positions[signal.symbol] = signal.direction
+        self.open_trade_count += 1
         state = self.scalping_state if signal.strategy == "SCALPING" else self.intraday_state
         state.daily_trades += 1
 
     def record_trade_close(self, signal: TradeSignal, pnl: float):
         if signal.symbol in self.active_positions:
             del self.active_positions[signal.symbol]
+        self.open_trade_count = max(0, self.open_trade_count - 1)
 
         self.current_balance += pnl
         self.daily_pnl += pnl
