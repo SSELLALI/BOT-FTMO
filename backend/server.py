@@ -867,6 +867,139 @@ async def refresh_real_prices():
         }
 
 
+# ---------- Backtesting Endpoints ----------
+
+class BacktestRequest(BaseModel):
+    symbol: str = "EURUSD"
+    strategy: str = "BOTH"  # SCALPING, INTRADAY, or BOTH
+    days: int = 180  # Number of days to backtest
+    timeframe: str = "H1"  # H1, M15, M5
+    initial_balance: float = 100000
+
+
+@api_router.post("/backtest/run")
+async def run_backtest(request: BacktestRequest):
+    """Run a backtest with specified parameters"""
+    try:
+        logger.info(f"Starting backtest: {request.strategy} on {request.symbol} for {request.days} days")
+        
+        # Configure backtest engine
+        engine = BacktestEngine(initial_balance=request.initial_balance)
+        
+        # Calculate dates
+        end_date = datetime.now(timezone.utc)
+        start_date = end_date - timedelta(days=request.days)
+        
+        # Run backtest
+        result = engine.run_backtest(
+            symbol=request.symbol,
+            strategy=request.strategy,
+            start_date=start_date,
+            end_date=end_date,
+            timeframe=request.timeframe
+        )
+        
+        # Store result in database
+        result_dict = {
+            "id": str(uuid.uuid4()),
+            "symbol": result.symbol,
+            "strategy": result.strategy,
+            "start_date": result.start_date,
+            "end_date": result.end_date,
+            "initial_balance": result.initial_balance,
+            "final_balance": result.final_balance,
+            "total_return": result.total_return,
+            "total_return_percent": result.total_return_percent,
+            "max_drawdown": result.max_drawdown,
+            "max_drawdown_percent": result.max_drawdown_percent,
+            "total_trades": result.total_trades,
+            "winning_trades": result.winning_trades,
+            "losing_trades": result.losing_trades,
+            "win_rate": result.win_rate,
+            "gross_profit": result.gross_profit,
+            "gross_loss": result.gross_loss,
+            "profit_factor": result.profit_factor,
+            "average_win": result.average_win,
+            "average_loss": result.average_loss,
+            "largest_win": result.largest_win,
+            "largest_loss": result.largest_loss,
+            "sharpe_ratio": result.sharpe_ratio,
+            "sortino_ratio": result.sortino_ratio,
+            "avg_risk_reward": result.avg_risk_reward,
+            "max_daily_loss": result.max_daily_loss,
+            "max_daily_loss_percent": result.max_daily_loss_percent,
+            "ftmo_daily_limit_breached": result.ftmo_daily_limit_breached,
+            "ftmo_total_limit_breached": result.ftmo_total_limit_breached,
+            "avg_trade_duration_hours": result.avg_trade_duration_hours,
+            "best_trading_hour": result.best_trading_hour,
+            "worst_trading_hour": result.worst_trading_hour,
+            "equity_curve": result.equity_curve,
+            "trades": result.trades[-100:],  # Last 100 trades for display
+            "daily_returns": result.daily_returns,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+        await db.backtests.insert_one(result_dict)
+        
+        # Create alert
+        await create_alert(
+            "SUCCESS" if result.total_return > 0 else "WARNING",
+            "Backtest Terminé",
+            f"{result.strategy} sur {result.days} jours: {result.total_return_percent:.2f}% ({result.win_rate:.1f}% win rate)"
+        )
+        
+        return {
+            "success": True,
+            "result": result_dict
+        }
+        
+    except Exception as e:
+        logger.error(f"Backtest error: {e}")
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
+
+@api_router.get("/backtest/history")
+async def get_backtest_history(limit: int = 10):
+    """Get history of backtests"""
+    backtests = await db.backtests.find(
+        {}, {"_id": 0, "trades": 0, "equity_curve": 0}
+    ).sort("created_at", -1).limit(limit).to_list(limit)
+    
+    return {"backtests": backtests}
+
+
+@api_router.get("/backtest/{backtest_id}")
+async def get_backtest_detail(backtest_id: str):
+    """Get detailed backtest result"""
+    result = await db.backtests.find_one({"id": backtest_id}, {"_id": 0})
+    
+    if not result:
+        raise HTTPException(status_code=404, detail="Backtest not found")
+    
+    return result
+
+
+@api_router.get("/backtest/compare")
+async def compare_strategies():
+    """Compare all strategies performance"""
+    # Get latest backtest for each strategy
+    strategies = ["SCALPING", "INTRADAY", "BOTH"]
+    comparison = []
+    
+    for strategy in strategies:
+        result = await db.backtests.find_one(
+            {"strategy": strategy},
+            {"_id": 0, "trades": 0, "equity_curve": 0}
+        )
+        if result:
+            comparison.append(result)
+    
+    return {"comparison": comparison}
+
+
 # ==================== APP SETUP ====================
 
 # Include router
