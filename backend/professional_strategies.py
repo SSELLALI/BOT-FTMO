@@ -246,8 +246,6 @@ class ScalpingStrategy:
 
         # Extract data
         closes = [c["close"] for c in candles[:current_index + 1]]
-        highs = [c["high"] for c in candles[:current_index + 1]]
-        lows = [c["low"] for c in candles[:current_index + 1]]
 
         # Indicators
         ema9 = TechnicalAnalysis.ema(closes, 9)
@@ -261,7 +259,6 @@ class ScalpingStrategy:
         cur_ema9 = ema9[-1]
         cur_ema21 = ema21[-1]
         prev_ema9 = ema9[-2]
-        prev_ema21 = ema21[-2]
 
         # Minimum volatility filter (skip very quiet markets)
         min_atr = 0.00025 if "JPY" not in symbol else 0.025
