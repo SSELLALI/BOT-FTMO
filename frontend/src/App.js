@@ -38,6 +38,324 @@ const API = `${BACKEND_URL}/api`;
 
 // ==================== COMPONENTS ====================
 
+// Backtesting Modal
+const BacktestModal = ({ isOpen, onClose }) => {
+  const [running, setRunning] = useState(false);
+  const [result, setResult] = useState(null);
+  const [config, setConfig] = useState({
+    symbol: "EURUSD",
+    strategy: "BOTH",
+    days: 180,
+    timeframe: "H1",
+    initial_balance: 100000
+  });
+
+  if (!isOpen) return null;
+
+  const runBacktest = async () => {
+    setRunning(true);
+    setResult(null);
+    
+    try {
+      const response = await axios.post(`${API}/backtest/run`, config);
+      if (response.data.success) {
+        setResult(response.data.result);
+        toast.success("Backtest terminé!");
+      } else {
+        toast.error(response.data.error);
+      }
+    } catch (error) {
+      toast.error("Erreur lors du backtest");
+    } finally {
+      setRunning(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 overflow-y-auto" data-testid="backtest-modal">
+      <div className="card w-full max-w-4xl mx-4 my-8 max-h-[90vh] overflow-y-auto">
+        <div className="card-header sticky top-0 bg-[#18181B] z-10">
+          <h2 className="card-title flex items-center gap-2">
+            <BarChart2 size={18} className="text-blue-500" />
+            Backtesting des Stratégies
+          </h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-white" data-testid="close-backtest">
+            <X size={20} />
+          </button>
+        </div>
+
+        {/* Configuration */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          <div>
+            <label className="input-label">Symbole</label>
+            <select
+              className="input-field"
+              value={config.symbol}
+              onChange={(e) => setConfig({...config, symbol: e.target.value})}
+              data-testid="backtest-symbol"
+            >
+              <option value="EURUSD">EUR/USD</option>
+            </select>
+          </div>
+          <div>
+            <label className="input-label">Stratégie</label>
+            <select
+              className="input-field"
+              value={config.strategy}
+              onChange={(e) => setConfig({...config, strategy: e.target.value})}
+              data-testid="backtest-strategy"
+            >
+              <option value="BOTH">Les deux</option>
+              <option value="SCALPING">Scalping</option>
+              <option value="INTRADAY">Intraday</option>
+            </select>
+          </div>
+          <div>
+            <label className="input-label">Période (jours)</label>
+            <select
+              className="input-field"
+              value={config.days}
+              onChange={(e) => setConfig({...config, days: parseInt(e.target.value)})}
+              data-testid="backtest-days"
+            >
+              <option value={30}>30 jours</option>
+              <option value={90}>90 jours</option>
+              <option value={180}>180 jours (6 mois)</option>
+              <option value={365}>365 jours (1 an)</option>
+            </select>
+          </div>
+          <div>
+            <label className="input-label">Timeframe</label>
+            <select
+              className="input-field"
+              value={config.timeframe}
+              onChange={(e) => setConfig({...config, timeframe: e.target.value})}
+              data-testid="backtest-timeframe"
+            >
+              <option value="M15">15 minutes</option>
+              <option value="H1">1 heure</option>
+              <option value="H4">4 heures</option>
+            </select>
+          </div>
+        </div>
+
+        <button
+          onClick={runBacktest}
+          disabled={running}
+          className="btn btn-primary w-full mb-6"
+          data-testid="run-backtest-btn"
+        >
+          {running ? (
+            <>
+              <div className="spinner" style={{width: 16, height: 16}} />
+              Backtest en cours... (peut prendre 30-60 secondes)
+            </>
+          ) : (
+            <>
+              <Play size={16} />
+              Lancer le Backtest
+            </>
+          )}
+        </button>
+
+        {/* Results */}
+        {result && (
+          <div className="space-y-6">
+            {/* Summary Cards */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className={`card ${result.total_return >= 0 ? "border-green-500/30" : "border-red-500/30"}`}>
+                <p className="text-xs text-gray-400 mb-1">Rendement Total</p>
+                <p className={`stat-value text-xl ${result.total_return >= 0 ? "text-green-500" : "text-red-500"}`}>
+                  {result.total_return >= 0 ? "+" : ""}{result.total_return_percent}%
+                </p>
+                <p className="text-xs text-gray-500 font-mono">
+                  ${result.total_return.toLocaleString()}
+                </p>
+              </div>
+              
+              <div className="card">
+                <p className="text-xs text-gray-400 mb-1">Win Rate</p>
+                <p className="stat-value text-xl text-white">{result.win_rate}%</p>
+                <p className="text-xs text-gray-500">
+                  {result.winning_trades}W / {result.losing_trades}L
+                </p>
+              </div>
+              
+              <div className="card">
+                <p className="text-xs text-gray-400 mb-1">Profit Factor</p>
+                <p className={`stat-value text-xl ${result.profit_factor >= 1.5 ? "text-green-500" : result.profit_factor >= 1 ? "text-yellow-500" : "text-red-500"}`}>
+                  {result.profit_factor}
+                </p>
+                <p className="text-xs text-gray-500">{result.total_trades} trades</p>
+              </div>
+              
+              <div className={`card ${result.max_drawdown_percent <= 10 ? "border-green-500/30" : "border-red-500/30"}`}>
+                <p className="text-xs text-gray-400 mb-1">Max Drawdown</p>
+                <p className={`stat-value text-xl ${result.max_drawdown_percent <= 10 ? "text-yellow-500" : "text-red-500"}`}>
+                  {result.max_drawdown_percent}%
+                </p>
+                <p className="text-xs text-gray-500 font-mono">
+                  ${result.max_drawdown.toLocaleString()}
+                </p>
+              </div>
+            </div>
+
+            {/* FTMO Compliance */}
+            <div className={`card ${!result.ftmo_daily_limit_breached && !result.ftmo_total_limit_breached ? "border-green-500/30" : "border-red-500/30"}`}>
+              <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                {!result.ftmo_daily_limit_breached && !result.ftmo_total_limit_breached ? (
+                  <ShieldCheck size={16} className="text-green-500" />
+                ) : (
+                  <ShieldAlert size={16} className="text-red-500" />
+                )}
+                Conformité FTMO
+              </h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-400">Limite journalière (4.5%)</span>
+                  <span className={`badge ${result.ftmo_daily_limit_breached ? "badge-loss" : "badge-profit"}`}>
+                    {result.ftmo_daily_limit_breached ? "DÉPASSÉE" : "OK"} ({result.max_daily_loss_percent}%)
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-400">Drawdown total (10%)</span>
+                  <span className={`badge ${result.ftmo_total_limit_breached ? "badge-loss" : "badge-profit"}`}>
+                    {result.ftmo_total_limit_breached ? "DÉPASSÉ" : "OK"} ({result.max_drawdown_percent}%)
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Detailed Stats */}
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              <div className="bg-gray-900/50 rounded-lg p-3">
+                <p className="text-xs text-gray-500">Gain Moyen</p>
+                <p className="font-mono text-green-500">${result.average_win}</p>
+              </div>
+              <div className="bg-gray-900/50 rounded-lg p-3">
+                <p className="text-xs text-gray-500">Perte Moyenne</p>
+                <p className="font-mono text-red-500">${result.average_loss}</p>
+              </div>
+              <div className="bg-gray-900/50 rounded-lg p-3">
+                <p className="text-xs text-gray-500">Risk/Reward Moyen</p>
+                <p className="font-mono text-white">{result.avg_risk_reward}:1</p>
+              </div>
+              <div className="bg-gray-900/50 rounded-lg p-3">
+                <p className="text-xs text-gray-500">Meilleur Trade</p>
+                <p className="font-mono text-green-500">${result.largest_win}</p>
+              </div>
+              <div className="bg-gray-900/50 rounded-lg p-3">
+                <p className="text-xs text-gray-500">Pire Trade</p>
+                <p className="font-mono text-red-500">${result.largest_loss}</p>
+              </div>
+              <div className="bg-gray-900/50 rounded-lg p-3">
+                <p className="text-xs text-gray-500">Durée Moy. Trade</p>
+                <p className="font-mono text-white">{result.avg_trade_duration_hours}h</p>
+              </div>
+              <div className="bg-gray-900/50 rounded-lg p-3">
+                <p className="text-xs text-gray-500">Sharpe Ratio</p>
+                <p className="font-mono text-white">{result.sharpe_ratio}</p>
+              </div>
+              <div className="bg-gray-900/50 rounded-lg p-3">
+                <p className="text-xs text-gray-500">Meilleure Heure</p>
+                <p className="font-mono text-green-400">{result.best_trading_hour}:00 UTC</p>
+              </div>
+              <div className="bg-gray-900/50 rounded-lg p-3">
+                <p className="text-xs text-gray-500">Pire Heure</p>
+                <p className="font-mono text-red-400">{result.worst_trading_hour}:00 UTC</p>
+              </div>
+            </div>
+
+            {/* Equity Curve */}
+            {result.equity_curve && result.equity_curve.length > 0 && (
+              <div className="card">
+                <h3 className="text-sm font-semibold mb-3">Courbe d'Équité</h3>
+                <div className="h-48">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={result.equity_curve}>
+                      <defs>
+                        <linearGradient id="backtestGradient" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor={result.total_return >= 0 ? "#22C55E" : "#EF4444"} stopOpacity={0.3} />
+                          <stop offset="95%" stopColor={result.total_return >= 0 ? "#22C55E" : "#EF4444"} stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <XAxis dataKey="index" hide />
+                      <YAxis
+                        domain={["auto", "auto"]}
+                        tick={{ fill: "#71717A", fontSize: 10 }}
+                        tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`}
+                      />
+                      <Tooltip
+                        contentStyle={{
+                          background: "#18181B",
+                          border: "1px solid #27272A",
+                          borderRadius: 8,
+                          fontFamily: "JetBrains Mono"
+                        }}
+                        formatter={(value) => [`$${value.toLocaleString()}`, "Équité"]}
+                      />
+                      <Area
+                        type="monotone"
+                        dataKey="equity"
+                        stroke={result.total_return >= 0 ? "#22C55E" : "#EF4444"}
+                        fill="url(#backtestGradient)"
+                        strokeWidth={2}
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            )}
+
+            {/* Recent Trades */}
+            {result.trades && result.trades.length > 0 && (
+              <div className="card">
+                <h3 className="text-sm font-semibold mb-3">Derniers Trades ({result.trades.length})</h3>
+                <div className="max-h-64 overflow-y-auto">
+                  <table className="trade-table text-xs">
+                    <thead>
+                      <tr>
+                        <th>Dir.</th>
+                        <th>Stratégie</th>
+                        <th>Entrée</th>
+                        <th>Sortie</th>
+                        <th>P&L</th>
+                        <th>Raison</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {result.trades.slice(-20).map((trade, idx) => (
+                        <tr key={idx}>
+                          <td>
+                            <span className={`badge ${trade.direction === "BUY" ? "badge-profit" : "badge-loss"}`}>
+                              {trade.direction}
+                            </span>
+                          </td>
+                          <td>{trade.strategy}</td>
+                          <td>{trade.entry_price?.toFixed(5)}</td>
+                          <td>{trade.exit_price?.toFixed(5)}</td>
+                          <td className={trade.pnl >= 0 ? "text-green-500" : "text-red-500"}>
+                            {trade.pnl >= 0 ? "+" : ""}{trade.pnl}
+                          </td>
+                          <td>
+                            <span className={`badge ${trade.exit_reason === "TP" ? "badge-profit" : trade.exit_reason === "SL" ? "badge-loss" : "badge-neutral"}`}>
+                              {trade.exit_reason}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 // Connection Modal
 const ConnectionModal = ({ isOpen, onClose, onConnect }) => {
   const [connectionType, setConnectionType] = useState("fix");
