@@ -4,7 +4,7 @@ Ensures all trades respect FTMO rules:
 - Max 1% loss per trade
 - Min 1:1 Risk/Reward ratio
 - Max 4.5% daily loss
-- Max 10% total drawdown
+- Max 8% total drawdown
 """
 from typing import Optional, Tuple
 from datetime import datetime, timezone
@@ -20,7 +20,7 @@ class RiskManager:
         max_loss_per_trade: float = 0.01,  # 1%
         min_risk_reward: float = 1.0,  # 1:1
         max_daily_loss: float = 0.045,  # 4.5%
-        max_total_loss: float = 0.10  # 10%
+        max_total_loss: float = 0.08  # 8%
     ):
         self.initial_balance = initial_balance
         self.max_loss_per_trade = max_loss_per_trade
