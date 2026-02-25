@@ -441,7 +441,7 @@ class ProfessionalBacktester:
         daily_loss_pct = abs(self.risk_manager.daily_pnl) / self.risk_manager.daily_starting_balance if self.risk_manager.daily_pnl < 0 and self.risk_manager.daily_starting_balance > 0 else 0
         total_dd = (self.risk_manager.peak_balance - self.risk_manager.current_balance) / self.risk_manager.peak_balance if self.risk_manager.peak_balance > 0 else 0
         
-        if daily_loss_pct >= 0.035 or total_dd >= 0.065:  # Pre-emptive at 3.5% daily and 6.5% total
+        if daily_loss_pct >= 0.025 or total_dd >= 0.06:  # Pre-emptive at 2.5% daily and 6% total
             for signal, _ in self.open_trades[:]:
                 self._close_trade(signal, candle["close"], candle["datetime"], "SAFETY_CLOSE")
     

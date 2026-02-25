@@ -787,11 +787,13 @@ class ProfessionalRiskManager:
         if strategy_state.daily_trades >= max_daily:
             return False, f"Max daily trades reached ({max_daily})"
 
-        # BARRIER 5: Remaining daily risk capacity
+        # BARRIER 5: Remaining daily risk capacity (accounts for ALL open positions)
         potential_loss = self.current_balance * self.max_risk_per_trade
-        remaining_daily = (self.max_daily_loss * self.daily_starting_balance) - abs(min(0, self.daily_pnl))
-        if potential_loss > remaining_daily:
-            return False, "Insufficient daily risk capacity"
+        current_daily_loss = abs(min(0, self.daily_pnl))
+        # Total exposure = current loss + ALL open positions' risk + this new trade's risk
+        total_open_exposure = (self.open_trade_count + 1) * potential_loss
+        if (current_daily_loss + total_open_exposure) / self.daily_starting_balance > self.max_daily_loss:
+            return False, "Would exceed daily loss limit with open exposure"
 
         # BARRIER 5b: Pre-trade total drawdown buffer
         # If current DD + potential 1% loss would breach 8%, don't trade
