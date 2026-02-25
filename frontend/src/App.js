@@ -38,16 +38,15 @@ const API = `${BACKEND_URL}/api`;
 
 // ==================== COMPONENTS ====================
 
-// Backtesting Modal
+// Backtesting Modal - Professional Version
 const BacktestModal = ({ isOpen, onClose }) => {
   const [running, setRunning] = useState(false);
   const [result, setResult] = useState(null);
   const [config, setConfig] = useState({
     symbol: "EURUSD",
-    strategy: "BOTH",
+    strategy: "SCALPING",
     days: 180,
-    timeframe: "H1",
-    initial_balance: 100000
+    initial_balance: 10000
   });
 
   if (!isOpen) return null;
@@ -57,7 +56,8 @@ const BacktestModal = ({ isOpen, onClose }) => {
     setResult(null);
     
     try {
-      const response = await axios.post(`${API}/backtest/run`, config);
+      const response = await axios.post(`${API}/backtest/professional`, config);
+      
       if (response.data.success) {
         setResult(response.data.result);
         toast.success("Backtest terminé!");
@@ -77,17 +77,63 @@ const BacktestModal = ({ isOpen, onClose }) => {
         <div className="card-header sticky top-0 bg-[#18181B] z-10">
           <h2 className="card-title flex items-center gap-2">
             <BarChart2 size={18} className="text-blue-500" />
-            Backtesting des Stratégies
+            Backtest Stratégies FTMO
           </h2>
           <button onClick={onClose} className="text-gray-400 hover:text-white" data-testid="close-backtest">
             <X size={20} />
           </button>
         </div>
 
+        {/* Strategy Selection */}
+        <div className="mb-6">
+          <label className="input-label mb-2">Choisir la Stratégie</label>
+          <div className="grid grid-cols-2 gap-4">
+            <button
+              className={`p-4 rounded-lg border-2 text-left transition-all ${
+                config.strategy === "SCALPING" 
+                  ? "border-blue-500 bg-blue-500/10" 
+                  : "border-gray-700 hover:border-gray-600"
+              }`}
+              onClick={() => setConfig({...config, strategy: "SCALPING"})}
+              data-testid="select-scalping"
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <Zap size={18} className="text-blue-500" />
+                <span className="font-bold text-white">SCALPING</span>
+              </div>
+              <p className="text-xs text-gray-400">
+                Breakout + Pullback sur M5<br/>
+                Target: 5-15 pips | SL: 5-8 pips<br/>
+                3-8 trades/jour | R:R 1.5:1
+              </p>
+            </button>
+            
+            <button
+              className={`p-4 rounded-lg border-2 text-left transition-all ${
+                config.strategy === "INTRADAY" 
+                  ? "border-green-500 bg-green-500/10" 
+                  : "border-gray-700 hover:border-gray-600"
+              }`}
+              onClick={() => setConfig({...config, strategy: "INTRADAY"})}
+              data-testid="select-intraday"
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <TrendingUp size={18} className="text-green-500" />
+                <span className="font-bold text-white">INTRADAY</span>
+              </div>
+              <p className="text-xs text-gray-400">
+                Trend Continuation H1/M15<br/>
+                Target: 30-80 pips | SL: 15-30 pips<br/>
+                1-3 trades/jour | R:R 2:1
+              </p>
+            </button>
+          </div>
+        </div>
+
         {/* Configuration */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-3 gap-4 mb-6">
           <div>
-            <label className="input-label">Symbole</label>
+            <label className="input-label">Paire</label>
             <select
               className="input-field"
               value={config.symbol}
@@ -95,48 +141,46 @@ const BacktestModal = ({ isOpen, onClose }) => {
               data-testid="backtest-symbol"
             >
               <option value="EURUSD">EUR/USD</option>
+              <option value="GBPUSD">GBP/USD</option>
+              <option value="USDJPY">USD/JPY</option>
+              <option value="AUDUSD">AUD/USD</option>
             </select>
           </div>
           <div>
-            <label className="input-label">Stratégie</label>
-            <select
-              className="input-field"
-              value={config.strategy}
-              onChange={(e) => setConfig({...config, strategy: e.target.value})}
-              data-testid="backtest-strategy"
-            >
-              <option value="BOTH">Les deux</option>
-              <option value="SCALPING">Scalping</option>
-              <option value="INTRADAY">Intraday</option>
-            </select>
-          </div>
-          <div>
-            <label className="input-label">Période (jours)</label>
+            <label className="input-label">Période</label>
             <select
               className="input-field"
               value={config.days}
               onChange={(e) => setConfig({...config, days: parseInt(e.target.value)})}
               data-testid="backtest-days"
             >
-              <option value={30}>30 jours</option>
-              <option value={90}>90 jours</option>
-              <option value={180}>180 jours (6 mois)</option>
-              <option value={365}>365 jours (1 an)</option>
+              <option value={90}>3 mois</option>
+              <option value={180}>6 mois</option>
+              <option value={365}>1 an</option>
             </select>
           </div>
           <div>
-            <label className="input-label">Timeframe</label>
+            <label className="input-label">Capital Initial</label>
             <select
               className="input-field"
-              value={config.timeframe}
-              onChange={(e) => setConfig({...config, timeframe: e.target.value})}
-              data-testid="backtest-timeframe"
+              value={config.initial_balance}
+              onChange={(e) => setConfig({...config, initial_balance: parseInt(e.target.value)})}
+              data-testid="backtest-balance"
             >
-              <option value="M15">15 minutes</option>
-              <option value="H1">1 heure</option>
-              <option value="H4">4 heures</option>
+              <option value={10000}>10 000€</option>
+              <option value={25000}>25 000€</option>
+              <option value={50000}>50 000€</option>
+              <option value={100000}>100 000€</option>
             </select>
           </div>
+        </div>
+
+        {/* Risk Rules Reminder */}
+        <div className="bg-gray-900/50 rounded-lg p-3 mb-4">
+          <p className="text-xs text-gray-400">
+            <span className="text-yellow-500 font-semibold">Règles de Risque FTMO:</span>
+            {" "}1% max/trade • 4.5% max/jour • 8% max drawdown • Stop après {config.strategy === "SCALPING" ? "3" : "2"} pertes consécutives
+          </p>
         </div>
 
         <button
@@ -148,12 +192,12 @@ const BacktestModal = ({ isOpen, onClose }) => {
           {running ? (
             <>
               <div className="spinner" style={{width: 16, height: 16}} />
-              Backtest en cours... (peut prendre 30-60 secondes)
+              Backtest en cours...
             </>
           ) : (
             <>
               <Play size={16} />
-              Lancer le Backtest
+              Lancer le Backtest {config.strategy}
             </>
           )}
         </button>
@@ -169,7 +213,7 @@ const BacktestModal = ({ isOpen, onClose }) => {
                   {result.total_return >= 0 ? "+" : ""}{result.total_return_percent}%
                 </p>
                 <p className="text-xs text-gray-500 font-mono">
-                  ${result.total_return.toLocaleString()}
+                  {result.total_return >= 0 ? "+" : ""}{result.total_return.toLocaleString()}€
                 </p>
               </div>
               
@@ -189,13 +233,13 @@ const BacktestModal = ({ isOpen, onClose }) => {
                 <p className="text-xs text-gray-500">{result.total_trades} trades</p>
               </div>
               
-              <div className={`card ${result.max_drawdown_percent <= 10 ? "border-green-500/30" : "border-red-500/30"}`}>
+              <div className={`card ${result.max_drawdown_percent <= 8 ? "border-green-500/30" : "border-red-500/30"}`}>
                 <p className="text-xs text-gray-400 mb-1">Max Drawdown</p>
-                <p className={`stat-value text-xl ${result.max_drawdown_percent <= 10 ? "text-yellow-500" : "text-red-500"}`}>
+                <p className={`stat-value text-xl ${result.max_drawdown_percent <= 8 ? "text-yellow-500" : "text-red-500"}`}>
                   {result.max_drawdown_percent}%
                 </p>
                 <p className="text-xs text-gray-500 font-mono">
-                  ${result.max_drawdown.toLocaleString()}
+                  Limite: 8%
                 </p>
               </div>
             </div>
@@ -218,51 +262,56 @@ const BacktestModal = ({ isOpen, onClose }) => {
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-400">Drawdown total (10%)</span>
+                  <span className="text-sm text-gray-400">Drawdown total (8%)</span>
                   <span className={`badge ${result.ftmo_total_limit_breached ? "badge-loss" : "badge-profit"}`}>
                     {result.ftmo_total_limit_breached ? "DÉPASSÉ" : "OK"} ({result.max_drawdown_percent}%)
                   </span>
                 </div>
               </div>
+              {result.days_stopped_trading > 0 && (
+                <p className="text-xs text-yellow-500 mt-2">
+                  ⚠️ {result.days_stopped_trading} jours où le trading a été arrêté (limites atteintes)
+                </p>
+              )}
             </div>
 
             {/* Detailed Stats */}
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               <div className="bg-gray-900/50 rounded-lg p-3">
                 <p className="text-xs text-gray-500">Gain Moyen</p>
-                <p className="font-mono text-green-500">${result.average_win}</p>
+                <p className="font-mono text-green-500">{result.average_win}€</p>
               </div>
               <div className="bg-gray-900/50 rounded-lg p-3">
                 <p className="text-xs text-gray-500">Perte Moyenne</p>
-                <p className="font-mono text-red-500">${result.average_loss}</p>
+                <p className="font-mono text-red-500">{result.average_loss}€</p>
               </div>
               <div className="bg-gray-900/50 rounded-lg p-3">
-                <p className="text-xs text-gray-500">Risk/Reward Moyen</p>
+                <p className="text-xs text-gray-500">R:R Moyen</p>
                 <p className="font-mono text-white">{result.avg_risk_reward}:1</p>
               </div>
               <div className="bg-gray-900/50 rounded-lg p-3">
-                <p className="text-xs text-gray-500">Meilleur Trade</p>
-                <p className="font-mono text-green-500">${result.largest_win}</p>
+                <p className="text-xs text-gray-500">Plus Gros Gain</p>
+                <p className="font-mono text-green-500">{result.largest_win}€</p>
               </div>
               <div className="bg-gray-900/50 rounded-lg p-3">
-                <p className="text-xs text-gray-500">Pire Trade</p>
-                <p className="font-mono text-red-500">${result.largest_loss}</p>
-              </div>
-              <div className="bg-gray-900/50 rounded-lg p-3">
-                <p className="text-xs text-gray-500">Durée Moy. Trade</p>
-                <p className="font-mono text-white">{result.avg_trade_duration_hours}h</p>
+                <p className="text-xs text-gray-500">Plus Grosse Perte</p>
+                <p className="font-mono text-red-500">{result.largest_loss}€</p>
               </div>
               <div className="bg-gray-900/50 rounded-lg p-3">
                 <p className="text-xs text-gray-500">Sharpe Ratio</p>
                 <p className="font-mono text-white">{result.sharpe_ratio}</p>
               </div>
               <div className="bg-gray-900/50 rounded-lg p-3">
-                <p className="text-xs text-gray-500">Meilleure Heure</p>
-                <p className="font-mono text-green-400">{result.best_trading_hour}:00 UTC</p>
+                <p className="text-xs text-gray-500">Consec. Wins Max</p>
+                <p className="font-mono text-green-400">{result.max_consecutive_wins}</p>
               </div>
               <div className="bg-gray-900/50 rounded-lg p-3">
-                <p className="text-xs text-gray-500">Pire Heure</p>
-                <p className="font-mono text-red-400">{result.worst_trading_hour}:00 UTC</p>
+                <p className="text-xs text-gray-500">Consec. Losses Max</p>
+                <p className="font-mono text-red-400">{result.max_consecutive_losses}</p>
+              </div>
+              <div className="bg-gray-900/50 rounded-lg p-3">
+                <p className="text-xs text-gray-500">Session Londres</p>
+                <p className="font-mono text-white">{result.london_trades} trades ({result.london_win_rate}%)</p>
               </div>
             </div>
 
@@ -283,7 +332,7 @@ const BacktestModal = ({ isOpen, onClose }) => {
                       <YAxis
                         domain={["auto", "auto"]}
                         tick={{ fill: "#71717A", fontSize: 10 }}
-                        tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`}
+                        tickFormatter={(v) => `${(v / 1000).toFixed(0)}k€`}
                       />
                       <Tooltip
                         contentStyle={{
@@ -292,7 +341,7 @@ const BacktestModal = ({ isOpen, onClose }) => {
                           borderRadius: 8,
                           fontFamily: "JetBrains Mono"
                         }}
-                        formatter={(value) => [`$${value.toLocaleString()}`, "Équité"]}
+                        formatter={(value) => [`${value.toLocaleString()}€`, "Équité"]}
                       />
                       <Area
                         type="monotone"
@@ -316,9 +365,9 @@ const BacktestModal = ({ isOpen, onClose }) => {
                     <thead>
                       <tr>
                         <th>Dir.</th>
-                        <th>Stratégie</th>
                         <th>Entrée</th>
                         <th>Sortie</th>
+                        <th>SL/TP</th>
                         <th>P&L</th>
                         <th>Raison</th>
                       </tr>
@@ -331,11 +380,11 @@ const BacktestModal = ({ isOpen, onClose }) => {
                               {trade.direction}
                             </span>
                           </td>
-                          <td>{trade.strategy}</td>
                           <td>{trade.entry_price?.toFixed(5)}</td>
                           <td>{trade.exit_price?.toFixed(5)}</td>
+                          <td className="text-gray-400">{trade.sl_pips}/{trade.tp_pips}</td>
                           <td className={trade.pnl >= 0 ? "text-green-500" : "text-red-500"}>
-                            {trade.pnl >= 0 ? "+" : ""}{trade.pnl}
+                            {trade.pnl >= 0 ? "+" : ""}{trade.pnl}€
                           </td>
                           <td>
                             <span className={`badge ${trade.exit_reason === "TP" ? "badge-profit" : trade.exit_reason === "SL" ? "badge-loss" : "badge-neutral"}`}>
