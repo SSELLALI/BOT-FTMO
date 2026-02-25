@@ -38,6 +38,205 @@ const API = `${BACKEND_URL}/api`;
 
 // ==================== COMPONENTS ====================
 
+// Connection Modal
+const ConnectionModal = ({ isOpen, onClose, onConnect }) => {
+  const [connectionType, setConnectionType] = useState("fix");
+  const [fixPassword, setFixPassword] = useState("");
+  const [openApiData, setOpenApiData] = useState({
+    client_id: "",
+    client_secret: "",
+    access_token: "",
+    account_id: "",
+    is_live: false
+  });
+  const [connecting, setConnecting] = useState(false);
+  const [error, setError] = useState(null);
+
+  if (!isOpen) return null;
+
+  const handleFIXConnect = async () => {
+    if (!fixPassword) {
+      setError("Mot de passe requis");
+      return;
+    }
+    setConnecting(true);
+    setError(null);
+    
+    try {
+      const response = await axios.post(`${API}/connection/fix/connect`, {
+        password: fixPassword
+      });
+      
+      if (response.data.success) {
+        toast.success("Connecté à cTrader FIX!");
+        onConnect();
+        onClose();
+      } else {
+        setError(response.data.message);
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || "Erreur de connexion");
+    } finally {
+      setConnecting(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50" data-testid="connection-modal">
+      <div className="card w-full max-w-lg mx-4">
+        <div className="card-header">
+          <h2 className="card-title flex items-center gap-2">
+            <Activity size={18} className="text-blue-500" />
+            Connexion cTrader
+          </h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-white" data-testid="close-connection">
+            <X size={20} />
+          </button>
+        </div>
+
+        {/* Tabs */}
+        <div className="tab-list mb-4">
+          <button
+            className={`tab-item ${connectionType === "fix" ? "tab-item-active" : ""}`}
+            onClick={() => setConnectionType("fix")}
+          >
+            FIX Protocol
+          </button>
+          <button
+            className={`tab-item ${connectionType === "openapi" ? "tab-item-active" : ""}`}
+            onClick={() => setConnectionType("openapi")}
+          >
+            Open API
+          </button>
+        </div>
+
+        {error && (
+          <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3 mb-4 text-red-400 text-sm">
+            {error}
+          </div>
+        )}
+
+        {connectionType === "fix" && (
+          <div className="space-y-4">
+            <div className="bg-gray-900/50 rounded-lg p-3 text-sm">
+              <p className="text-gray-400 mb-2">Configuration FIX détectée :</p>
+              <div className="font-mono text-xs space-y-1">
+                <p>Host: <span className="text-green-400">live-uk-eqx-01.p.c-trader.com</span></p>
+                <p>Port: <span className="text-green-400">5211</span></p>
+                <p>Account: <span className="text-green-400">17061677</span></p>
+              </div>
+            </div>
+            
+            <div>
+              <label className="input-label">Mot de passe FIX API</label>
+              <input
+                type="password"
+                className="input-field"
+                value={fixPassword}
+                onChange={(e) => setFixPassword(e.target.value)}
+                placeholder="Entrez votre mot de passe FIX"
+                data-testid="fix-password-input"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Obtenu via le dashboard FTMO ou le support
+              </p>
+            </div>
+
+            <button
+              onClick={handleFIXConnect}
+              disabled={connecting}
+              className="btn btn-primary w-full"
+              data-testid="fix-connect-btn"
+            >
+              {connecting ? (
+                <>
+                  <div className="spinner" style={{width: 16, height: 16}} />
+                  Connexion...
+                </>
+              ) : (
+                <>
+                  <Zap size={16} />
+                  Connecter FIX
+                </>
+              )}
+            </button>
+          </div>
+        )}
+
+        {connectionType === "openapi" && (
+          <div className="space-y-4">
+            <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3 text-sm text-blue-300">
+              <p className="font-semibold mb-2">Guide de configuration :</p>
+              <ol className="list-decimal list-inside space-y-1 text-xs">
+                <li>Allez sur openapi.ctrader.com</li>
+                <li>Créez une application</li>
+                <li>Notez Client ID et Secret</li>
+                <li>Autorisez via l'URL OAuth</li>
+              </ol>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="input-label">Client ID</label>
+                <input
+                  type="text"
+                  className="input-field"
+                  value={openApiData.client_id}
+                  onChange={(e) => setOpenApiData({...openApiData, client_id: e.target.value})}
+                />
+              </div>
+              <div>
+                <label className="input-label">Client Secret</label>
+                <input
+                  type="password"
+                  className="input-field"
+                  value={openApiData.client_secret}
+                  onChange={(e) => setOpenApiData({...openApiData, client_secret: e.target.value})}
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="input-label">Access Token</label>
+              <input
+                type="text"
+                className="input-field"
+                value={openApiData.access_token}
+                onChange={(e) => setOpenApiData({...openApiData, access_token: e.target.value})}
+              />
+            </div>
+
+            <div>
+              <label className="input-label">Account ID</label>
+              <input
+                type="number"
+                className="input-field"
+                value={openApiData.account_id}
+                onChange={(e) => setOpenApiData({...openApiData, account_id: e.target.value})}
+              />
+            </div>
+
+            <button
+              className="btn btn-primary w-full opacity-50 cursor-not-allowed"
+              disabled
+            >
+              Configuration requise
+            </button>
+          </div>
+        )}
+
+        <div className="mt-4 pt-4 border-t border-gray-800">
+          <p className="text-xs text-gray-500 text-center">
+            Mode actuel : <span className="text-yellow-400">Paper Trading (Simulation)</span>
+            <br />
+            Les vraies données de marché sont utilisées, mais les trades sont simulés.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // Risk Meter Component
 const RiskMeter = ({ label, current, limit, remaining, status, amount }) => {
   const percentage = Math.min((current / limit) * 100, 100);
