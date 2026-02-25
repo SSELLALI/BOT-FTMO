@@ -367,8 +367,7 @@ class BacktestEngine:
         current_price: float
     ) -> Optional[Tuple[str, str]]:
         """
-        Check for intraday entry signal - Optimized version
-        Returns (direction, reason) or None
+        Check for intraday entry signal - High probability version
         """
         if not indicators or not prev_indicators:
             return None
@@ -382,29 +381,36 @@ class BacktestEngine:
         macd_hist = indicators.get("macd_histogram", 0)
         prev_hist = prev_indicators.get("macd_histogram", 0)
         rsi = indicators.get("rsi", 50)
+        prev_rsi = prev_indicators.get("rsi", 50)
         
         dist_to_support = current_price - support
         dist_to_resistance = resistance - current_price
         range_size = resistance - support
         
-        if range_size <= 0:
+        if range_size <= 0.0005:  # Skip if range is too tight
             return None
             
-        threshold = range_size * 0.15  # 15% of range - tighter
+        threshold = range_size * 0.10  # 10% of range - very tight
         
-        # BUY: At support + MACD bullish + RSI not overbought
-        if dist_to_support < threshold and rsi < 60:
-            if prev_macd <= prev_macd_signal and macd > macd_signal:
-                return ("BUY", f"Support bounce ({support:.5f}) + MACD cross")
-            elif prev_hist <= 0 and macd_hist > 0:
-                return ("BUY", f"Support ({support:.5f}) + MACD histogram flip")
+        # BUY: Strong support bounce with multiple confirmations
+        if dist_to_support < threshold:
+            macd_bullish = prev_macd <= prev_macd_signal and macd > macd_signal
+            hist_flip = prev_hist <= 0 and macd_hist > 0
+            rsi_oversold_reversal = prev_rsi < 35 and rsi > 35
+            
+            confirmations = sum([macd_bullish, hist_flip, rsi_oversold_reversal])
+            if confirmations >= 2:  # Need at least 2 confirmations
+                return ("BUY", f"Support bounce with {confirmations} confirmations")
         
-        # SELL: At resistance + MACD bearish + RSI not oversold
-        if dist_to_resistance < threshold and rsi > 40:
-            if prev_macd >= prev_macd_signal and macd < macd_signal:
-                return ("SELL", f"Resistance rejection ({resistance:.5f}) + MACD cross")
-            elif prev_hist >= 0 and macd_hist < 0:
-                return ("SELL", f"Resistance ({resistance:.5f}) + MACD histogram flip")
+        # SELL: Strong resistance rejection with multiple confirmations
+        if dist_to_resistance < threshold:
+            macd_bearish = prev_macd >= prev_macd_signal and macd < macd_signal
+            hist_flip = prev_hist >= 0 and macd_hist < 0
+            rsi_overbought_reversal = prev_rsi > 65 and rsi < 65
+            
+            confirmations = sum([macd_bearish, hist_flip, rsi_overbought_reversal])
+            if confirmations >= 2:
+                return ("SELL", f"Resistance rejection with {confirmations} confirmations")
         
         return None
     
