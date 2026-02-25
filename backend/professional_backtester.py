@@ -413,37 +413,37 @@ class ProfessionalBacktester:
         logger.debug(f"Opened {signal.strategy} {signal.direction} {signal.symbol} @ {signal.entry_price}")
     
     def _check_exits(self, candle: Dict):
-        """Check if any open trades should be closed"""
+        """Check if any open trades should be closed, with safety checks after each"""
         for signal, entry_candle in self.open_trades[:]:
+            # First check if we need to force-close due to limits
+            daily_loss_pct = abs(self.risk_manager.daily_pnl) / self.risk_manager.daily_starting_balance if self.risk_manager.daily_pnl < 0 and self.risk_manager.daily_starting_balance > 0 else 0
+            total_dd = (self.risk_manager.peak_balance - self.risk_manager.current_balance) / self.risk_manager.peak_balance if self.risk_manager.peak_balance > 0 else 0
+
+            if daily_loss_pct >= 0.025 or total_dd >= 0.06:
+                # Force close this trade at current price
+                self._close_trade(signal, candle["close"], candle["datetime"], "SAFETY_CLOSE")
+                continue
+
             exit_price = None
             exit_reason = None
-            
+
             if signal.direction == "BUY":
-                # Check SL first (worst case)
                 if candle["low"] <= signal.stop_loss:
                     exit_price = signal.stop_loss
                     exit_reason = "SL"
                 elif candle["high"] >= signal.take_profit:
                     exit_price = signal.take_profit
                     exit_reason = "TP"
-            else:  # SELL
+            else:
                 if candle["high"] >= signal.stop_loss:
                     exit_price = signal.stop_loss
                     exit_reason = "SL"
                 elif candle["low"] <= signal.take_profit:
                     exit_price = signal.take_profit
                     exit_reason = "TP"
-            
+
             if exit_price:
                 self._close_trade(signal, exit_price, candle["datetime"], exit_reason)
-        
-        # SAFETY: Force-close ALL remaining open trades if daily/total limits breached
-        daily_loss_pct = abs(self.risk_manager.daily_pnl) / self.risk_manager.daily_starting_balance if self.risk_manager.daily_pnl < 0 and self.risk_manager.daily_starting_balance > 0 else 0
-        total_dd = (self.risk_manager.peak_balance - self.risk_manager.current_balance) / self.risk_manager.peak_balance if self.risk_manager.peak_balance > 0 else 0
-        
-        if daily_loss_pct >= 0.025 or total_dd >= 0.06:  # Pre-emptive at 2.5% daily and 6% total
-            for signal, _ in self.open_trades[:]:
-                self._close_trade(signal, candle["close"], candle["datetime"], "SAFETY_CLOSE")
     
     def _close_trade(self, signal: TradeSignal, exit_price: float, exit_time: datetime, exit_reason: str):
         """Close a trade and record results"""
