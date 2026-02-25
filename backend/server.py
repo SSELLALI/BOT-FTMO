@@ -945,7 +945,7 @@ async def run_backtest(request: BacktestRequest):
         await create_alert(
             "SUCCESS" if result.total_return > 0 else "WARNING",
             "Backtest Terminé",
-            f"{result.strategy} sur {result.days} jours: {result.total_return_percent:.2f}% ({result.win_rate:.1f}% win rate)"
+            f"{result.strategy} sur {request.days} jours: {result.total_return_percent:.2f}% ({result.win_rate:.1f}% win rate)"
         )
         
         return {
