@@ -25,6 +25,7 @@ from market_simulator import market_simulator
 from real_market_data import real_market_data
 from ctrader_fix_client import create_ftmo_client, CTraderFIXClient, FTMO_CONFIG
 from ctrader_open_api_client import CTraderOpenAPIClient, OpenAPIConfig, OPEN_API_SETUP_GUIDE
+from backtesting import BacktestEngine, BacktestResult, backtest_engine
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
