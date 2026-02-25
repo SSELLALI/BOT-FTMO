@@ -737,8 +737,8 @@ class ProfessionalRiskManager:
         self.intraday_state.stop_reason = ""
 
     def calculate_lot_size(self, sl_pips: float, symbol: str = "EURUSD") -> float:
-        """Position size for exactly 1% risk"""
-        risk_amount = self.current_balance * self.max_risk_per_trade
+        """Position size for exactly 1% risk (with safety buffer)"""
+        risk_amount = self.current_balance * self.max_risk_per_trade * 0.95  # 5% safety buffer
         pip_value_per_lot = 10.0
         if "JPY" in symbol:
             pip_value_per_lot = 1000 / 100
