@@ -415,9 +415,9 @@ class ProfessionalBacktester:
     def _check_exits(self, candle: Dict):
         """Check if any open trades should be closed, with safety checks after each"""
         for signal, entry_candle in self.open_trades[:]:
-            # SAFETY BARRIER: Check limits BEFORE processing this trade
-            daily_loss_pct = abs(self.risk_manager.daily_pnl) / self.risk_manager.daily_starting_balance if self.risk_manager.daily_pnl < 0 and self.risk_manager.daily_starting_balance > 0 else 0
-            total_dd = (self.risk_manager.peak_balance - self.risk_manager.current_balance) / self.risk_manager.peak_balance if self.risk_manager.peak_balance > 0 else 0
+            # SAFETY BARRIER: Check limits vs INITIAL BALANCE (FTMO rule)
+            daily_loss_pct = abs(self.risk_manager.daily_pnl) / self.risk_manager.initial_balance if self.risk_manager.daily_pnl < 0 else 0
+            total_dd = (self.risk_manager.initial_balance - self.risk_manager.current_balance) / self.risk_manager.initial_balance if self.risk_manager.current_balance < self.risk_manager.initial_balance else 0
 
             if daily_loss_pct >= 0.03 or total_dd >= 0.06:
                 # Safety close at the BETTER price (max of SL and close for BUY, min for SELL)
