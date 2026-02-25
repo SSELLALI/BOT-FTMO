@@ -356,47 +356,44 @@ class ScalpingStrategy:
         rsi_ok_sell = 28 <= rsi <= 70
 
         if signal is None and ema_bearish and rsi_ok_sell:
-            confluence = 0
-            reasons = []
-
-            # Factor 1: EMA9 pullback rejection
+            entry_triggered = False
+            reason = ""
             prev_candle = candles[current_index - 1]
-            touched_ema9 = prev_candle["high"] >= prev_ema9 * 0.9996
-            dropped = current_price < prev_candle["low"]
-            if touched_ema9 and dropped:
-                confluence += 1
-                reasons.append("EMA9 pullback")
 
-            # Factor 2: Bollinger upper band proximity
-            if current_price >= bb_upper * 0.999:
-                confluence += 1
-                reasons.append("BB upper")
+            # Signal 1: EMA9 rejection
+            near_ema9 = abs(prev_candle["high"] - prev_ema9) / current_price < 0.0006
+            if near_ema9 and current_price < prev_candle["low"]:
+                entry_triggered = True
+                reason = f"EMA9 rejection, RSI {rsi:.0f}"
 
-            # Factor 3: Bearish candle pattern
-            if (TechnicalAnalysis.is_bearish_engulfing(candles, current_index) or
-                    TechnicalAnalysis.is_bearish_rejection(current_candle)):
-                confluence += 1
-                reasons.append("pattern")
+            # Signal 2: Bearish pattern
+            if not entry_triggered:
+                if (TechnicalAnalysis.is_bearish_engulfing(candles, current_index) or
+                        TechnicalAnalysis.is_bearish_rejection(current_candle)):
+                    entry_triggered = True
+                    reason = f"Bearish pattern, RSI {rsi:.0f}"
 
-            # Factor 4: Negative momentum
-            if momentum < -0.01:
-                confluence += 1
-                reasons.append("momentum")
-
-            # Factor 5: Strong bearish candle
-            if TechnicalAnalysis.is_bearish_candle(current_candle):
+            # Signal 3: Strong bearish momentum
+            if not entry_triggered and TechnicalAnalysis.is_bearish_candle(current_candle):
                 body = current_candle["open"] - current_candle["close"]
-                if body > atr * 0.5:
-                    confluence += 1
-                    reasons.append("strong candle")
+                if body > atr * 0.4 and momentum < 0:
+                    entry_triggered = True
+                    reason = f"Bearish momentum, RSI {rsi:.0f}"
 
-            # Factor 6: RSI sweet spot
-            if 42 <= rsi <= 60:
-                confluence += 1
-                reasons.append("RSI optimal")
+            # Signal 4: Break below EMA21
+            if not entry_triggered:
+                if prev_candle["close"] >= cur_ema21 and current_price < cur_ema21 and momentum < 0:
+                    entry_triggered = True
+                    reason = f"EMA21 breakdown, RSI {rsi:.0f}"
 
-            if confluence >= 2:
-                reason = f"{'+'.join(reasons)}, RSI {rsi:.0f}"
+            # Signal 5: BB upper band rejection
+            if not entry_triggered and current_price >= bb_upper * 0.999:
+                if TechnicalAnalysis.is_bearish_candle(current_candle):
+                    entry_triggered = True
+                    reason = f"BB upper rejection, RSI {rsi:.0f}"
+
+            if entry_triggered:
+                reason_text = reason
                 sl_distance = max(atr * 1.2, self.min_sl_pips / 10000)
                 sl_price = current_price + sl_distance
                 sl_pips = (sl_price - current_price) * 10000
