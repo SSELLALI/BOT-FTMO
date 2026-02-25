@@ -1083,6 +1083,10 @@ function App() {
         </div>
 
         <div className="nav-actions">
+          <button onClick={() => setShowBacktest(true)} className="btn btn-outline" data-testid="backtest-btn">
+            <BarChart2 size={16} className="text-blue-500" />
+            Backtest
+          </button>
           <button onClick={() => setShowConnection(true)} className="btn btn-outline" data-testid="connection-btn">
             <Activity size={16} className={connectionStatus === "connected" ? "text-green-500" : ""} />
             {connectionStatus === "connected" ? "Connecté" : "Connexion"}
