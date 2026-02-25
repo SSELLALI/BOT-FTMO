@@ -854,16 +854,16 @@ class ProfessionalRiskManager:
         else:
             state.consecutive_losses = 0
 
-        # POST-TRADE SAFETY CHECK: immediately check daily & total limits
-        daily_loss_pct = abs(self.daily_pnl) / self.daily_starting_balance if self.daily_pnl < 0 and self.daily_starting_balance > 0 else 0
+        # POST-TRADE SAFETY CHECK: immediately check daily & total limits (vs initial balance)
+        daily_loss_pct = abs(self.daily_pnl) / self.initial_balance if self.daily_pnl < 0 else 0
         if daily_loss_pct >= self.max_daily_loss:
             self.scalping_state.is_stopped_today = True
             self.scalping_state.stop_reason = f"Daily loss limit post-trade ({daily_loss_pct * 100:.2f}%)"
             self.intraday_state.is_stopped_today = True
             self.intraday_state.stop_reason = f"Daily loss limit post-trade ({daily_loss_pct * 100:.2f}%)"
 
-        total_dd = (self.peak_balance - self.current_balance) / self.peak_balance if self.peak_balance > 0 else 0
-        if total_dd >= self.max_total_drawdown:
+        total_dd_pct = (self.initial_balance - self.current_balance) / self.initial_balance if self.current_balance < self.initial_balance else 0
+        if total_dd_pct >= self.max_total_drawdown:
             self.scalping_state.is_stopped_global = True
             self.scalping_state.stop_reason = f"Max drawdown post-trade ({total_dd * 100:.2f}%)"
             self.intraday_state.is_stopped_global = True
