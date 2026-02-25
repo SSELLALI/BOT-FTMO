@@ -323,8 +323,8 @@ class BacktestEngine:
         prev_indicators: Dict
     ) -> Optional[Tuple[str, str]]:
         """
-        Check for scalping entry signal - Optimized version
-        Returns (direction, reason) or None
+        Check for scalping entry signal - High probability version
+        Only take trades with strong confluence
         """
         if not indicators or not prev_indicators:
             return None
@@ -334,28 +334,29 @@ class BacktestEngine:
         ema21 = indicators.get("ema_21", 0)
         prev_ema8 = prev_indicators.get("ema_8", 0)
         prev_ema21 = prev_indicators.get("ema_21", 0)
+        prev_rsi = prev_indicators.get("rsi", 50)
         close = indicators.get("close", 0)
         
-        # More selective entries - only strong signals
+        # BUY: Strong oversold reversal - RSI crossing above 30 + price above EMAs
+        if prev_rsi < 25 and rsi > 30 and close > ema8 and ema8 > ema21:
+            return ("BUY", f"RSI reversal from {prev_rsi:.0f} to {rsi:.0f} + bullish structure")
         
-        # BUY: Strong oversold with reversal confirmation
-        if rsi < 30 and close > ema8:
-            if ema8 > prev_ema8:  # EMA turning up
-                return ("BUY", f"Strong oversold RSI({rsi:.1f}) + reversal")
+        # SELL: Strong overbought reversal - RSI crossing below 70 + price below EMAs
+        if prev_rsi > 75 and rsi < 70 and close < ema8 and ema8 < ema21:
+            return ("SELL", f"RSI reversal from {prev_rsi:.0f} to {rsi:.0f} + bearish structure")
         
-        # SELL: Strong overbought with reversal confirmation
-        if rsi > 70 and close < ema8:
-            if ema8 < prev_ema8:  # EMA turning down
-                return ("SELL", f"Strong overbought RSI({rsi:.1f}) + reversal")
+        # EMA crossover with strong momentum confirmation
+        ema_diff = abs(ema8 - ema21) / ema21 * 10000  # Difference in pips
+        prev_ema_diff = abs(prev_ema8 - prev_ema21) / prev_ema21 * 10000
         
-        # EMA crossover with trend confirmation
+        # Only trade crossovers with expanding EMAs (momentum)
         if prev_ema8 <= prev_ema21 and ema8 > ema21:
-            if rsi > 45 and rsi < 65:  # Not overbought
-                return ("BUY", f"EMA bullish crossover + RSI({rsi:.1f}) neutral")
+            if ema_diff > prev_ema_diff and rsi > 40 and rsi < 60:
+                return ("BUY", f"Strong EMA crossover + momentum")
         
         if prev_ema8 >= prev_ema21 and ema8 < ema21:
-            if rsi < 55 and rsi > 35:  # Not oversold
-                return ("SELL", f"EMA bearish crossover + RSI({rsi:.1f}) neutral")
+            if ema_diff > prev_ema_diff and rsi > 40 and rsi < 60:
+                return ("SELL", f"Strong EMA crossover + momentum")
         
         return None
     
