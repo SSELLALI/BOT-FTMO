@@ -55,8 +55,14 @@ trading_engine = TradingEngine()
 bot_state = {
     "active": False,
     "last_signal_check": None,
-    "pending_signals": []
+    "pending_signals": [],
+    "connection_status": "disconnected",
+    "fix_client": None,
+    "use_real_data": True
 }
+
+# FIX Client instance
+fix_client: Optional[CTraderFIXClient] = None
 
 
 # ==================== HELPER FUNCTIONS ====================
