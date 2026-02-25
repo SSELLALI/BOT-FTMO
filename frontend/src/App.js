@@ -1574,6 +1574,207 @@ function App() {
         </div>
       )}
 
+      {/* Live Trading Tab */}
+      {activeTab === "live" && (
+        <div className="px-4 pb-4 max-w-[1600px] mx-auto" data-testid="live-content">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+
+            {/* Connection & Control Panel */}
+            <div className="card lg:col-span-1" data-testid="live-control-panel">
+              <div className="card-header">
+                <h2 className="card-title flex items-center gap-2">
+                  <Activity size={18} className={liveStatus?.connected ? "text-green-500" : "text-gray-500"} />
+                  Contrôle Live
+                </h2>
+              </div>
+
+              {/* Connection Status */}
+              <div className="mb-4 p-3 rounded-lg bg-gray-900/50">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm text-gray-400">Connexion FIX</span>
+                  <span className={`text-sm font-mono ${liveStatus?.connected ? "text-green-500" : "text-red-400"}`}>
+                    {liveStatus?.connected ? "CONNECTE" : "DECONNECTE"}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm text-gray-400">Trading</span>
+                  <span className={`text-sm font-mono ${liveStatus?.trading ? "text-green-500" : "text-gray-500"}`}>
+                    {liveStatus?.trading ? "ACTIF" : "INACTIF"}
+                  </span>
+                </div>
+                <div className="text-xs text-gray-500 mt-2 font-mono">
+                  Host: live-uk-eqx-01.p.c-trader.com:5211
+                  <br />
+                  Compte: 17061677
+                </div>
+              </div>
+
+              {/* Buttons */}
+              <div className="space-y-2">
+                {!liveStatus?.connected ? (
+                  <button
+                    onClick={liveConnect}
+                    disabled={liveConnecting}
+                    className="btn btn-primary w-full"
+                    data-testid="live-connect-btn"
+                  >
+                    {liveConnecting ? (
+                      <><div className="spinner" style={{width: 14, height: 14}} /> Connexion...</>
+                    ) : (
+                      <><Zap size={14} /> Connecter FIX API</>
+                    )}
+                  </button>
+                ) : (
+                  <>
+                    {!liveStatus?.trading ? (
+                      <button
+                        onClick={() => liveStart({scalping: true, intraday: true})}
+                        className="btn btn-primary w-full"
+                        data-testid="live-start-btn"
+                      >
+                        <Play size={14} /> Démarrer Trading
+                      </button>
+                    ) : (
+                      <button
+                        onClick={liveStop}
+                        className="btn btn-danger w-full"
+                        data-testid="live-stop-btn"
+                      >
+                        <Square size={14} /> Arrêter Trading
+                      </button>
+                    )}
+                    <button
+                      onClick={liveDisconnect}
+                      className="btn btn-outline w-full"
+                      data-testid="live-disconnect-btn"
+                    >
+                      <X size={14} /> Déconnecter
+                    </button>
+                  </>
+                )}
+                <button
+                  onClick={fetchLiveStatus}
+                  className="btn btn-outline w-full"
+                  data-testid="live-refresh-btn"
+                >
+                  <RefreshCw size={14} /> Actualiser
+                </button>
+              </div>
+
+              {/* Risk Limits */}
+              <div className="mt-4 p-3 rounded-lg border border-green-500/20 bg-green-500/5">
+                <h3 className="text-sm font-semibold text-green-400 mb-2 flex items-center gap-1">
+                  <ShieldCheck size={14} /> Barrières FTMO
+                </h3>
+                <div className="text-xs space-y-1 text-gray-400">
+                  <p>Max risque/trade: <span className="text-white font-mono">1%</span></p>
+                  <p>Max perte journalière: <span className="text-white font-mono">4.5%</span></p>
+                  <p>Max drawdown total: <span className="text-white font-mono">8%</span></p>
+                  <p>Positions simultanées: <span className="text-white font-mono">1 max</span></p>
+                  <p>Stop scalping: <span className="text-white font-mono">3 pertes consec.</span></p>
+                  <p>Stop intraday: <span className="text-white font-mono">2 pertes consec.</span></p>
+                </div>
+              </div>
+            </div>
+
+            {/* Status & Positions */}
+            <div className="card lg:col-span-2" data-testid="live-status-panel">
+              <div className="card-header">
+                <h2 className="card-title">Positions & Risque en temps réel</h2>
+              </div>
+
+              {liveStatus?.risk_status && Object.keys(liveStatus.risk_status).length > 0 ? (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <div className="bg-gray-900/50 rounded-lg p-3 text-center">
+                      <p className="text-xs text-gray-500">Balance</p>
+                      <p className="text-lg font-mono text-white">${liveStatus.risk_status.current_balance?.toLocaleString()}</p>
+                    </div>
+                    <div className="bg-gray-900/50 rounded-lg p-3 text-center">
+                      <p className="text-xs text-gray-500">P&L Jour</p>
+                      <p className={`text-lg font-mono ${(liveStatus.risk_status.daily_pnl || 0) >= 0 ? "text-green-500" : "text-red-500"}`}>
+                        ${liveStatus.risk_status.daily_pnl?.toFixed(2)}
+                      </p>
+                    </div>
+                    <div className="bg-gray-900/50 rounded-lg p-3 text-center">
+                      <p className="text-xs text-gray-500">Perte Jour</p>
+                      <p className="text-lg font-mono text-yellow-400">
+                        {liveStatus.risk_status.daily_loss_limit_used?.toFixed(2)}% / 4.5%
+                      </p>
+                    </div>
+                    <div className="bg-gray-900/50 rounded-lg p-3 text-center">
+                      <p className="text-xs text-gray-500">Drawdown</p>
+                      <p className="text-lg font-mono text-yellow-400">
+                        {liveStatus.risk_status.total_dd_limit_used?.toFixed(2)}% / 8%
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Active Trades */}
+                  <div>
+                    <h3 className="text-sm font-semibold text-gray-400 mb-2">Trades Ouverts ({liveStatus.active_trades?.length || 0})</h3>
+                    {liveStatus.active_trades?.length > 0 ? (
+                      <div className="space-y-2">
+                        {liveStatus.active_trades.map((trade, idx) => (
+                          <div key={idx} className="bg-gray-900/50 rounded-lg p-3 flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <span className={`badge ${trade.direction === "BUY" ? "badge-profit" : "badge-loss"}`}>
+                                {trade.direction}
+                              </span>
+                              <span className="text-white font-mono">{trade.symbol}</span>
+                              <span className="text-xs badge badge-neutral">{trade.strategy}</span>
+                            </div>
+                            <div className="text-right text-xs text-gray-400">
+                              <p>Entrée: {trade.entry_price?.toFixed(5)}</p>
+                              <p>SL: {trade.stop_loss?.toFixed(5)} / TP: {trade.take_profit?.toFixed(5)}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-gray-500">Aucun trade ouvert</p>
+                    )}
+                  </div>
+
+                  {/* Recent Closed */}
+                  <div>
+                    <h3 className="text-sm font-semibold text-gray-400 mb-2">Trades Récents</h3>
+                    {liveStatus.recent_closed?.length > 0 ? (
+                      <div className="space-y-1">
+                        {liveStatus.recent_closed.map((trade, idx) => (
+                          <div key={idx} className="flex items-center justify-between text-sm p-2 rounded bg-gray-900/30">
+                            <div className="flex items-center gap-2">
+                              <span className={trade.direction === "BUY" ? "text-green-500" : "text-red-500"}>{trade.direction}</span>
+                              <span className="text-gray-400">{trade.symbol}</span>
+                              <span className="text-xs text-gray-500">{trade.strategy}</span>
+                            </div>
+                            <span className={`font-mono ${trade.pnl >= 0 ? "text-green-500" : "text-red-500"}`}>
+                              {trade.pnl >= 0 ? "+" : ""}{trade.pnl?.toFixed(2)}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-gray-500">Aucun trade fermé</p>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <Activity size={48} className="mx-auto mb-4 text-gray-600" />
+                  <h3 className="text-lg text-gray-400 mb-2">Trading Live</h3>
+                  <p className="text-sm text-gray-500 max-w-md mx-auto">
+                    Connectez-vous au FIX API pour démarrer le trading en temps réel.
+                    <br />
+                    Toutes les barrières FTMO sont actives en permanence.
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Settings Modal */}
       <SettingsModal
         isOpen={showSettings}
