@@ -764,6 +764,10 @@ function App() {
         </div>
 
         <div className="nav-actions">
+          <button onClick={() => setShowConnection(true)} className="btn btn-outline" data-testid="connection-btn">
+            <Activity size={16} className={connectionStatus === "connected" ? "text-green-500" : ""} />
+            {connectionStatus === "connected" ? "Connecté" : "Connexion"}
+          </button>
           <button onClick={generateDemoData} className="btn btn-outline" data-testid="generate-demo-btn">
             <BarChart2 size={16} />
             Démo
