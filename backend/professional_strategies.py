@@ -329,8 +329,8 @@ class ScalpingStrategy:
                 tp_pips = sl_pips * self.min_rr
                 tp_price = current_price + (tp_pips / 10000)
 
-                # Confidence based on confluence count
-                confidence = 55 + confluence * 7
+                # Confidence
+                confidence = 70
                 if 13 <= hour <= 16:
                     confidence += 5  # Overlap bonus
 
