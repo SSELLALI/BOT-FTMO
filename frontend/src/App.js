@@ -1134,6 +1134,16 @@ function App() {
         settings={settings}
         onSave={saveSettings}
       />
+
+      {/* Connection Modal */}
+      <ConnectionModal
+        isOpen={showConnection}
+        onClose={() => setShowConnection(false)}
+        onConnect={() => {
+          fetchConnectionStatus();
+          fetchDashboard();
+        }}
+      />
     </div>
   );
 }
