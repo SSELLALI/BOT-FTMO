@@ -802,6 +802,14 @@ class ProfessionalRiskManager:
         if potential_loss > remaining_daily:
             return False, "Insufficient daily risk capacity"
 
+        # BARRIER 5b: Pre-trade total drawdown buffer
+        # If current DD + potential 1% loss would breach 8%, don't trade
+        current_dd_amount = self.peak_balance - self.current_balance
+        if (current_dd_amount + potential_loss) / self.peak_balance >= self.max_total_drawdown:
+            strategy_state.is_stopped_global = True
+            strategy_state.stop_reason = "Approaching max drawdown limit"
+            return False, "BARRIER: Would exceed total drawdown limit"
+
         # BARRIER 6: Max concurrent positions
         if self.open_trade_count >= self.max_concurrent_total:
             return False, f"Max concurrent positions ({self.max_concurrent_total})"
