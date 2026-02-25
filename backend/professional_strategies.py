@@ -406,6 +406,7 @@ class IntradayStrategy:
         
         current_ema50 = ema50_h1[-1]
         current_ema200 = ema200_h1[-1]
+        prev_ema50 = ema50_h1[-2] if len(ema50_h1) > 1 else current_ema50
         
         # M15 Analysis
         m15_closes = [c["close"] for c in candles_m15[:current_index_m15 + 1]]
@@ -414,112 +415,125 @@ class IntradayStrategy:
         
         current_price = m15_closes[-1]
         
-        # Detect structure on H1 - more lenient
-        structure = TechnicalAnalysis.detect_structure(h1_highs[-20:], h1_lows[-20:])
+        # RSI for confirmation
+        rsi = TechnicalAnalysis.rsi(m15_closes, 14)
         
         # Find support/resistance on H1
-        h1_support = TechnicalAnalysis.find_swing_low(h1_lows[-50:], 20)
-        h1_resistance = TechnicalAnalysis.find_swing_high(h1_highs[-50:], 20)
-        
-        # Calculate RSI for additional confirmation
-        rsi = TechnicalAnalysis.rsi(m15_closes, 14)
+        h1_support = TechnicalAnalysis.find_swing_low(h1_lows[-30:], 15)
+        h1_resistance = TechnicalAnalysis.find_swing_high(h1_highs[-30:], 15)
         
         signal = None
         
         # ========== BUY SETUP ==========
-        if current_ema50 > current_ema200:  # H1 Uptrend
-            # More lenient structure check
-            if structure in ["BULLISH", "RANGING"]:
-                # Check pullback to EMA50 or support - wider threshold
-                near_ema50 = abs(current_price - current_ema50) / current_price < 0.004  # Within 40 pips
-                near_support = abs(current_price - h1_support) / current_price < 0.005
+        # Condition: EMA50 > EMA200 (uptrend) OR EMA50 crossing above EMA200
+        ema_bullish = current_ema50 > current_ema200
+        ema_crossing_up = prev_ema50 <= current_ema200 * 1.001 and current_ema50 > current_ema200
+        
+        if ema_bullish or ema_crossing_up:
+            # Check pullback conditions
+            # Price near EMA50 or at support
+            near_ema50 = current_price <= current_ema50 * 1.003 and current_price >= current_ema50 * 0.995
+            near_support = abs(current_price - h1_support) / current_price < 0.004
+            price_above_support = current_price > h1_support * 0.998
+            
+            # RSI not overbought
+            rsi_ok = rsi < 65
+            
+            if (near_ema50 or near_support) and price_above_support and rsi_ok:
+                # M15 confirmation
+                is_engulfing = TechnicalAnalysis.is_bullish_engulfing(candles_m15, current_index_m15)
+                is_rejection = TechnicalAnalysis.is_bullish_rejection(candles_m15[current_index_m15])
                 
-                # Price should be above support
-                above_support = current_price > h1_support
+                # Also accept a strong bullish candle
+                curr_candle = candles_m15[current_index_m15]
+                strong_bullish = curr_candle["close"] > curr_candle["open"] and \
+                                (curr_candle["close"] - curr_candle["open"]) > (curr_candle["high"] - curr_candle["low"]) * 0.6
                 
-                if (near_ema50 or near_support) and above_support:
-                    # M15 confirmation - engulfing, rejection, or RSI oversold reversal
-                    is_engulfing = TechnicalAnalysis.is_bullish_engulfing(candles_m15, current_index_m15)
-                    is_rejection = TechnicalAnalysis.is_bullish_rejection(candles_m15[current_index_m15])
-                    rsi_reversal = rsi < 40  # RSI in oversold zone
+                if is_engulfing or is_rejection or strong_bullish:
+                    # Calculate SL
+                    m15_swing_low = TechnicalAnalysis.find_swing_low(m15_lows[-8:], 4)
+                    sl_price = min(m15_swing_low, h1_support) - 0.0003
+                    sl_pips = (current_price - sl_price) * 10000
                     
-                    if is_engulfing or is_rejection or rsi_reversal:
-                        # Calculate SL below M15 swing low
-                        m15_swing_low = TechnicalAnalysis.find_swing_low(m15_lows[-10:], 5)
-                        sl_price = m15_swing_low - 0.0003  # 3 pips buffer
-                        sl_pips = (current_price - sl_price) * 10000
-                        
-                        if self.min_sl_pips <= sl_pips <= self.max_sl_pips:
-                            tp_pips = sl_pips * self.min_rr
-                            tp_price = current_price + (tp_pips / 10000)
-                            
-                            # Don't cap at resistance if it's too close
-                            if h1_resistance > current_price * 1.003:  # At least 30 pips away
-                                tp_price = min(tp_price, h1_resistance)
-                            
-                            actual_tp_pips = (tp_price - current_price) * 10000
-                            
-                            if actual_tp_pips / sl_pips >= 1.5:  # Minimum 1.5:1 RR
-                                signal = TradeSignal(
-                                    symbol=symbol,
-                                    direction="BUY",
-                                    strategy=self.name,
-                                    entry_price=current_price,
-                                    stop_loss=sl_price,
-                                    take_profit=tp_price,
-                                    sl_pips=round(sl_pips, 1),
-                                    tp_pips=round(actual_tp_pips, 1),
-                                    risk_reward=round(actual_tp_pips / sl_pips, 2),
-                                    lot_size=0,
-                                    reason=f"H1 uptrend, pullback, RSI {rsi:.0f}",
-                                    confidence=80,
-                                    session="LONDON" if hour < 13 else "NEW_YORK",
-                                    timestamp=current_candle["datetime"]
-                                )
+                    # Adjust SL if too tight or too wide
+                    if sl_pips < self.min_sl_pips:
+                        sl_pips = self.min_sl_pips
+                        sl_price = current_price - (sl_pips / 10000)
+                    elif sl_pips > self.max_sl_pips:
+                        sl_pips = self.max_sl_pips
+                        sl_price = current_price - (sl_pips / 10000)
+                    
+                    # Calculate TP (2:1 minimum)
+                    tp_pips = sl_pips * self.min_rr
+                    tp_price = current_price + (tp_pips / 10000)
+                    
+                    signal = TradeSignal(
+                        symbol=symbol,
+                        direction="BUY",
+                        strategy=self.name,
+                        entry_price=current_price,
+                        stop_loss=sl_price,
+                        take_profit=tp_price,
+                        sl_pips=round(sl_pips, 1),
+                        tp_pips=round(tp_pips, 1),
+                        risk_reward=round(tp_pips / sl_pips, 2),
+                        lot_size=0,
+                        reason=f"H1 uptrend + pullback, RSI {rsi:.0f}",
+                        confidence=80,
+                        session="LONDON" if hour < 13 else "NEW_YORK",
+                        timestamp=current_candle["datetime"]
+                    )
         
         # ========== SELL SETUP ==========
-        elif current_ema50 < current_ema200:  # H1 Downtrend
-            if structure in ["BEARISH", "RANGING"]:
-                near_ema50 = abs(current_price - current_ema50) / current_price < 0.004
-                near_resistance = abs(current_price - h1_resistance) / current_price < 0.005
-                below_resistance = current_price < h1_resistance
+        ema_bearish = current_ema50 < current_ema200
+        ema_crossing_down = prev_ema50 >= current_ema200 * 0.999 and current_ema50 < current_ema200
+        
+        if ema_bearish or ema_crossing_down:
+            near_ema50 = current_price >= current_ema50 * 0.997 and current_price <= current_ema50 * 1.005
+            near_resistance = abs(current_price - h1_resistance) / current_price < 0.004
+            price_below_resistance = current_price < h1_resistance * 1.002
+            
+            rsi_ok = rsi > 35
+            
+            if (near_ema50 or near_resistance) and price_below_resistance and rsi_ok:
+                is_engulfing = TechnicalAnalysis.is_bearish_engulfing(candles_m15, current_index_m15)
+                is_rejection = TechnicalAnalysis.is_bearish_rejection(candles_m15[current_index_m15])
                 
-                if (near_ema50 or near_resistance) and below_resistance:
-                    is_engulfing = TechnicalAnalysis.is_bearish_engulfing(candles_m15, current_index_m15)
-                    is_rejection = TechnicalAnalysis.is_bearish_rejection(candles_m15[current_index_m15])
-                    rsi_reversal = rsi > 60
+                curr_candle = candles_m15[current_index_m15]
+                strong_bearish = curr_candle["close"] < curr_candle["open"] and \
+                                (curr_candle["open"] - curr_candle["close"]) > (curr_candle["high"] - curr_candle["low"]) * 0.6
+                
+                if is_engulfing or is_rejection or strong_bearish:
+                    m15_swing_high = TechnicalAnalysis.find_swing_high(m15_highs[-8:], 4)
+                    sl_price = max(m15_swing_high, h1_resistance) + 0.0003
+                    sl_pips = (sl_price - current_price) * 10000
                     
-                    if is_engulfing or is_rejection or rsi_reversal:
-                        m15_swing_high = TechnicalAnalysis.find_swing_high(m15_highs[-10:], 5)
-                        sl_price = m15_swing_high + 0.0003
-                        sl_pips = (sl_price - current_price) * 10000
-                        
-                        if self.min_sl_pips <= sl_pips <= self.max_sl_pips:
-                            tp_pips = sl_pips * self.min_rr
-                            tp_price = current_price - (tp_pips / 10000)
-                            
-                            if h1_support < current_price * 0.997:
-                                tp_price = max(tp_price, h1_support)
-                            
-                            actual_tp_pips = (current_price - tp_price) * 10000
-                            
-                            if actual_tp_pips / sl_pips >= 1.5:
-                                signal = TradeSignal(
-                                    symbol=symbol,
-                                    direction="SELL",
-                                    strategy=self.name,
-                                    entry_price=current_price,
-                                    stop_loss=sl_price,
-                                    take_profit=tp_price,
-                                    sl_pips=round(sl_pips, 1),
-                                    tp_pips=round(actual_tp_pips, 1),
-                                    risk_reward=round(actual_tp_pips / sl_pips, 2),
-                                    lot_size=0,
-                                    reason=f"H1 downtrend, pullback, RSI {rsi:.0f}",
-                                    confidence=80,
-                                    session="LONDON" if hour < 13 else "NEW_YORK",
-                                    timestamp=current_candle["datetime"]
-                                )
+                    if sl_pips < self.min_sl_pips:
+                        sl_pips = self.min_sl_pips
+                        sl_price = current_price + (sl_pips / 10000)
+                    elif sl_pips > self.max_sl_pips:
+                        sl_pips = self.max_sl_pips
+                        sl_price = current_price + (sl_pips / 10000)
+                    
+                    tp_pips = sl_pips * self.min_rr
+                    tp_price = current_price - (tp_pips / 10000)
+                    
+                    signal = TradeSignal(
+                        symbol=symbol,
+                        direction="SELL",
+                        strategy=self.name,
+                        entry_price=current_price,
+                        stop_loss=sl_price,
+                        take_profit=tp_price,
+                        sl_pips=round(sl_pips, 1),
+                        tp_pips=round(tp_pips, 1),
+                        risk_reward=round(tp_pips / sl_pips, 2),
+                        lot_size=0,
+                        reason=f"H1 downtrend + pullback, RSI {rsi:.0f}",
+                        confidence=80,
+                        session="LONDON" if hour < 13 else "NEW_YORK",
+                        timestamp=current_candle["datetime"]
+                    )
         
         return signal
 
