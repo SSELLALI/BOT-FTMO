@@ -1467,6 +1467,12 @@ function App() {
           fetchDashboard();
         }}
       />
+
+      {/* Backtest Modal */}
+      <BacktestModal
+        isOpen={showBacktest}
+        onClose={() => setShowBacktest(false)}
+      />
     </div>
   );
 }
