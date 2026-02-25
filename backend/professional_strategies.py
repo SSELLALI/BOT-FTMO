@@ -789,18 +789,16 @@ class ProfessionalRiskManager:
         if strategy_state.daily_trades >= max_daily:
             return False, f"Max daily trades reached ({max_daily})"
 
-        # BARRIER 5: Remaining daily risk capacity (accounts for ALL open positions)
-        potential_loss = self.current_balance * self.max_risk_per_trade
+        # BARRIER 5: Remaining daily risk capacity (based on initial balance - FTMO rule)
+        potential_loss = self.current_balance * self.max_risk_per_trade * 0.95
         current_daily_loss = abs(min(0, self.daily_pnl))
-        # Total exposure = current loss + ALL open positions' risk + this new trade's risk
         total_open_exposure = (self.open_trade_count + 1) * potential_loss
-        if (current_daily_loss + total_open_exposure) / self.daily_starting_balance > self.max_daily_loss:
+        if (current_daily_loss + total_open_exposure) / self.initial_balance > self.max_daily_loss:
             return False, "Would exceed daily loss limit with open exposure"
 
-        # BARRIER 5b: Pre-trade total drawdown buffer
-        # If current DD + potential 1% loss would breach 8%, don't trade
-        current_dd_amount = self.peak_balance - self.current_balance
-        if (current_dd_amount + potential_loss) / self.peak_balance >= self.max_total_drawdown:
+        # BARRIER 5b: Pre-trade total drawdown buffer (based on initial balance)
+        total_loss_from_initial = self.initial_balance - self.current_balance
+        if total_loss_from_initial > 0 and (total_loss_from_initial + potential_loss) / self.initial_balance >= self.max_total_drawdown:
             strategy_state.is_stopped_global = True
             strategy_state.stop_reason = "Approaching max drawdown limit"
             return False, "BARRIER: Would exceed total drawdown limit"
