@@ -27,6 +27,7 @@ from ctrader_fix_client import create_ftmo_client, CTraderFIXClient, FTMO_CONFIG
 from ctrader_open_api_client import CTraderOpenAPIClient, OpenAPIConfig, OPEN_API_SETUP_GUIDE
 from backtesting import BacktestEngine, BacktestResult, backtest_engine
 from professional_backtester import ProfessionalBacktester, professional_backtester
+from live_trading_service import live_trading_service
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
