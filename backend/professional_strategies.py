@@ -317,6 +317,7 @@ class ScalpingStrategy:
 
             # Need at least 2 confluences
             if confluence >= 2:
+                reason = f"{'+'.join(reasons)}, RSI {rsi:.0f}"
                 # Dynamic SL based on ATR
                 sl_distance = max(atr * 1.2, self.min_sl_pips / 10000)
                 sl_price = current_price - sl_distance
