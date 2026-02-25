@@ -1004,6 +1004,115 @@ async def compare_strategies():
     return {"comparison": comparison}
 
 
+# ---------- Professional Backtest Endpoints ----------
+
+class ProfessionalBacktestRequest(BaseModel):
+    symbol: str = "EURUSD"
+    strategy: str = "BOTH"  # SCALPING, INTRADAY, or BOTH
+    days: int = 180
+    initial_balance: float = 10000
+
+
+@api_router.post("/backtest/professional")
+async def run_professional_backtest(request: ProfessionalBacktestRequest):
+    """
+    Run professional backtest with precise FTMO-compliant strategies
+    
+    Strategies:
+    - SCALPING: Breakout + Pullback on M5 (5-15 pips)
+    - INTRADAY: Trend Continuation H1/M15 (30-80 pips)
+    
+    Risk Rules:
+    - 1% max per trade
+    - 4.5% max daily loss
+    - 8% max total drawdown
+    """
+    try:
+        logger.info(f"Starting professional backtest: {request.strategy} on {request.symbol} for {request.days} days")
+        
+        # Create backtester with specified balance
+        backtester = ProfessionalBacktester(initial_balance=request.initial_balance)
+        
+        # Run backtest
+        report = backtester.run_backtest(
+            symbol=request.symbol,
+            strategy=request.strategy,
+            days=request.days
+        )
+        
+        # Convert to dict for storage
+        result_dict = {
+            "id": str(uuid.uuid4()),
+            "type": "professional",
+            "symbol": report.symbol,
+            "strategy": report.strategy,
+            "start_date": report.start_date,
+            "end_date": report.end_date,
+            "initial_balance": report.initial_balance,
+            "final_balance": report.final_balance,
+            "total_return": report.total_return,
+            "total_return_percent": report.total_return_percent,
+            "max_drawdown": report.max_drawdown,
+            "max_drawdown_percent": report.max_drawdown_percent,
+            "total_trades": report.total_trades,
+            "winning_trades": report.winning_trades,
+            "losing_trades": report.losing_trades,
+            "win_rate": report.win_rate,
+            "profit_factor": report.profit_factor,
+            "gross_profit": report.gross_profit,
+            "gross_loss": report.gross_loss,
+            "average_win": report.average_win,
+            "average_loss": report.average_loss,
+            "largest_win": report.largest_win,
+            "largest_loss": report.largest_loss,
+            "avg_risk_reward": report.avg_risk_reward,
+            "sharpe_ratio": report.sharpe_ratio,
+            "max_consecutive_wins": report.max_consecutive_wins,
+            "max_consecutive_losses": report.max_consecutive_losses,
+            "max_daily_loss": report.max_daily_loss,
+            "max_daily_loss_percent": report.max_daily_loss_percent,
+            "ftmo_daily_limit_breached": bool(report.ftmo_daily_limit_breached),
+            "ftmo_total_limit_breached": bool(report.ftmo_total_limit_breached),
+            "days_stopped_trading": report.days_stopped_trading,
+            "london_trades": report.london_trades,
+            "london_win_rate": report.london_win_rate,
+            "ny_trades": report.ny_trades,
+            "ny_win_rate": report.ny_win_rate,
+            "equity_curve": report.equity_curve,
+            "trades": report.trades,
+            "daily_returns": report.daily_returns,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+        # Store in database
+        await db.backtests.insert_one(result_dict)
+        result_dict.pop("_id", None)
+        
+        # Create alert
+        status = "SUCCESS" if report.total_return > 0 else "WARNING"
+        compliance = "✓" if not report.ftmo_daily_limit_breached and not report.ftmo_total_limit_breached else "✗"
+        
+        await create_alert(
+            status,
+            "Backtest Pro Terminé",
+            f"{report.strategy}: {report.total_return_percent:+.2f}% | WR: {report.win_rate}% | FTMO: {compliance}"
+        )
+        
+        return {
+            "success": True,
+            "result": result_dict
+        }
+        
+    except Exception as e:
+        logger.error(f"Professional backtest error: {e}")
+        import traceback
+        traceback.print_exc()
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
+
 # ==================== APP SETUP ====================
 
 # Include router
