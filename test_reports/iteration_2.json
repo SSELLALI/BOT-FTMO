@@ -1,0 +1,113 @@
+{
+  "summary": "Testing iteration 2 - FTMO Professional Backtest and Strategy Compliance. All core APIs working. INTRADAY strategy is generally FTMO compliant. SCALPING and BOTH strategies show intermittent daily loss limit breaches (due to random market data). Frontend in French works correctly.",
+  
+  "backend_issues": {
+    "critical": [
+      {
+        "endpoint": "POST /api/backtest/professional (strategy=SCALPING)",
+        "issue": "Intermittent FTMO daily loss limit breach (4.63% vs 4.5% limit in some runs)",
+        "priority": "HIGH",
+        "root_cause": "Random market data generation can create scenarios where multiple concurrent scalping trades hit SL simultaneously, exceeding daily loss threshold before safety close triggers",
+        "recommendation": "Reduce concurrent positions for SCALPING or lower safety close threshold from 3.5% to 3.0%"
+      },
+      {
+        "endpoint": "POST /api/backtest/professional (strategy=BOTH)",
+        "issue": "Consistent FTMO daily loss limit breach (5.23-6.79% in tests)",
+        "priority": "HIGH",
+        "root_cause": "When both strategies run together, total exposure can exceed safe limits. With 2 scalping + 1 intraday positions (3% total exposure at 1% each) hitting SL = 3% loss + existing daily losses can breach 4.5%",
+        "recommendation": "Add combined exposure check across both strategies or reduce max_concurrent_total from 2 to 1"
+      }
+    ],
+    "minor": []
+  },
+  
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {
+        "screen": "Console warnings",
+        "issues": ["React hydration warnings about <span> inside <tbody>/<tr> - cosmetic, doesn't affect functionality"]
+      }
+    ]
+  },
+  
+  "test_report_links": [
+    "/app/backend/tests/test_ftmo_backtest.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  
+  "action_items": [
+    "CRITICAL: Fix daily loss limit breaches in SCALPING strategy - lower safety close threshold from 3.5% to 3.0%",
+    "CRITICAL: Fix daily loss limit breaches in BOTH strategy - add cross-strategy exposure check or reduce max concurrent positions",
+    "LOW: Fix React hydration warnings (span inside tbody/tr) in TradeRow component"
+  ],
+  
+  "critical_code_review_comments": [
+    "professional_backtester.py line 444: Safety close at 3.5% is too late - market can gap and breach 4.5% before safety trigger",
+    "professional_strategies.py line 724: max_concurrent_total=2 allows both strategies to have positions simultaneously, increasing exposure risk",
+    "The force-close mechanism at 3.5% daily / 6.5% total is insufficient buffer given 1% risk per trade"
+  ],
+  
+  "updated_files": ["/app/backend/tests/test_ftmo_backtest.py"],
+  
+  "success_rate": {
+    "backend": "81% (17/21 tests passed)",
+    "frontend": "100% (all UI flows working)"
+  },
+  
+  "test_credentials": null,
+  
+  "seed_data_creation": "Demo trades were generated using /api/demo/generate-trades endpoint",
+  
+  "retest_needed": true,
+  
+  "should_main_agent_self_test": false,
+  
+  "context_for_next_testing_agent": "SCALPING and BOTH strategies intermittently breach FTMO daily loss limits due to concurrent position exposure. INTRADAY strategy is generally compliant. Market data is MOCKED (random OHLC generation), causing variability in test results. Key fix needed: reduce safety close thresholds and/or limit concurrent positions.",
+  
+  "rca_of_the_issue": {
+    "problem": "SCALPING and BOTH strategies breach 4.5% daily loss limit",
+    "root_cause": "The safety close mechanism triggers at 3.5% daily loss, but with 2 concurrent positions each risking 1%, a simultaneous SL hit adds 2% loss before safety close can execute, totaling 5.5% potential daily loss",
+    "reproduction_steps": [
+      "Run POST /api/backtest/professional with strategy=SCALPING or BOTH",
+      "Observe max_daily_loss_percent occasionally exceeds 4.5%",
+      "Check ftmo_daily_limit_breached flag - sometimes True"
+    ],
+    "suggested_fix": [
+      "In professional_backtester.py line 444: Change safety threshold from 0.035 to 0.025 (2.5% daily)",
+      "In professional_strategies.py ProfessionalRiskManager: Add pre-trade check for total open position exposure",
+      "OR reduce max_concurrent_total from 2 to 1 for BOTH strategy"
+    ]
+  },
+  
+  "passed_tests": [
+    "API health check",
+    "Risk status shows 8% total loss limit (not 10%)",
+    "Dashboard endpoint returns valid data",
+    "INTRADAY strategy FTMO compliant",
+    "INTRADAY max daily loss under 4.5%", 
+    "INTRADAY max drawdown under 8%",
+    "INTRADAY generates trades with required fields",
+    "SCALPING max drawdown under 8%",
+    "SCALPING generates trades with required fields",
+    "BOTH max drawdown under 8%",
+    "BOTH generates trades with required fields",
+    "Backtest report has all required metrics",
+    "Equity curve data valid",
+    "Daily returns data valid",
+    "Frontend loads in French",
+    "Backtest modal works",
+    "Tab navigation works",
+    "Settings modal works"
+  ],
+  
+  "failed_tests": [
+    "SCALPING FTMO daily limit compliance (intermittent)",
+    "SCALPING max daily loss under 4.5% (intermittent)",
+    "BOTH FTMO daily limit compliance (consistent failure)",
+    "BOTH max daily loss under 4.5% (consistent failure)"
+  ],
+  
+  "mocked_data_note": "Market data is generated using MultiTimeframeDataGenerator with random OHLC - not real market data. Results vary between runs due to randomness."
+}
