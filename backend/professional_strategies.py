@@ -748,26 +748,28 @@ class ProfessionalRiskManager:
     def can_open_trade(self, signal: TradeSignal, strategy_state: StrategyState) -> Tuple[bool, str]:
         """
         SAFETY BARRIER CHECK - All rules enforced here
-        Returns (can_trade, reason)
+        Uses INITIAL BALANCE as reference for all % calculations (FTMO rule)
         """
-        # BARRIER 1: Global stop (8% total drawdown)
+        # BARRIER 1: Global stop (8% total drawdown from initial balance)
         if strategy_state.is_stopped_global:
             return False, "BARRIER: Global stop (8% max drawdown reached)"
 
-        total_dd = (self.peak_balance - self.current_balance) / self.peak_balance if self.peak_balance > 0 else 0
-        if total_dd >= self.max_total_drawdown:
+        total_dd_amount = self.initial_balance - self.current_balance
+        total_dd_pct = total_dd_amount / self.initial_balance if total_dd_amount > 0 else 0
+        if total_dd_pct >= self.max_total_drawdown:
             strategy_state.is_stopped_global = True
-            strategy_state.stop_reason = f"BARRIER: Max drawdown {total_dd * 100:.2f}% >= {self.max_total_drawdown * 100}%"
+            strategy_state.stop_reason = f"BARRIER: Max drawdown {total_dd_pct * 100:.2f}%"
             return False, strategy_state.stop_reason
 
-        # BARRIER 2: Daily stop (4.5% daily loss)
+        # BARRIER 2: Daily stop (4.5% daily loss from initial balance)
         if strategy_state.is_stopped_today:
             return False, f"BARRIER: Daily stop - {strategy_state.stop_reason}"
 
-        daily_loss_pct = abs(self.daily_pnl) / self.daily_starting_balance if self.daily_pnl < 0 and self.daily_starting_balance > 0 else 0
+        daily_loss_abs = abs(self.daily_pnl) if self.daily_pnl < 0 else 0
+        daily_loss_pct = daily_loss_abs / self.initial_balance
         if daily_loss_pct >= self.max_daily_loss:
             strategy_state.is_stopped_today = True
-            strategy_state.stop_reason = f"Daily loss {daily_loss_pct * 100:.2f}% >= {self.max_daily_loss * 100}%"
+            strategy_state.stop_reason = f"Daily loss {daily_loss_pct * 100:.2f}%"
             return False, f"BARRIER: {strategy_state.stop_reason}"
 
         # BARRIER 3: Consecutive losses
