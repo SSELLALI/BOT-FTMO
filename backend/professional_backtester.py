@@ -293,6 +293,7 @@ class ProfessionalBacktester:
     ) -> BacktestReport:
         """
         Run complete backtest with multi-timeframe data
+        Optimized to use M15 instead of M5 for faster execution
         """
         self.reset()
         
@@ -302,25 +303,24 @@ class ProfessionalBacktester:
         
         logger.info(f"Generating multi-timeframe data for {symbol}...")
         
-        m5_candles = MultiTimeframeDataGenerator.generate_m5_data(symbol, start_date, end_date)
+        # Skip M5 for performance - use M15 for both strategies
         m15_candles = MultiTimeframeDataGenerator.generate_m15_data(symbol, start_date, end_date)
         h1_candles = MultiTimeframeDataGenerator.generate_h1_data(symbol, start_date, end_date)
         
-        logger.info(f"Data generated: M5={len(m5_candles)}, M15={len(m15_candles)}, H1={len(h1_candles)}")
+        logger.info(f"Data generated: M15={len(m15_candles)}, H1={len(h1_candles)}")
         
         # Create time index mapping
-        m15_by_time = {c["datetime"]: i for i, c in enumerate(m15_candles)}
         h1_by_time = {c["datetime"]: i for i, c in enumerate(h1_candles)}
         
         # Track current day for daily reset
         current_day = None
         
-        # Main backtest loop (iterate M5 for scalping precision)
-        for m5_idx, m5_candle in enumerate(m5_candles):
-            if m5_idx < 100:  # Need enough data for indicators
+        # Main backtest loop using M15 candles
+        for m15_idx, m15_candle in enumerate(m15_candles):
+            if m15_idx < 50:  # Need enough data for indicators
                 continue
             
-            candle_time = m5_candle["datetime"]
+            candle_time = m15_candle["datetime"]
             candle_day = candle_time.strftime("%Y-%m-%d")
             
             # Daily reset
@@ -335,25 +335,18 @@ class ProfessionalBacktester:
                 current_day = candle_day
             
             # Check open trades for exit
-            self._check_exits(m5_candle)
+            self._check_exits(m15_candle)
             
-            # Find corresponding M15 and H1 candles
-            # Round down to nearest M15/H1
-            m15_time = candle_time.replace(
-                minute=(candle_time.minute // 15) * 15,
-                second=0, microsecond=0
-            )
+            # Find corresponding H1 candle
             h1_time = candle_time.replace(minute=0, second=0, microsecond=0)
-            
-            m15_idx = m15_by_time.get(m15_time, -1)
             h1_idx = h1_by_time.get(h1_time, -1)
             
-            # === SCALPING STRATEGY (M5) ===
-            if strategy in ["SCALPING", "BOTH"] and m5_idx >= 50:
+            # === SCALPING STRATEGY (using M15 data) ===
+            if strategy in ["SCALPING", "BOTH"]:
                 if not self.risk_manager.scalping_state.is_stopped_today and \
                    not self.risk_manager.scalping_state.is_stopped_global:
                     
-                    signal = self.scalping.analyze(m5_candles, m5_idx, symbol)
+                    signal = self.scalping.analyze(m15_candles, m15_idx, symbol)
                     
                     if signal:
                         can_trade, reason = self.risk_manager.can_open_trade(
@@ -361,12 +354,11 @@ class ProfessionalBacktester:
                         )
                         
                         if can_trade:
-                            self._open_trade(signal, m5_candle)
+                            self._open_trade(signal, m15_candle)
             
             # === INTRADAY STRATEGY (H1 + M15) ===
-            # Only check at M15 boundaries to avoid over-trading
-            if strategy in ["INTRADAY", "BOTH"] and candle_time.minute % 15 == 0:
-                if m15_idx >= 50 and h1_idx >= 200:
+            if strategy in ["INTRADAY", "BOTH"]:
+                if h1_idx >= 200:
                     if not self.risk_manager.intraday_state.is_stopped_today and \
                        not self.risk_manager.intraday_state.is_stopped_global:
                         
@@ -381,10 +373,10 @@ class ProfessionalBacktester:
                             )
                             
                             if can_trade:
-                                self._open_trade(signal, m5_candle)
+                                self._open_trade(signal, m15_candle)
             
             # Record equity periodically
-            if m5_idx % 100 == 0:
+            if m15_idx % 50 == 0:
                 self.equity_curve.append({
                     "timestamp": candle_time.isoformat(),
                     "equity": round(self.risk_manager.current_balance, 2),
@@ -392,8 +384,8 @@ class ProfessionalBacktester:
                 })
         
         # Close any remaining trades
-        if m5_candles:
-            last_candle = m5_candles[-1]
+        if m15_candles:
+            last_candle = m15_candles[-1]
             for signal, _ in self.open_trades[:]:
                 self._close_trade(signal, last_candle["close"], last_candle["datetime"], "EOD")
         
