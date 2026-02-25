@@ -419,11 +419,7 @@ class ScalpingStrategy:
                 tp_pips = sl_pips * self.min_rr
                 tp_price = current_price - (tp_pips / 10000)
 
-                confidence = 65
-                if momentum < -0.03:
-                    confidence += 5
-                if 40 <= rsi <= 60:
-                    confidence += 5
+                confidence = 55 + confluence * 7
                 if 13 <= hour <= 16:
                     confidence += 5
 
