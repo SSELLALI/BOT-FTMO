@@ -297,9 +297,10 @@ class ProfessionalBacktester:
         """
         self.reset()
         
-        # Generate data
-        end_date = datetime.now(timezone.utc)
+        # Generate data - round to hour boundary for alignment
+        end_date = datetime.now(timezone.utc).replace(minute=0, second=0, microsecond=0)
         start_date = end_date - timedelta(days=days)
+        start_date = start_date.replace(minute=0, second=0, microsecond=0)
         
         logger.info(f"Generating multi-timeframe data for {symbol}...")
         
