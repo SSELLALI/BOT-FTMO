@@ -941,6 +941,9 @@ async def run_backtest(request: BacktestRequest):
         
         await db.backtests.insert_one(result_dict)
         
+        # Remove MongoDB _id for response
+        result_dict.pop("_id", None)
+        
         # Create alert
         await create_alert(
             "SUCCESS" if result.total_return > 0 else "WARNING",
