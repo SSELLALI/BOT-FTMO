@@ -366,7 +366,7 @@ class BacktestEngine:
         current_price: float
     ) -> Optional[Tuple[str, str]]:
         """
-        Check for intraday entry signal
+        Check for intraday entry signal - Optimized version
         Returns (direction, reason) or None
         """
         if not indicators or not prev_indicators:
@@ -380,31 +380,30 @@ class BacktestEngine:
         prev_macd_signal = prev_indicators.get("macd_signal", 0)
         macd_hist = indicators.get("macd_histogram", 0)
         prev_hist = prev_indicators.get("macd_histogram", 0)
+        rsi = indicators.get("rsi", 50)
         
         dist_to_support = current_price - support
         dist_to_resistance = resistance - current_price
         range_size = resistance - support
         
-        threshold = range_size * 0.2 if range_size > 0 else 0.0015  # 20% of range
+        if range_size <= 0:
+            return None
+            
+        threshold = range_size * 0.15  # 15% of range - tighter
         
-        # BUY: Near support + MACD bullish crossover or histogram turning positive
-        if dist_to_support < threshold:
-            if (prev_macd <= prev_macd_signal and macd > macd_signal) or \
-               (prev_hist < 0 and macd_hist > 0):
-                return ("BUY", f"Near support ({support:.5f}) + MACD bullish")
+        # BUY: At support + MACD bullish + RSI not overbought
+        if dist_to_support < threshold and rsi < 60:
+            if prev_macd <= prev_macd_signal and macd > macd_signal:
+                return ("BUY", f"Support bounce ({support:.5f}) + MACD cross")
+            elif prev_hist <= 0 and macd_hist > 0:
+                return ("BUY", f"Support ({support:.5f}) + MACD histogram flip")
         
-        # SELL: Near resistance + MACD bearish crossover or histogram turning negative
-        if dist_to_resistance < threshold:
-            if (prev_macd >= prev_macd_signal and macd < macd_signal) or \
-               (prev_hist > 0 and macd_hist < 0):
-                return ("SELL", f"Near resistance ({resistance:.5f}) + MACD bearish")
-        
-        # Alternative: Strong MACD divergence anywhere
-        if abs(macd_hist) > abs(prev_hist) * 1.5:
-            if macd_hist > 0 and prev_hist > 0 and macd > 0:
-                return ("BUY", f"Strong MACD bullish momentum")
-            elif macd_hist < 0 and prev_hist < 0 and macd < 0:
-                return ("SELL", f"Strong MACD bearish momentum")
+        # SELL: At resistance + MACD bearish + RSI not oversold
+        if dist_to_resistance < threshold and rsi > 40:
+            if prev_macd >= prev_macd_signal and macd < macd_signal:
+                return ("SELL", f"Resistance rejection ({resistance:.5f}) + MACD cross")
+            elif prev_hist >= 0 and macd_hist < 0:
+                return ("SELL", f"Resistance ({resistance:.5f}) + MACD histogram flip")
         
         return None
     
