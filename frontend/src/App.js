@@ -610,6 +610,16 @@ function App() {
     }
   }, []);
 
+  // Fetch connection status
+  const fetchConnectionStatus = useCallback(async () => {
+    try {
+      const response = await axios.get(`${API}/connection/status`);
+      setConnectionStatus(response.data.status);
+    } catch (error) {
+      console.error("Connection status error:", error);
+    }
+  }, []);
+
   // Initial load
   useEffect(() => {
     const loadData = async () => {
