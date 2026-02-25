@@ -1112,16 +1112,7 @@ function App() {
     toast.success("Données actualisées");
   };
 
-  // Live trading functions
-  const fetchLiveStatus = useCallback(async () => {
-    try {
-      const response = await axios.get(`${API}/live/status`);
-      setLiveStatus(response.data);
-    } catch (error) {
-      console.error("Live status error:", error);
-    }
-  }, []);
-
+  // Live trading actions
   const liveConnect = async () => {
     setLiveConnecting(true);
     try {
