@@ -1,0 +1,88 @@
+{
+  "summary": "Iteration 3 testing completed - All FTMO compliance issues from iteration 2 have been fixed. All 28 backend tests pass. All 3 strategies (SCALPING, INTRADAY, BOTH) are now FTMO compliant with max_daily_loss < 4.5% and max_drawdown < 8%. New live trading endpoints work correctly. Frontend displays properly in French with correct FTMO risk barriers.",
+
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {
+        "screen": "Console warnings",
+        "issues": ["React hydration warning: <span> inside <tbody>/<tr> - cosmetic, doesn't affect functionality"]
+      }
+    ]
+  },
+
+  "test_report_links": [
+    "/app/backend/tests/test_ftmo_backtest.py",
+    "/app/backend/tests/test_live_trading.py",
+    "/app/test_reports/pytest/pytest_results_iteration3_final.xml"
+  ],
+
+  "action_items": [
+    "LOW: Fix React hydration warnings (span inside tbody/tr) in TradeRow component - cosmetic issue only"
+  ],
+
+  "critical_code_review_comments": [],
+
+  "updated_files": ["/app/backend/tests/test_live_trading.py"],
+
+  "success_rate": {
+    "backend": "100% (28/28 tests passed)",
+    "frontend": "100% (all UI flows working)"
+  },
+
+  "test_credentials": null,
+
+  "seed_data_creation": "Demo trades generated via /api/demo/generate-trades endpoint",
+
+  "retest_needed": false,
+
+  "should_main_agent_self_test": false,
+
+  "context_for_next_testing_agent": "All FTMO compliance issues fixed. Key fixes from main agent: (1) Fixed drawdown calculation to use INITIAL balance (FTMO rule), (2) Added hard cap on daily PnL, (3) Added pre-emptive safety close at 3%/6%, (4) Limited concurrent positions to 1. Live trading endpoints work correctly but FIX connection will fail in preview environment (expected). Market data is MOCKED (random OHLC generation).",
+
+  "passed_tests": [
+    "API health check",
+    "Risk status shows 8% total loss limit",
+    "Dashboard endpoint returns valid data",
+    "SCALPING FTMO compliant (daily_breached=False, total_breached=False)",
+    "SCALPING max daily loss under 4.5%",
+    "SCALPING max drawdown under 8%",
+    "SCALPING generates trades with required fields",
+    "INTRADAY FTMO compliant",
+    "INTRADAY max daily loss under 4.5%",
+    "INTRADAY max drawdown under 8%",
+    "INTRADAY generates trades with required fields",
+    "BOTH strategies FTMO compliant",
+    "BOTH max daily loss under 4.5%",
+    "BOTH max drawdown under 8%",
+    "BOTH includes trades from both strategies",
+    "Backtest report has all required metrics",
+    "Equity curve data valid",
+    "Daily returns data valid",
+    "Live status returns valid response",
+    "Live connect attempts FIX connection (fails as expected in preview)",
+    "Live start requires connection",
+    "Live stop returns success",
+    "Frontend Dashboard tab loads correctly",
+    "Frontend Trading Live tab displays correctly",
+    "Frontend Backtest modal opens and runs successfully",
+    "French UI language working",
+    "FTMO risk widget displays correct limits"
+  ],
+
+  "failed_tests": [],
+
+  "mocked_data_note": "Market data is generated using MultiTimeframeDataGenerator with random OHLC - not real market data. FIX connection will fail in preview environment (external connections blocked) - this is expected behavior.",
+
+  "verified_fixes_from_previous_iteration": {
+    "issue": "SCALPING and BOTH strategies were intermittently breaching FTMO daily loss limits",
+    "fix_applied": "Main agent implemented: (1) pre-emptive safety close at 3%/6%, (2) hard cap on daily PnL, (3) limited concurrent positions to 1, (4) drawdown calculation using INITIAL balance",
+    "verification": "All 7 FTMO compliance tests now pass consistently across multiple runs"
+  }
+}
