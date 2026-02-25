@@ -1101,6 +1101,71 @@ function App() {
     toast.success("Données actualisées");
   };
 
+  // Live trading functions
+  const fetchLiveStatus = useCallback(async () => {
+    try {
+      const response = await axios.get(`${API}/live/status`);
+      setLiveStatus(response.data);
+    } catch (error) {
+      console.error("Live status error:", error);
+    }
+  }, []);
+
+  const liveConnect = async () => {
+    setLiveConnecting(true);
+    try {
+      const response = await axios.post(`${API}/live/connect`);
+      if (response.data.success) {
+        toast.success("Connecté au FIX API!");
+        fetchLiveStatus();
+      } else {
+        toast.error(response.data.error || "Erreur de connexion");
+      }
+    } catch (error) {
+      toast.error("Erreur de connexion FIX");
+    } finally {
+      setLiveConnecting(false);
+    }
+  };
+
+  const liveDisconnect = async () => {
+    try {
+      await axios.post(`${API}/live/disconnect`);
+      toast.info("Déconnecté du FIX");
+      fetchLiveStatus();
+    } catch (error) {
+      toast.error("Erreur de déconnexion");
+    }
+  };
+
+  const liveStart = async (strategies) => {
+    try {
+      const response = await axios.post(`${API}/live/start`, {
+        initial_balance: 10000,
+        symbols: ["EURUSD"],
+        strategies
+      });
+      if (response.data.success) {
+        toast.success("Trading live démarré!");
+        fetchLiveStatus();
+      } else {
+        toast.error(response.data.error || "Erreur");
+      }
+    } catch (error) {
+      toast.error("Erreur au démarrage");
+    }
+  };
+
+  const liveStop = async () => {
+    try {
+      await axios.post(`${API}/live/stop`);
+      toast.info("Trading live arrêté");
+      fetchLiveStatus();
+    } catch (error) {
+      toast.error("Erreur à l'arrêt");
+    }
+  };
+
   if (loading && !dashboard) {
     return (
       <div className="min-h-screen flex items-center justify-center" data-testid="loading-screen">
