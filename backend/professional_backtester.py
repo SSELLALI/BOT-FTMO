@@ -310,8 +310,13 @@ class ProfessionalBacktester:
         
         logger.info(f"Data generated: M15={len(m15_candles)}, H1={len(h1_candles)}")
         
-        # Create time index mapping
-        h1_by_time = {c["datetime"]: i for i, c in enumerate(h1_candles)}
+        # Create time index mapping for H1 candles
+        h1_by_time = {}
+        for i, c in enumerate(h1_candles):
+            # Map to the hour (rounded down)
+            t = c["datetime"]
+            key = t.replace(minute=0, second=0, microsecond=0)
+            h1_by_time[key] = i
         
         # Track current day for daily reset
         current_day = None
