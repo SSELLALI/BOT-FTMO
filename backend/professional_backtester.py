@@ -478,11 +478,12 @@ class ProfessionalBacktester:
         # Record with risk manager
         self.risk_manager.record_trade_close(signal, pnl)
         
-        # Update max drawdown
+        # Update max drawdown (from INITIAL balance, FTMO rule)
         if self.risk_manager.current_balance > self.peak_balance:
             self.peak_balance = self.risk_manager.current_balance
         
-        current_dd = (self.peak_balance - self.risk_manager.current_balance) / self.peak_balance
+        # FTMO drawdown = loss from initial balance (not from peak)
+        current_dd = max(0, (self.initial_balance - self.risk_manager.current_balance) / self.initial_balance)
         if current_dd > self.max_drawdown:
             self.max_drawdown = current_dd
         
