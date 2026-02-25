@@ -851,6 +851,59 @@ async def toggle_real_data():
     }
 
 
+# ==================== LIVE TRADING ENDPOINTS ====================
+
+class LiveTradingConfig(BaseModel):
+    initial_balance: float = 10000.0
+    symbols: List[str] = ["EURUSD"]
+    strategies: dict = {"scalping": True, "intraday": True}
+
+
+@api_router.post("/live/connect")
+async def live_connect():
+    """Connect to cTrader FIX API for live trading"""
+    result = live_trading_service.connect()
+    if result["success"]:
+        await create_alert("SUCCESS", "FIX Connect", result.get("message", "Connected"))
+    return result
+
+
+@api_router.post("/live/disconnect")
+async def live_disconnect():
+    """Disconnect from live trading"""
+    live_trading_service.disconnect()
+    await create_alert("INFO", "FIX Disconnect", "Disconnected from live trading")
+    return {"success": True, "message": "Disconnected"}
+
+
+@api_router.post("/live/start")
+async def live_start(config: LiveTradingConfig):
+    """Start live trading with configured strategies"""
+    live_trading_service.configure(
+        initial_balance=config.initial_balance,
+        symbols=config.symbols
+    )
+    result = live_trading_service.start_trading(config.strategies)
+    if result["success"]:
+        await create_alert("SUCCESS", "Trading Started",
+            f"Live trading active: {config.strategies}")
+    return result
+
+
+@api_router.post("/live/stop")
+async def live_stop():
+    """Stop live trading (positions remain open)"""
+    result = live_trading_service.stop_trading()
+    await create_alert("INFO", "Trading Stopped", "Live trading stopped")
+    return result
+
+
+@api_router.get("/live/status")
+async def live_status():
+    """Get live trading status, positions, and risk metrics"""
+    return live_trading_service.get_status()
+
+
 @api_router.post("/market/refresh-real-prices")
 async def refresh_real_prices():
     """Manually refresh real market prices"""
