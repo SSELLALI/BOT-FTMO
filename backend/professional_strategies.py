@@ -120,9 +120,9 @@ class TechnicalAnalysis:
         for i in range(min(d_period, len(closes) - k_period + 1)):
             idx = -(i + 1)
             h = max(highs[idx - k_period + 1:idx + 1]) if abs(idx) + k_period <= len(highs) else highest
-            l = min(lows[idx - k_period + 1:idx + 1]) if abs(idx) + k_period <= len(lows) else lowest
-            if h != l:
-                k_values.append(((closes[idx] - l) / (h - l)) * 100)
+            lo = min(lows[idx - k_period + 1:idx + 1]) if abs(idx) + k_period <= len(lows) else lowest
+            if h != lo:
+                k_values.append(((closes[idx] - lo) / (h - lo)) * 100)
         d = np.mean(k_values) if k_values else k
         return k, d
 
@@ -816,8 +816,6 @@ class ProfessionalRiskManager:
         if self.open_trade_count >= self.max_concurrent_total:
             return False, f"Max concurrent positions ({self.max_concurrent_total})"
 
-        # Count by strategy
-        scalp_open = sum(1 for s, d in self.active_positions.items() if True)  # simplified
         if signal.strategy == "SCALPING" and self.open_trade_count >= self.max_concurrent_scalping:
             return False, "Max concurrent scalping positions"
         if signal.strategy == "INTRADAY" and self.open_trade_count >= self.max_concurrent_intraday:
