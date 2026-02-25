@@ -414,42 +414,52 @@ class IntradayStrategy:
         
         current_price = m15_closes[-1]
         
-        # Detect structure on H1
+        # Detect structure on H1 - more lenient
         structure = TechnicalAnalysis.detect_structure(h1_highs[-20:], h1_lows[-20:])
         
         # Find support/resistance on H1
         h1_support = TechnicalAnalysis.find_swing_low(h1_lows[-50:], 20)
         h1_resistance = TechnicalAnalysis.find_swing_high(h1_highs[-50:], 20)
         
+        # Calculate RSI for additional confirmation
+        rsi = TechnicalAnalysis.rsi(m15_closes, 14)
+        
         signal = None
         
         # ========== BUY SETUP ==========
         if current_ema50 > current_ema200:  # H1 Uptrend
-            if structure == "BULLISH":  # Clear bullish structure
-                # Check pullback to EMA50 or support
-                near_ema50 = abs(current_price - current_ema50) / current_price < 0.002  # Within 20 pips
-                near_support = abs(current_price - h1_support) / current_price < 0.003  # Within 30 pips
+            # More lenient structure check
+            if structure in ["BULLISH", "RANGING"]:
+                # Check pullback to EMA50 or support - wider threshold
+                near_ema50 = abs(current_price - current_ema50) / current_price < 0.004  # Within 40 pips
+                near_support = abs(current_price - h1_support) / current_price < 0.005
                 
-                if near_ema50 or near_support:
-                    # M15 confirmation
+                # Price should be above support
+                above_support = current_price > h1_support
+                
+                if (near_ema50 or near_support) and above_support:
+                    # M15 confirmation - engulfing, rejection, or RSI oversold reversal
                     is_engulfing = TechnicalAnalysis.is_bullish_engulfing(candles_m15, current_index_m15)
                     is_rejection = TechnicalAnalysis.is_bullish_rejection(candles_m15[current_index_m15])
+                    rsi_reversal = rsi < 40  # RSI in oversold zone
                     
-                    if is_engulfing or is_rejection:
+                    if is_engulfing or is_rejection or rsi_reversal:
                         # Calculate SL below M15 swing low
                         m15_swing_low = TechnicalAnalysis.find_swing_low(m15_lows[-10:], 5)
-                        sl_price = m15_swing_low - 0.0002  # 2 pips buffer
+                        sl_price = m15_swing_low - 0.0003  # 3 pips buffer
                         sl_pips = (current_price - sl_price) * 10000
                         
                         if self.min_sl_pips <= sl_pips <= self.max_sl_pips:
                             tp_pips = sl_pips * self.min_rr
-                            tp_price = min(
-                                current_price + (tp_pips / 10000),
-                                h1_resistance  # Cap at resistance
-                            )
+                            tp_price = current_price + (tp_pips / 10000)
+                            
+                            # Don't cap at resistance if it's too close
+                            if h1_resistance > current_price * 1.003:  # At least 30 pips away
+                                tp_price = min(tp_price, h1_resistance)
+                            
                             actual_tp_pips = (tp_price - current_price) * 10000
                             
-                            if actual_tp_pips / sl_pips >= self.min_rr:
+                            if actual_tp_pips / sl_pips >= 1.5:  # Minimum 1.5:1 RR
                                 signal = TradeSignal(
                                     symbol=symbol,
                                     direction="BUY",
@@ -461,7 +471,7 @@ class IntradayStrategy:
                                     tp_pips=round(actual_tp_pips, 1),
                                     risk_reward=round(actual_tp_pips / sl_pips, 2),
                                     lot_size=0,
-                                    reason=f"H1 uptrend, pullback + M15 confirmation",
+                                    reason=f"H1 uptrend, pullback, RSI {rsi:.0f}",
                                     confidence=80,
                                     session="LONDON" if hour < 13 else "NEW_YORK",
                                     timestamp=current_candle["datetime"]
@@ -469,28 +479,31 @@ class IntradayStrategy:
         
         # ========== SELL SETUP ==========
         elif current_ema50 < current_ema200:  # H1 Downtrend
-            if structure == "BEARISH":
-                near_ema50 = abs(current_price - current_ema50) / current_price < 0.002
-                near_resistance = abs(current_price - h1_resistance) / current_price < 0.003
+            if structure in ["BEARISH", "RANGING"]:
+                near_ema50 = abs(current_price - current_ema50) / current_price < 0.004
+                near_resistance = abs(current_price - h1_resistance) / current_price < 0.005
+                below_resistance = current_price < h1_resistance
                 
-                if near_ema50 or near_resistance:
+                if (near_ema50 or near_resistance) and below_resistance:
                     is_engulfing = TechnicalAnalysis.is_bearish_engulfing(candles_m15, current_index_m15)
                     is_rejection = TechnicalAnalysis.is_bearish_rejection(candles_m15[current_index_m15])
+                    rsi_reversal = rsi > 60
                     
-                    if is_engulfing or is_rejection:
+                    if is_engulfing or is_rejection or rsi_reversal:
                         m15_swing_high = TechnicalAnalysis.find_swing_high(m15_highs[-10:], 5)
-                        sl_price = m15_swing_high + 0.0002
+                        sl_price = m15_swing_high + 0.0003
                         sl_pips = (sl_price - current_price) * 10000
                         
                         if self.min_sl_pips <= sl_pips <= self.max_sl_pips:
                             tp_pips = sl_pips * self.min_rr
-                            tp_price = max(
-                                current_price - (tp_pips / 10000),
-                                h1_support
-                            )
+                            tp_price = current_price - (tp_pips / 10000)
+                            
+                            if h1_support < current_price * 0.997:
+                                tp_price = max(tp_price, h1_support)
+                            
                             actual_tp_pips = (current_price - tp_price) * 10000
                             
-                            if actual_tp_pips / sl_pips >= self.min_rr:
+                            if actual_tp_pips / sl_pips >= 1.5:
                                 signal = TradeSignal(
                                     symbol=symbol,
                                     direction="SELL",
@@ -502,7 +515,7 @@ class IntradayStrategy:
                                     tp_pips=round(actual_tp_pips, 1),
                                     risk_reward=round(actual_tp_pips / sl_pips, 2),
                                     lot_size=0,
-                                    reason=f"H1 downtrend, pullback + M15 confirmation",
+                                    reason=f"H1 downtrend, pullback, RSI {rsi:.0f}",
                                     confidence=80,
                                     session="LONDON" if hour < 13 else "NEW_YORK",
                                     timestamp=current_candle["datetime"]
