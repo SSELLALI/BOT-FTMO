@@ -1,0 +1,131 @@
+<analysis>**original_problem_statement:**
+The user wants a trading bot compatible with FTMO and cTrader, operating on major forex pairs. The bot should incorporate two distinct strategies: a Scalping strategy and an Intraday strategy. The user has provided very specific and strict risk management rules:
+- Max risk per trade: 1%
+- Max daily loss: 4.5%
+- Max total drawdown: 8% (This was updated from an earlier 10% requirement)
+- The user also specified rules like stopping for the day after a certain number of consecutive losses.
+
+The initial phase involved creating a dashboard and backtesting system. After several iterations, the backtesting results for the provided strategies were inconsistent. The user's latest instruction is for the agent to use its expertise to improve or completely rewrite the strategies to be more robust and effective, with the absolute priority being the enforcement of the risk management rules and the inclusion of strong security barriers.
+
+**User's preferred language**: The user's primary language is **French**. The next agent MUST respond in French only.
+
+**what currently exists?**
+A full-stack application with a React frontend and a FastAPI backend.
+- **Frontend**: A dashboard to display trading stats and a page to run backtests and view results (profit, drawdown, win rate).
+- **Backend**: API endpoints for the dashboard and for running backtests. It contains a  file with the logic for two trading strategies (Scalping, Intraday) and a backtesting engine that simulates trades based on randomly generated market data.
+
+**Last working item**:
+-   **Last item agent was working**: The agent was about to begin a complete rewrite of the trading strategies located in . This was in response to the user's request to do your best, improve the strategies, change them but above all respect the FTMO rules and put in security barriers. The previous strategies were not performing consistently in backtests.
+-   **Status**: NOT STARTED
+-   **Agent Testing Done**: N
+-   **Which testing method agent to use?**: Backend testing. After rewriting the strategies, the agent must use  to call the  endpoint to validate the performance and safety of each strategy independently.
+-   **User Testing Done**: N
+
+**All Pending/In progress Issue list**:
+-   **Issue 1: Implement Robust and Secure Trading Strategies (P0)**
+    The current strategies are unreliable. The core task is to develop and validate new strategies that are both potentially profitable and, most importantly, strictly adhere to the user's risk parameters.
+
+    -   **Attempted fixes**: The agent implemented the user's specified strategies, but backtests on simulated data showed inconsistent performance and difficulty in generating trades for the Intraday strategy.
+    -   **Next debug checklist**:
+        1.  In , completely rewrite the logic within the  and  functions.
+        2.  Focus on creating more robust and selective entry/exit signals.
+        3.  Implement hard-coded security barriers as requested. This MUST include:
+            - A check after every trade to ensure the **4.5% max daily loss** is not breached.
+            - A check after every trade to ensure the **8% max total drawdown** is not breached.
+            - Logic to stop trading for the day after N consecutive losses (e.g., 3 for scalping, 2 for intraday as per user's spec).
+        4.  Verify that the position sizing calculation correctly risks exactly 1% of capital per trade based on the stop-loss distance.
+        5.  Run extensive backtests on the new strategies **independently**.
+    -   **Why fix this issue and what will be achieved with the fix?**: This is the central requirement of the project. The bot is non-functional without effective and safe trading logic.
+    -   **Status**: NOT STARTED
+    -   **Is recurring issue?**: Y
+    -   **Should Test frontend/backend/both after fix?**: Backend
+    -   **Blocked on other issue**: None
+
+**In progress Task List**:
+There are no tasks currently in progress.
+
+**Upcoming and Future Tasks**
+-   **Upcoming Tasks**:
+    -   **P1: Live Trading Integration with FIX API**: Once the strategies are validated and approved by the user, the next step is to connect the bot to the cTrader platform using the FIX API credentials provided by the user. This is currently blocked because the user has not provided the necessary FIX API password.
+        -   **Files to implement**:  (or a new ) and new endpoints in  to manage the live connection.
+
+-   **Future Tasks**:
+    -   **P2: Strategy Parameter Optimizer**: The agent previously suggested creating an automated optimizer to find the best settings for the strategies. This would be a valuable feature to add after the core strategies are stable.
+    -   **P3: Use Historical Data for Backtesting**: The current backtester uses randomly generated data, which is not realistic. A significant improvement would be to modify the backtester to use real historical market data (e.g., from a CSV file).
+
+**Completed work in this session**
+-   A full-stack application skeleton (React/FastAPI) for the trading bot was created.
+-   A frontend dashboard and backtesting interface were built.
+-   A backend backtesting engine was developed to simulate trading strategies.
+-   Initial versions of the user-defined Scalping and Intraday strategies were implemented and tested.
+-   The backtesting UI in  was updated to allow selecting and running backtests for different strategies.
+
+**Earlier issues found/mentioned but not fixed**
+-   **Issue 1: Incomplete FIX API Credentials**: The user provided credentials for the cTrader FIX API but is missing the password. The agent has already guided the user on how to find it. This task is parked until the user provides the password.
+
+**Known issue recurrence from previous fork**
+-   N/A
+
+**Code Architecture**
+
+
+**Key Technical Concepts**
+-   **Frontend**: React, TailwindCSS, Recharts for charts.
+-   **Backend**: FastAPI, Python.
+-   **Database**: MongoDB for storing backtest results.
+-   **Trading Logic**: Custom backtesting engine using Pandas and NumPy for data manipulation and strategy simulation.
+-   **Connectivity**: The planned integration is via the **FIX API protocol** for cTrader.
+
+**key DB schema**
+-   : 
+-   : 
+
+**changes in tech stack**
+-   None.
+
+**All files of reference**
+-   : **This is the most critical file.** It contains all trading logic and backtesting functions that need to be rewritten.
+-   : Defines the API endpoints, including .
+-   : The React component for the backtesting UI.
+-   : The frontend service for making API calls to the backend.
+
+**Areas that need refactoring**:
+-   The  function in  uses purely random data. This makes backtesting results unreliable. For the strategies to be meaningful, this should be replaced with a method to load real historical data (e.g., from an uploaded CSV file).
+
+**key api endpoints**
+-   : Runs a full backtest on a selected strategy. Body: 
+
+**Critical Info for New Agent**
+-   **Your main priority is safety.** The user has repeatedly emphasized that respecting the risk rules (1% risk/trade, 4.5% daily loss, 8% total drawdown) is more important than profitability. You MUST implement these as hard limits in the code.
+-   **Communicate in French.** The user is a native French speaker.
+-   The backtesting engine currently runs on **simulated random data**. You must be aware of this limitation. The results are for testing the logic, not for predicting real-world performance.
+-   The user has given you creative freedom to design the strategies. Use this to create robust logic, but do not deviate from the core risk management rules.
+-   The two strategies, Scalping and Intraday, must be implemented and tested **independently**.
+
+**documents and test reports created in this job**
+-   
+
+**Last 10 User Messages and any pending HUMAN messages**
+1.  **User**: Provided two very detailed strategies to implement. (Status: Done)
+2.  **User**: Clarified that the strategies should be tested independently, not combined. (Status: Addressed)
+3.  **User**: do your best, improve the strategies, change them but above all respect the FTMO rules and put in security barriers (Status: **PENDING - This is the current and most important task**).
+
+**Project Health Check:**
+-   **Broken**: The core trading logic is not considered reliable or safe. This is the main part of the application that needs to be fixed.
+-   **Mocked**: The entire system operates on simulated market data. The connection to the live cTrader platform is not implemented.
+
+**3rd Party Integrations**
+-   **cTrader (FIX API)**: Planned for live trading. The integration is blocked pending the user providing a complete set of credentials (the password is still missing).
+
+**Testing status**
+-   Testing agent used after significant changes: NO
+-   Troubleshoot agent used after agent stuck in loop: NO
+-   Test files created: []
+-   Known regressions: []
+
+**Credentials to test flow:**
+-   N/A
+
+**What agent forgot to execute**
+-   The rule to stop trading for the day after X consecutive losses was explicitly mentioned in the user's strategy document but seems to have been overlooked in the last implementation. This MUST be included in the strategy rewrite.
+-   The max drawdown limit was updated by the user from 10% to 8%. The agent must ensure the new 8% limit is used in all risk calculations.</analysis>
