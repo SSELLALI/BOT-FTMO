@@ -866,6 +866,7 @@ function App() {
   const [trades, setTrades] = useState([]);
   const [showConnection, setShowConnection] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState("disconnected");
+  const [showBacktest, setShowBacktest] = useState(false);
 
   // Fetch dashboard data
   const fetchDashboard = useCallback(async () => {
