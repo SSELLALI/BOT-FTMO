@@ -408,7 +408,7 @@ class ScalpingStrategy:
                 tp_pips = sl_pips * self.min_rr
                 tp_price = current_price - (tp_pips / 10000)
 
-                confidence = 55 + confluence * 7
+                confidence = 70
                 if 13 <= hour <= 16:
                     confidence += 5
 
@@ -423,7 +423,7 @@ class ScalpingStrategy:
                     tp_pips=round(tp_pips, 1),
                     risk_reward=round(tp_pips / sl_pips, 2),
                     lot_size=0,
-                    reason=reason,
+                    reason=reason_text,
                     confidence=min(90, confidence),
                     session="LONDON" if hour < 13 else "NY_OVERLAP",
                     timestamp=current_candle["datetime"]
