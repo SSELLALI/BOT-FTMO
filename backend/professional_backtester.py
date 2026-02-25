@@ -419,7 +419,7 @@ class ProfessionalBacktester:
             daily_loss_pct = abs(self.risk_manager.daily_pnl) / self.risk_manager.daily_starting_balance if self.risk_manager.daily_pnl < 0 and self.risk_manager.daily_starting_balance > 0 else 0
             total_dd = (self.risk_manager.peak_balance - self.risk_manager.current_balance) / self.risk_manager.peak_balance if self.risk_manager.peak_balance > 0 else 0
 
-            if daily_loss_pct >= 0.035 or total_dd >= 0.065:
+            if daily_loss_pct >= 0.03 or total_dd >= 0.06:
                 # Safety close at SL price (guaranteed max loss) to prevent exceeding limits
                 self._close_trade(signal, signal.stop_loss, candle["datetime"], "SAFETY_CLOSE")
                 continue
