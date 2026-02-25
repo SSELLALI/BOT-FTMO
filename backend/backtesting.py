@@ -453,13 +453,13 @@ class BacktestEngine:
         
         entry_price = candle["close"]
         
-        # Set SL/TP based on strategy
+        # Set SL/TP based on strategy - Optimized for better RR
         if strategy == "SCALPING":
-            sl_pips = 10
-            tp_pips = 12  # Slightly better than 1:1
+            sl_pips = 8
+            tp_pips = 16  # 2:1 RR
         else:  # INTRADAY
-            sl_pips = 20
-            tp_pips = 30  # 1.5:1
+            sl_pips = 15
+            tp_pips = 30  # 2:1 RR
         
         pip_value = 0.0001
         
