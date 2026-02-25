@@ -718,9 +718,9 @@ class ProfessionalRiskManager:
         self.intraday_state = StrategyState()
         self.active_positions: Dict[str, str] = {}
         self.open_trade_count = 0
-        self.max_concurrent_scalping = 2
+        self.max_concurrent_scalping = 1
         self.max_concurrent_intraday = 1
-        self.max_concurrent_total = 2
+        self.max_concurrent_total = 1
 
     def reset_daily(self):
         self.daily_starting_balance = self.current_balance
