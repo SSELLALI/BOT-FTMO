@@ -334,16 +334,22 @@ class BacktestEngine:
         ema21 = indicators.get("ema_21", 0)
         prev_ema8 = prev_indicators.get("ema_8", 0)
         prev_ema21 = prev_indicators.get("ema_21", 0)
+        close = indicators.get("close", 0)
         
-        # BUY: RSI oversold + EMA bullish crossover
-        if rsi < 35:
-            if prev_ema8 <= prev_ema21 and ema8 > ema21:
-                return ("BUY", f"RSI({rsi:.1f}) oversold + EMA bullish crossover")
+        # BUY: RSI oversold zone + price above EMA8 (momentum)
+        if rsi < 40 and close > ema8 and ema8 > prev_ema8:
+            return ("BUY", f"RSI({rsi:.1f}) oversold + bullish momentum")
         
-        # SELL: RSI overbought + EMA bearish crossover
-        if rsi > 65:
-            if prev_ema8 >= prev_ema21 and ema8 < ema21:
-                return ("SELL", f"RSI({rsi:.1f}) overbought + EMA bearish crossover")
+        # SELL: RSI overbought zone + price below EMA8 (momentum)
+        if rsi > 60 and close < ema8 and ema8 < prev_ema8:
+            return ("SELL", f"RSI({rsi:.1f}) overbought + bearish momentum")
+        
+        # Alternative: EMA crossover with RSI confirmation
+        if prev_ema8 <= prev_ema21 and ema8 > ema21 and rsi < 55:
+            return ("BUY", f"EMA bullish crossover + RSI({rsi:.1f})")
+        
+        if prev_ema8 >= prev_ema21 and ema8 < ema21 and rsi > 45:
+            return ("SELL", f"EMA bearish crossover + RSI({rsi:.1f})")
         
         return None
     
