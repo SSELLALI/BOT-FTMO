@@ -1013,9 +1013,10 @@ function App() {
     const interval = setInterval(() => {
       fetchDashboard();
       fetchSignals();
+      if (activeTab === "live") fetchLiveStatus();
     }, 5000);
     return () => clearInterval(interval);
-  }, [fetchDashboard, fetchSignals]);
+  }, [fetchDashboard, fetchSignals, fetchLiveStatus, activeTab]);
 
   // Bot control
   const toggleBot = async () => {
