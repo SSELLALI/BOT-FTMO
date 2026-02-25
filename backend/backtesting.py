@@ -323,7 +323,7 @@ class BacktestEngine:
         prev_indicators: Dict
     ) -> Optional[Tuple[str, str]]:
         """
-        Check for scalping entry signal
+        Check for scalping entry signal - Optimized version
         Returns (direction, reason) or None
         """
         if not indicators or not prev_indicators:
@@ -336,20 +336,26 @@ class BacktestEngine:
         prev_ema21 = prev_indicators.get("ema_21", 0)
         close = indicators.get("close", 0)
         
-        # BUY: RSI oversold zone + price above EMA8 (momentum)
-        if rsi < 40 and close > ema8 and ema8 > prev_ema8:
-            return ("BUY", f"RSI({rsi:.1f}) oversold + bullish momentum")
+        # More selective entries - only strong signals
         
-        # SELL: RSI overbought zone + price below EMA8 (momentum)
-        if rsi > 60 and close < ema8 and ema8 < prev_ema8:
-            return ("SELL", f"RSI({rsi:.1f}) overbought + bearish momentum")
+        # BUY: Strong oversold with reversal confirmation
+        if rsi < 30 and close > ema8:
+            if ema8 > prev_ema8:  # EMA turning up
+                return ("BUY", f"Strong oversold RSI({rsi:.1f}) + reversal")
         
-        # Alternative: EMA crossover with RSI confirmation
-        if prev_ema8 <= prev_ema21 and ema8 > ema21 and rsi < 55:
-            return ("BUY", f"EMA bullish crossover + RSI({rsi:.1f})")
+        # SELL: Strong overbought with reversal confirmation
+        if rsi > 70 and close < ema8:
+            if ema8 < prev_ema8:  # EMA turning down
+                return ("SELL", f"Strong overbought RSI({rsi:.1f}) + reversal")
         
-        if prev_ema8 >= prev_ema21 and ema8 < ema21 and rsi > 45:
-            return ("SELL", f"EMA bearish crossover + RSI({rsi:.1f})")
+        # EMA crossover with trend confirmation
+        if prev_ema8 <= prev_ema21 and ema8 > ema21:
+            if rsi > 45 and rsi < 65:  # Not overbought
+                return ("BUY", f"EMA bullish crossover + RSI({rsi:.1f}) neutral")
+        
+        if prev_ema8 >= prev_ema21 and ema8 < ema21:
+            if rsi < 55 and rsi > 35:  # Not oversold
+                return ("SELL", f"EMA bearish crossover + RSI({rsi:.1f}) neutral")
         
         return None
     
