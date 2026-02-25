@@ -372,21 +372,33 @@ class BacktestEngine:
         macd_signal = indicators.get("macd_signal", 0)
         prev_macd = prev_indicators.get("macd", 0)
         prev_macd_signal = prev_indicators.get("macd_signal", 0)
+        macd_hist = indicators.get("macd_histogram", 0)
+        prev_hist = prev_indicators.get("macd_histogram", 0)
         
         dist_to_support = current_price - support
         dist_to_resistance = resistance - current_price
+        range_size = resistance - support
         
-        threshold = 0.0015  # 15 pips
+        threshold = range_size * 0.2 if range_size > 0 else 0.0015  # 20% of range
         
-        # BUY: Near support + MACD bullish crossover
+        # BUY: Near support + MACD bullish crossover or histogram turning positive
         if dist_to_support < threshold:
-            if prev_macd <= prev_macd_signal and macd > macd_signal:
+            if (prev_macd <= prev_macd_signal and macd > macd_signal) or \
+               (prev_hist < 0 and macd_hist > 0):
                 return ("BUY", f"Near support ({support:.5f}) + MACD bullish")
         
-        # SELL: Near resistance + MACD bearish crossover
+        # SELL: Near resistance + MACD bearish crossover or histogram turning negative
         if dist_to_resistance < threshold:
-            if prev_macd >= prev_macd_signal and macd < macd_signal:
+            if (prev_macd >= prev_macd_signal and macd < macd_signal) or \
+               (prev_hist > 0 and macd_hist < 0):
                 return ("SELL", f"Near resistance ({resistance:.5f}) + MACD bearish")
+        
+        # Alternative: Strong MACD divergence anywhere
+        if abs(macd_hist) > abs(prev_hist) * 1.5:
+            if macd_hist > 0 and prev_hist > 0 and macd > 0:
+                return ("BUY", f"Strong MACD bullish momentum")
+            elif macd_hist < 0 and prev_hist < 0 and macd < 0:
+                return ("SELL", f"Strong MACD bearish momentum")
         
         return None
     
