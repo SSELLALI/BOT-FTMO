@@ -417,6 +417,11 @@ class ProfessionalBacktester:
                     if "JPY" in symbol:
                         pnl_pips = pnl_pips / 100
                     
+                    # Deduct execution costs
+                    pnl_pips -= (self.spread_pips + self.entry_slippage)
+                    if exit_reason == "SL":
+                        pnl_pips -= self.sl_slippage
+                    
                     pnl = pnl_pips * sig["lot_size"] * 10
                     
                     # Hard cap: don't exceed daily loss limit
