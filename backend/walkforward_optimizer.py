@@ -108,7 +108,8 @@ def _run_one(candles, params, strategy_type, initial_balance=100000,
 # ── Robustness Check ─────────────────────────────────────────────
 
 def check_robustness(params: Dict, candles: List[Dict], strategy_type: str,
-                     variation: float = 0.15) -> Tuple[bool, float]:
+                     variation: float = 0.15, symbol: str = "EURUSD",
+                     base_spread: float = 0.8) -> Tuple[bool, float]:
     """
     Vary each numeric parameter by ±variation.
     Robust if ≥70% of variations stay profitable + FTMO compliant.
@@ -126,7 +127,7 @@ def check_robustness(params: Dict, candles: List[Dict], strategy_type: str,
             varied[key] = max(1, round(nv)) if isinstance(val, int) else round(nv, 4)
             if "rsi_sell_min" in varied and "rsi_buy_max" in varied:
                 varied["rsi_sell_min"] = 100 - varied["rsi_buy_max"]
-            r = _run_one(candles, varied, strategy_type)
+            r = _run_one(candles, varied, strategy_type, symbol=symbol, base_spread=base_spread)
             total += 1
             if r.total_return_pct > 0 and r.ftmo_compliant:
                 ok += 1
