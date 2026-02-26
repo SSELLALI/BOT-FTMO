@@ -81,10 +81,12 @@ class LiveTradingService:
             self.trading_symbols = symbols
         self.risk_manager = ProfessionalRiskManager(
             initial_balance=initial_balance,
-            max_risk_per_trade=0.0075,  # Optimized: 0.75% per trade
+            max_risk_per_trade=0.0075,
             max_daily_loss=0.045,
             max_total_drawdown=0.08
         )
+        self.pa_strategy = PriceActionSignalGenerator(initial_balance=initial_balance)
+        self._init_historical_data()
 
     def connect(self) -> Dict:
         """Connect to cTrader FIX API"""
