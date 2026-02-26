@@ -710,6 +710,11 @@ class ProfessionalBacktester:
                     else:
                         pnl_pips = (sig["entry"] - exit_price) * 10000
                     
+                    # Deduct execution costs
+                    pnl_pips -= (self.spread_pips + self.entry_slippage)
+                    if exit_reason == "SL":
+                        pnl_pips -= self.sl_slippage
+                    
                     pnl = pnl_pips * sig["lot_size"] * 10
                     
                     if pnl < 0:
