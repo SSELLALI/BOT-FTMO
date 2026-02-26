@@ -345,10 +345,12 @@ class GBPJPYBreakoutBacktester:
 
             # ── PULLBACK DETECTION (Rule 6) ──
             if not pullback_active or last_breakout is None:
-                # Check if breakout is stale (more than 20 H1 candles ago)
-                if last_breakout and h1_idx - last_breakout["h1_idx"] > 20:
-                    last_breakout = None
-                    pullback_active = False
+                continue
+
+            # Stale breakout check (more than 20 H1 candles = ~20 hours)
+            if h1_idx - last_breakout["h1_idx"] > 20:
+                last_breakout = None
+                pullback_active = False
                 continue
 
             level = last_breakout["level"]
