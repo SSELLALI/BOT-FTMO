@@ -80,13 +80,16 @@ for ep in [15, 20, 25, 30]:
         for atr_m in [0.5, 0.8, 1.0, 1.5]:
             for pb in [0.002, 0.003, 0.004]:
                 for min_sl in [8, 12, 15, 20]:
-                    INTRADAY_GRID.append({
-                        "ema_period": ep, "min_rr": rr,
-                        "atr_multiplier": atr_m, "pullback_pct": pb,
-                        "min_sl_pips": min_sl, "max_sl_pips": 30,
-                        "session_start": 7, "session_end": 21,
-                        "max_daily_trades": 6, "max_consecutive_losses": 3,
-                    })
+                    for risk in [0.005, 0.0075, 0.01]:
+                        INTRADAY_GRID.append({
+                            "ema_period": ep, "min_rr": rr,
+                            "atr_multiplier": atr_m, "pullback_pct": pb,
+                            "min_sl_pips": min_sl, "max_sl_pips": 30,
+                            "risk_per_trade": risk,
+                            "session_start": 7, "session_end": 21,
+                            "max_daily_trades": 6,
+                            "max_consecutive_losses": 3,
+                        })
 
 
 # ── Helper: single backtest ───────────────────────────────────────
