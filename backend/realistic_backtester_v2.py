@@ -482,10 +482,10 @@ class RealisticBacktester:
             sig_price = all_closes[i - 1]
             cf = ef_all[i - 1]
             cs_val = esl_all[i - 1]
-            rsi = rsi_all[i - 1] if i - 1 < len(rsi_all) else 50
-            mom = mom_all[i - 1] if i - 1 < len(mom_all) else 0
-            bb_l = bb_l_all[i - 1] if i - 1 < len(bb_l_all) else 0
-            bb_u = bb_u_all[i - 1] if i - 1 < len(bb_u_all) else 999
+            rsi = rsi_all[i - 1]
+            mom = mom_all[i - 1]
+            bb_l = bb_l_all[i - 1]
+            bb_u = bb_u_all[i - 1]
 
             sig_dir = None
             pp = candles[i - 2] if i >= 2 else pc
