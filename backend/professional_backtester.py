@@ -416,7 +416,9 @@ class ProfessionalBacktester:
                 self._close_trade(signal, last_candle["close"], last_candle["datetime"], "EOD")
         
         # Compile report
-        return self._compile_report(symbol, strategy, start_date, end_date)
+        start_date = m15_candles[0]["datetime"] if m15_candles else datetime.now(timezone.utc)
+        end_date = m15_candles[-1]["datetime"] if m15_candles else datetime.now(timezone.utc)
+        return self._compile_report(symbol, strategy, start_date, end_date, data_source)
     
     def _open_trade(self, signal: TradeSignal, candle: Dict):
         """Open a new trade"""
