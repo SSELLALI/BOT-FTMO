@@ -25,26 +25,23 @@ def _write_status(data):
 def _generate_grid(strategy_type):
     """Generate parameter grid for PA strategies."""
     base = list(itertools.product(
-        [8, 12, 18],          # swing_lookback
+        [10, 15],             # swing_lookback
         [15, 25],             # sr_cluster_pips
-        [8, 15],              # sr_proximity_pips
+        [10, 18],             # sr_proximity_pips
         [2.0, 2.5, 3.0],     # min_rr
         [10, 15, 20],         # min_sl_pips
         [30, 45],             # max_sl_pips
         [0.005, 0.01],        # risk_per_trade
-        [30, 35],             # rsi_extreme
-        [1, 2],               # min_zone_strength
     ))
 
     if strategy_type == "BREAKOUT":
-        # Add breakout-specific param: sr_break_pips
         expanded = []
         for combo in base:
-            for break_pips in [5, 10, 15]:
+            for break_pips in [8, 12]:
                 expanded.append(combo + (break_pips,))
         return expanded
 
-    return [combo + (0,) for combo in base]  # 0 = placeholder for break_pips
+    return [combo + (0,) for combo in base]
 
 
 def _params_from_tuple(t, strategy_type):
@@ -56,9 +53,9 @@ def _params_from_tuple(t, strategy_type):
         "min_sl_pips": t[4],
         "max_sl_pips": t[5],
         "risk_per_trade": t[6],
-        "rsi_extreme": t[7],
-        "min_zone_strength": t[8],
-        "sr_break_pips": t[9] if strategy_type == "BREAKOUT" else 10,
+        "sr_break_pips": t[7] if strategy_type == "BREAKOUT" else 10,
+        "rsi_extreme": 33,
+        "min_zone_strength": 2,
         "sl_buffer_pips": 5,
         "session_start": 7,
         "session_end": 20,
