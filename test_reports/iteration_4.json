@@ -1,0 +1,91 @@
+{
+  "summary": "Iteration 4 testing completed. All backend tests pass (28 total). Backtest endpoint verified with SCALPING strategy returning +18.33% over 60 days (~2.14%/week) with FTMO compliance. Frontend loads correctly with dashboard, backtest modal, and live trading tabs all functional.",
+
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {
+        "screen": "Console warnings",
+        "issues": ["React hydration warning: <span> inside <tbody>/<tr> - cosmetic only, doesn't affect functionality", "Chart dimension warnings on initial load - charts render correctly after load"]
+      }
+    ]
+  },
+
+  "test_report_links": [
+    "/app/backend/tests/test_ftmo_backtest.py",
+    "/app/backend/tests/test_profitability.py",
+    "/app/test_reports/pytest/pytest_results_iteration4.xml"
+  ],
+
+  "action_items": [
+    "LOW PRIORITY: Fix React hydration warnings (span inside tbody/tr) in TradeRow component"
+  ],
+
+  "critical_code_review_comments": [],
+
+  "updated_files": ["/app/backend/tests/test_profitability.py"],
+
+  "success_rate": {
+    "backend": "100% (28/28 tests passed including 21 FTMO compliance + 7 profitability tests)",
+    "frontend": "100% (all UI flows working - Dashboard, Backtest modal, Trading Live tab)"
+  },
+
+  "test_credentials": null,
+
+  "seed_data_creation": "Demo trades exist from previous iterations via /api/demo/generate-trades",
+
+  "retest_needed": false,
+
+  "should_main_agent_self_test": false,
+
+  "context_for_next_testing_agent": "All features working correctly. Backtest shows +18% returns over 60 days with FTMO compliance. Key verified metrics: max_drawdown_percent < 8%, max_daily_loss_percent < 4.5%, ftmo_daily_limit_breached=false, ftmo_total_limit_breached=false. Data source shows 'real' when historical data available, falls back to 'simulated' otherwise. FIX connection will fail in preview environment (expected).",
+
+  "passed_tests": [
+    "API health check returns running status",
+    "Risk status shows 8% total loss limit (FTMO rule)",
+    "Risk status shows 4.5% daily loss limit",
+    "Dashboard endpoint returns valid data",
+    "SCALPING backtest FTMO compliant (daily_breached=False, total_breached=False)",
+    "SCALPING max daily loss under 4.5%",
+    "SCALPING max drawdown under 8%",
+    "SCALPING generates trades with required fields",
+    "INTRADAY backtest FTMO compliant",
+    "INTRADAY max daily loss under 4.5%",
+    "INTRADAY max drawdown under 8%",
+    "INTRADAY generates trades with required fields",
+    "BOTH strategies FTMO compliant",
+    "BOTH max daily loss under 4.5%",
+    "BOTH max drawdown under 8%",
+    "BOTH includes trades from strategies",
+    "Backtest report has all required metrics",
+    "Equity curve data valid",
+    "Daily returns data valid",
+    "SCALPING 60-day backtest is profitable (+18.33%)",
+    "SCALPING meets ~2%/week target (2.14%/week achieved)",
+    "SCALPING uses real data when available",
+    "SCALPING trade count sufficient (102 trades)",
+    "SCALPING R:R ratio matches strategy (2.5)",
+    "Live status endpoint returns valid data",
+    "Frontend Dashboard loads correctly",
+    "Frontend Backtest modal opens and shows strategies",
+    "Frontend Trading Live tab shows FIX connection UI with FTMO barriers"
+  ],
+
+  "failed_tests": [],
+
+  "verified_claims": {
+    "claim": "POST /api/backtest/professional with SCALPING strategy returns profitable results (+18% over 60 days)",
+    "result": "VERIFIED: +18.33% total return over 60 days, 102 trades, 34.3% win rate, 1.27 profit factor",
+    "weekly_return": "2.14%/week (exceeds 2%/week target)",
+    "ftmo_compliance": "VERIFIED: max_daily_loss=3.38% (< 4.5%), max_drawdown=6.13% (< 8%)",
+    "data_source": "Real historical data when available, simulated fallback"
+  },
+
+  "mocked_data_note": "Market data generated using MultiTimeframeDataGenerator when real historical data not available. FIX connection requires external network access (blocked in preview)."
+}
