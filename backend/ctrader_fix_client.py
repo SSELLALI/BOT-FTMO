@@ -219,13 +219,17 @@ class CTraderFIXClient:
             logon = FIXMessage("A")  # Logon message type
             logon.set(98, 0)  # EncryptMethod = None
             logon.set(108, self.heartbeat_interval)  # HeartBtInt
+            logon.set(141, "Y")  # ResetSeqNumFlag - required by cTrader
             logon.set(553, self.sender_comp_id.split('.')[-1])  # Username (account number)
             logon.set(554, self.password)  # Password
             
             self._send(logon)
             
-            # Wait for logon response
-            time.sleep(2)
+            # Wait for logon response (up to 10 seconds)
+            for _ in range(20):
+                time.sleep(0.5)
+                if self.logged_in:
+                    break
             
             if self.logged_in:
                 # Start heartbeat thread
