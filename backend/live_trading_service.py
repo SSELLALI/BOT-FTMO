@@ -105,29 +105,54 @@ class LiveTradingService:
                 use_ssl=True
             )
 
-            # Register callbacks
             self.fix_client.on_market_data(self._on_market_data)
             self.fix_client.on_execution(self._on_execution)
 
             if self.fix_client.connect():
                 if self.fix_client.login():
                     self.is_connected = True
-                    # Subscribe to market data
                     self.fix_client.subscribe_market_data(self.trading_symbols)
                     logger.info("Live trading connected to FIX API")
                     return {
                         "success": True,
                         "message": "Connected to cTrader FIX API",
-                        "account": os.environ.get("FIX_ACCOUNT", "17061677")
+                        "account": os.environ.get("FIX_ACCOUNT", "17061677"),
+                        "strategies": self.enabled_strategies,
+                        "pa_status": self.pa_strategy.get_status(),
                     }
                 else:
-                    return {"success": False, "error": "FIX login failed - check password. See server logs for details."}
+                    return {"success": False, "error": "FIX login failed"}
             else:
                 return {"success": False, "error": "Could not connect to FIX server"}
 
         except Exception as e:
             logger.error(f"FIX connection error: {e}")
             return {"success": False, "error": str(e)}
+
+    def _init_historical_data(self):
+        """Load historical H1 + M30 data for S/R zone computation."""
+        try:
+            from tradingview_loader import load_tradingview_csv
+            h1_path = os.path.join(os.path.dirname(__file__), "historical_data", "USDJPY_H1_TV.csv")
+            m30_path = os.path.join(os.path.dirname(__file__), "historical_data", "USDJPY_M30_TV.csv")
+
+            h1 = load_tradingview_csv(h1_path) if os.path.exists(h1_path) else []
+            m30 = load_tradingview_csv(m30_path) if os.path.exists(m30_path) else []
+
+            if h1:
+                self.candle_buffer_h1 = h1[-500:]
+                logger.info(f"Loaded {len(self.candle_buffer_h1)} H1 candles from historical data")
+            if m30:
+                self.candle_buffer_m30 = m30[-500:]
+                logger.info(f"Loaded {len(self.candle_buffer_m30)} M30 candles from historical data")
+
+            if len(self.candle_buffer_h1) >= 100:
+                self.pa_strategy.update(self.candle_buffer_h1, self.candle_buffer_m30)
+                self._h1_initialized = True
+                logger.info("PA Strategy initialized with historical data")
+
+        except Exception as e:
+            logger.warning(f"Could not load historical data: {e}. PA will wait for live data.")
 
     def disconnect(self):
         """Stop trading and disconnect"""
