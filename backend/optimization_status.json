@@ -1,8 +1,8 @@
 {
   "phase": "train_grid",
-  "strategy": "COMBINED",
-  "symbol": "AUDCAD",
+  "strategy": "BOUNCE",
+  "symbol": "USDJPY",
   "progress": "0/384",
   "elapsed_sec": 0.0,
-  "progress_key": "AUDCAD_COMBINED"
+  "progress_key": "USDJPY_BOUNCE"
 }
