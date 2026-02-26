@@ -1,7 +1,7 @@
 {
   "strategy": "SCALPING",
   "phase": "grid_search",
-  "progress": "100/2304",
-  "elapsed_sec": 25.6,
+  "progress": "500/2304",
+  "elapsed_sec": 65.0,
   "progress_key": "GBPJPY_scalping"
 }
