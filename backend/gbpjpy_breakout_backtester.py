@@ -328,7 +328,7 @@ class GBPJPYBreakoutBacktester:
 
                 # Bearish breakout below support
                 if not new_breakout and bias == "BEARISH" and key_support:
-                    bk_key = f"SELL_{key_support:.3f}"
+                    bk_key = f"SELL_{key_support:.2f}_{h1_idx}"
                     if bk_key not in detected_breakout_levels:
                         if h1_c["close"] < key_support and prev_h1_close >= key_support:
                             avg_range = float(np.mean(h1_ranges[max(0, h1_idx-10):h1_idx])) if h1_idx >= 10 else h1_ranges[h1_idx]
