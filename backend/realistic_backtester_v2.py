@@ -365,11 +365,10 @@ class RealisticBacktester:
         t = self.open_trade
         if not t:
             return
-        pm = 10000
         if t.direction == "BUY":
-            pnl_pips = (exit_price - t.entry_price) * pm
+            pnl_pips = (exit_price - t.entry_price) * self.pm
         else:
-            pnl_pips = (t.entry_price - exit_price) * pm
+            pnl_pips = (t.entry_price - exit_price) * self.pm
         if reason == "SL":
             pnl_pips -= exit_slip
         pnl = pnl_pips * t.lot_size * 10 * t.fill_ratio
