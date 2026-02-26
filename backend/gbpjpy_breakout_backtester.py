@@ -137,6 +137,8 @@ class GBPJPYBreakoutBacktester:
         use_structural_tp = params.get("use_structural_tp", False)
         min_sl_pips = params.get("min_sl_pips", 15)
         max_sl_pips = params.get("max_sl_pips", 60)
+        proximity_factor = params.get("proximity_factor", 0.5)
+        stale_timeout = params.get("stale_timeout", 20)
 
         consecutive_losses = 0
         daily_trade_count = {}
@@ -147,7 +149,7 @@ class GBPJPYBreakoutBacktester:
         pullback_active = False
         pullback_low = None
         pullback_high = None
-        detected_h1_breakouts = set()  # Track H1 indices where breakout was already detected
+        detected_breakout_levels = set()  # Track level+direction combos already detected
 
         # H1 structure state
         swings = []  # List of SwingPoint
