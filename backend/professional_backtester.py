@@ -686,7 +686,8 @@ class ProfessionalBacktester:
             ny_win_rate=round(ny_wr, 1),
             equity_curve=self.equity_curve,
             trades=trades_list,
-            daily_returns=daily_returns
+            daily_returns=daily_returns,
+            data_source=data_source
         )
 
 
