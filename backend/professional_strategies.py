@@ -355,19 +355,19 @@ class ScalpingStrategy:
                 )
 
         # =============== SELL SETUPS ===============
-        ema_bearish = cur_ema9 < cur_ema21
-        rsi_ok_sell = 28 <= rsi <= 70
+        ema_bearish = cur_fast < cur_slow
+        rsi_ok_sell = 35 <= rsi <= 70
 
         if signal is None and ema_bearish and rsi_ok_sell:
             entry_triggered = False
             reason = ""
             prev_candle = candles[current_index - 1]
 
-            # Signal 1: EMA9 rejection
-            near_ema9 = abs(prev_candle["high"] - prev_ema9) / current_price < 0.0006
-            if near_ema9 and current_price < prev_candle["low"]:
+            # Signal 1: Fast EMA rejection
+            near_ema = abs(prev_candle["high"] - prev_fast) / current_price < 0.0006
+            if near_ema and current_price < prev_candle["low"]:
                 entry_triggered = True
-                reason = f"EMA9 rejection, RSI {rsi:.0f}"
+                reason = f"EMA rejection, RSI {rsi:.0f}"
 
             # Signal 2: Bearish pattern
             if not entry_triggered:
@@ -379,15 +379,15 @@ class ScalpingStrategy:
             # Signal 3: Strong bearish momentum
             if not entry_triggered and TechnicalAnalysis.is_bearish_candle(current_candle):
                 body = current_candle["open"] - current_candle["close"]
-                if body > atr * 0.4 and momentum < 0:
+                if body > atr * 0.4 and momentum < -0.01:
                     entry_triggered = True
                     reason = f"Bearish momentum, RSI {rsi:.0f}"
 
-            # Signal 4: Break below EMA21
+            # Signal 4: Break below slow EMA
             if not entry_triggered:
-                if prev_candle["close"] >= cur_ema21 and current_price < cur_ema21 and momentum < 0:
+                if prev_candle["close"] >= cur_slow and current_price < cur_slow and momentum < 0:
                     entry_triggered = True
-                    reason = f"EMA21 breakdown, RSI {rsi:.0f}"
+                    reason = f"EMA breakdown, RSI {rsi:.0f}"
 
             # Signal 5: BB upper band rejection
             if not entry_triggered and current_price >= bb_upper * 0.999:
@@ -397,7 +397,7 @@ class ScalpingStrategy:
 
             if entry_triggered:
                 reason_text = reason
-                sl_distance = max(atr * 1.2, self.min_sl_pips / 10000)
+                sl_distance = max(atr * self.atr_multiplier, self.min_sl_pips / 10000)
                 sl_price = current_price + sl_distance
                 sl_pips = (sl_price - current_price) * 10000
 
