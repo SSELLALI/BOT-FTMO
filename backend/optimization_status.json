@@ -1,7 +1,7 @@
 {
-  "strategy": "SCALPING",
+  "strategy": "INTRADAY",
   "phase": "grid_search",
-  "progress": "1200/2304",
-  "elapsed_sec": 163.5,
-  "progress_key": "GBPUSD_scalping"
+  "progress": "250/1728",
+  "elapsed_sec": 37.5,
+  "progress_key": "GBPUSD_intraday"
 }
