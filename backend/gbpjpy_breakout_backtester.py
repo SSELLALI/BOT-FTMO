@@ -638,6 +638,38 @@ class GBPJPYBreakoutBacktester:
                     return s.price
         return None
 
+    def _get_recent_day_levels(self, h1_candles, h1_idx):
+        """Get previous day and 2-day high/low as additional key levels."""
+        current_date = h1_candles[h1_idx]["datetime"].date()
+        prev_day_highs = []
+        prev_day_lows = []
+        day_count = 0
+        last_date = None
+
+        for i in range(h1_idx - 1, max(0, h1_idx - 100), -1):
+            d = h1_candles[i]["datetime"].date()
+            if d == current_date:
+                continue
+            if d != last_date:
+                if last_date is not None:
+                    day_count += 1
+                last_date = d
+                if day_count >= 2:
+                    break
+                prev_day_highs.append(h1_candles[i]["high"])
+                prev_day_lows.append(h1_candles[i]["low"])
+            else:
+                prev_day_highs.append(h1_candles[i]["high"])
+                prev_day_lows.append(h1_candles[i]["low"])
+
+        result = {"highs": [], "lows": []}
+        if prev_day_highs:
+            result["highs"].append(max(prev_day_highs))
+        if prev_day_lows:
+            result["lows"].append(min(prev_day_lows))
+        return result
+
+
     def _close_trade(self, trade, exit_price, base_spread, close_type):
         spread_cost = (base_spread / 2) / PM
         slippage = random.uniform(0, 0.3) / PM
