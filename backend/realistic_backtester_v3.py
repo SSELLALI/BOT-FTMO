@@ -467,7 +467,7 @@ class MTFBacktester:
                 continue
 
             # News check
-            is_news = news_calendar.is_near_news(dt, minutes=3)
+            is_news = news_calendar.is_news_window(dt, window_minutes=3)
 
             # Spread & ATR
             atr_val = self.h1_atr[h1_idx]
