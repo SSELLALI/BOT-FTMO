@@ -419,37 +419,77 @@ class RealisticBacktester:
 
             sig_dir = None
 
-            # BUY
+            # BUY signals (trend = bullish: fast EMA > slow EMA)
             if cf > cs and rsi < rsi_bmax and rsi > 30:
                 hit = False
                 pp = candles[i - 2] if i >= 2 else pc
+
+                # S1: Pullback to EMA zone + breakout
                 if len(ef) >= 2 and abs(pp["low"] - ef[-2]) / sig_price < pb_thresh:
                     if pc["close"] > pp["high"]:
                         hit = True
+
+                # S2: Strong momentum candle
                 if not hit and TechnicalAnalysis.is_bullish_candle(pc):
                     if (pc["close"] - pc["open"]) > atr * body_ratio and mom > mom_thresh:
                         hit = True
+
+                # S3: Bollinger lower band bounce
                 if not hit and sig_price <= bb_l * 1.002 and TechnicalAnalysis.is_bullish_candle(pc):
                     hit = True
+
+                # S4: Bullish engulfing
                 if not hit and i >= 2 and TechnicalAnalysis.is_bullish_engulfing(candles, i - 1):
                     hit = True
+
+                # S5: EMA zone bounce (price within 1 ATR of fast EMA + bullish candle)
+                if not hit and TechnicalAnalysis.is_bullish_candle(pc):
+                    dist_to_ema = abs(pc["low"] - cf)
+                    if dist_to_ema < atr * 1.2 and pc["close"] > cf:
+                        hit = True
+
+                # S6: Trend continuation (bullish candle closing above prev high in trend)
+                if not hit and TechnicalAnalysis.is_bullish_candle(pc):
+                    if pc["close"] > pp["high"] and cf > cs * 1.0005:
+                        hit = True
+
                 if hit:
                     sig_dir = "BUY"
 
-            # SELL
+            # SELL signals (trend = bearish: fast EMA < slow EMA)
             elif cf < cs and rsi > rsi_smin and rsi < 70:
                 hit = False
                 pp = candles[i - 2] if i >= 2 else pc
+
+                # S1: Pullback to EMA zone + breakdown
                 if len(ef) >= 2 and abs(pp["high"] - ef[-2]) / sig_price < pb_thresh:
                     if pc["close"] < pp["low"]:
                         hit = True
+
+                # S2: Strong bearish momentum candle
                 if not hit and TechnicalAnalysis.is_bearish_candle(pc):
                     if (pc["open"] - pc["close"]) > atr * body_ratio and mom < -mom_thresh:
                         hit = True
+
+                # S3: Bollinger upper band rejection
                 if not hit and sig_price >= bb_u * 0.998 and TechnicalAnalysis.is_bearish_candle(pc):
                     hit = True
+
+                # S4: Bearish engulfing
                 if not hit and i >= 2 and TechnicalAnalysis.is_bearish_engulfing(candles, i - 1):
                     hit = True
+
+                # S5: EMA zone rejection (price within 1 ATR of fast EMA + bearish candle)
+                if not hit and TechnicalAnalysis.is_bearish_candle(pc):
+                    dist_to_ema = abs(pc["high"] - cf)
+                    if dist_to_ema < atr * 1.2 and pc["close"] < cf:
+                        hit = True
+
+                # S6: Trend continuation (bearish candle closing below prev low in trend)
+                if not hit and TechnicalAnalysis.is_bearish_candle(pc):
+                    if pc["close"] < pp["low"] and cf < cs * 0.9995:
+                        hit = True
+
                 if hit:
                     sig_dir = "SELL"
 
