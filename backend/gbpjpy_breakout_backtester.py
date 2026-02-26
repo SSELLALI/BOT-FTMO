@@ -587,20 +587,29 @@ class GBPJPYBreakoutBacktester:
         is_bull = c["close"] > c["open"]
         is_bear = c["close"] < c["open"]
 
+        # Classic pinbar
         if body_ratio < 0.35 and lw > body * 2.0 and uw < body * 1.0:
             patterns.append("BULLISH_PINBAR")
         if body_ratio < 0.35 and uw > body * 2.0 and lw < body * 1.0:
             patterns.append("BEARISH_PINBAR")
+        # Hammer / Shooting star
         if is_bull and lw > body * 2.0 and uw < body * 0.5:
             patterns.append("HAMMER")
         if is_bear and uw > body * 2.0 and lw < body * 0.5:
             patterns.append("SHOOTING_STAR")
+        # Engulfing
         if is_bull and p["close"] < p["open"] and c["close"] > p["open"] and c["open"] < p["close"]:
             patterns.append("BULLISH_ENGULFING")
         if is_bear and p["close"] > p["open"] and c["close"] < p["open"] and c["open"] > p["close"]:
             patterns.append("BEARISH_ENGULFING")
-        if body_ratio > 0.65:
+        # Strong impulse candle (relaxed from 0.65 to 0.50)
+        if body_ratio > 0.50:
             patterns.append("STRONG_BULLISH" if is_bull else "STRONG_BEARISH")
+        # Close near extreme — valid rejection in price action
+        if is_bull and (c["close"] - c["low"]) / rng > 0.70:
+            patterns.append("BULLISH_CLOSE_HIGH")
+        if is_bear and (c["high"] - c["close"]) / rng > 0.70:
+            patterns.append("BEARISH_CLOSE_LOW")
         return patterns
 
     def _find_next_swing_target(self, swings, entry, direction):
