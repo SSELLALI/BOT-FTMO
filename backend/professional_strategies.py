@@ -271,18 +271,18 @@ class ScalpingStrategy:
         signal = None
 
         # =============== BUY SETUPS ===============
-        ema_bullish = cur_ema9 > cur_ema21
-        rsi_ok_buy = 30 <= rsi <= 72
+        ema_bullish = cur_fast > cur_slow
+        rsi_ok_buy = 30 <= rsi <= 65
 
         if ema_bullish and rsi_ok_buy:
-            # Aggressive: EMA trend is already filtering. Need just 1 confirmation
+            # Optimized: EMA 15/30 trend filter + 1 confirmation
             entry_triggered = False
             reason = ""
             prev_candle = candles[current_index - 1]
 
-            # Signal 1: Price bounced from EMA9 area
-            near_ema9 = abs(prev_candle["low"] - prev_ema9) / current_price < 0.0006
-            if near_ema9 and current_price > prev_candle["high"]:
+            # Signal 1: Price bounced from fast EMA area
+            near_ema = abs(prev_candle["low"] - prev_fast) / current_price < 0.0006
+            if near_ema and current_price > prev_candle["high"]:
                 entry_triggered = True
                 reason = f"EMA9 bounce, RSI {rsi:.0f}"
 
