@@ -1,7 +1,7 @@
 {
   "phase": "train_grid",
   "strategy": "INTRADAY",
-  "progress": "350/648",
-  "elapsed_sec": 75.0,
+  "progress": "600/648",
+  "elapsed_sec": 115.2,
   "progress_key": "GBPJPY_intraday"
 }
