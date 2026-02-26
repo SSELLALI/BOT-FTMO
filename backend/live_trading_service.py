@@ -205,23 +205,27 @@ class LiveTradingService:
     def get_status(self) -> Dict:
         """Get current live trading status"""
         risk_status = self.risk_manager.get_status() if self.risk_manager else {}
+        pa_status = self.pa_strategy.get_status()
         return {
             "connected": self.is_connected,
             "trading": self.is_running,
             "strategies": self.enabled_strategies,
             "symbols": self.trading_symbols,
+            "pa_strategy": pa_status,
             "open_trades": len(self.active_trades),
             "closed_trades": len(self.closed_trades),
             "risk_status": risk_status,
             "market_prices": self.market_prices,
+            "h1_candles_buffered": len(self.candle_buffer_h1),
+            "m30_candles_buffered": len(self.candle_buffer_m30),
             "active_trades": [
                 {
-                    "symbol": t.signal.symbol,
-                    "direction": t.signal.direction,
-                    "strategy": t.signal.strategy,
+                    "symbol": getattr(t.signal, "symbol", "USDJPY"),
+                    "direction": getattr(t.signal, "direction", ""),
+                    "strategy": getattr(t.signal, "strategy", ""),
                     "entry_price": t.fill_price,
-                    "stop_loss": t.signal.stop_loss,
-                    "take_profit": t.signal.take_profit,
+                    "stop_loss": getattr(t.signal, "stop_loss", 0),
+                    "take_profit": getattr(t.signal, "take_profit", 0),
                     "status": t.status,
                     "opened_at": t.opened_at.isoformat() if t.opened_at else None
                 }
@@ -229,9 +233,9 @@ class LiveTradingService:
             ],
             "recent_closed": [
                 {
-                    "symbol": t.signal.symbol,
-                    "direction": t.signal.direction,
-                    "strategy": t.signal.strategy,
+                    "symbol": getattr(t.signal, "symbol", "USDJPY"),
+                    "direction": getattr(t.signal, "direction", ""),
+                    "strategy": getattr(t.signal, "strategy", ""),
                     "pnl": round(t.pnl, 2),
                     "closed_at": t.closed_at.isoformat() if t.closed_at else None
                 }
