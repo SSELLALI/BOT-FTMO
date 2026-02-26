@@ -2,7 +2,7 @@
   "phase": "train_grid",
   "strategy": "COMBINED",
   "symbol": "USDJPY",
-  "progress": "100/384",
-  "elapsed_sec": 33.3,
+  "progress": "300/384",
+  "elapsed_sec": 99.5,
   "progress_key": "USDJPY_COMBINED"
 }

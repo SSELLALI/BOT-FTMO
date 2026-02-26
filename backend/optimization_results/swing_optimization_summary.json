@@ -1,0 +1,144 @@
+{
+  "timestamp": "2026-02-26T18:05:22.015783+00:00",
+  "total_elapsed_sec": 2201.5,
+  "pairs_tested": [
+    "GBPJPY",
+    "AUDCAD",
+    "USDJPY"
+  ],
+  "strategies_tested": [
+    "BOUNCE",
+    "BREAKOUT",
+    "COMBINED"
+  ],
+  "total_robust_winners": 2,
+  "winners": [
+    {
+      "symbol": "USDJPY",
+      "strategy": "BREAKOUT",
+      "weekly_return": 0.016,
+      "total_return": 5.78,
+      "trades": 347,
+      "win_rate": 30.0,
+      "profit_factor": 1.05,
+      "max_dd": 4.38,
+      "ftmo_compliant": "True",
+      "robustness": 0.62,
+      "params": {
+        "d1_swing_lookback": 8,
+        "h4_swing_lookback": 12,
+        "sr_cluster_pips": 40,
+        "sr_proximity_pips": 45,
+        "min_rr": 2.5,
+        "min_sl_pips": 25,
+        "max_sl_pips": 100,
+        "risk_per_trade": 0.005,
+        "sr_break_pips": 15,
+        "sl_buffer_pips": 10,
+        "min_zone_strength": 2,
+        "max_hold_bars": 96,
+        "max_daily_trades": 3,
+        "max_consecutive_losses": 2
+      }
+    },
+    {
+      "symbol": "USDJPY",
+      "strategy": "BREAKOUT",
+      "weekly_return": 0.016,
+      "total_return": 5.78,
+      "trades": 347,
+      "win_rate": 30.0,
+      "profit_factor": 1.05,
+      "max_dd": 4.38,
+      "ftmo_compliant": "True",
+      "robustness": 0.62,
+      "params": {
+        "d1_swing_lookback": 8,
+        "h4_swing_lookback": 12,
+        "sr_cluster_pips": 40,
+        "sr_proximity_pips": 45,
+        "min_rr": 2.5,
+        "min_sl_pips": 25,
+        "max_sl_pips": 150,
+        "risk_per_trade": 0.005,
+        "sr_break_pips": 15,
+        "sl_buffer_pips": 10,
+        "min_zone_strength": 2,
+        "max_hold_bars": 96,
+        "max_daily_trades": 3,
+        "max_consecutive_losses": 2
+      }
+    }
+  ],
+  "per_pair_status": {
+    "GBPJPY": {
+      "BOUNCE": {
+        "status": "NO_OOS_PROFITABLE",
+        "grid_size": 384,
+        "viable_train": 208,
+        "profitable_oos": 0,
+        "robust": 0
+      },
+      "BREAKOUT": {
+        "status": "NO_OOS_PROFITABLE",
+        "grid_size": 768,
+        "viable_train": 272,
+        "profitable_oos": 0,
+        "robust": 0
+      },
+      "COMBINED": {
+        "status": "NO_OOS_PROFITABLE",
+        "grid_size": 384,
+        "viable_train": 238,
+        "profitable_oos": 0,
+        "robust": 0
+      }
+    },
+    "AUDCAD": {
+      "BOUNCE": {
+        "status": "COMPLETE",
+        "grid_size": 384,
+        "viable_train": 2,
+        "profitable_oos": 2,
+        "robust": 0
+      },
+      "BREAKOUT": {
+        "status": "NO_OOS_PROFITABLE",
+        "grid_size": 768,
+        "viable_train": 46,
+        "profitable_oos": 0,
+        "robust": 0
+      },
+      "COMBINED": {
+        "status": "COMPLETE",
+        "grid_size": 384,
+        "viable_train": 2,
+        "profitable_oos": 2,
+        "robust": 0
+      }
+    },
+    "USDJPY": {
+      "BOUNCE": {
+        "status": "COMPLETE",
+        "grid_size": 384,
+        "viable_train": 32,
+        "profitable_oos": 8,
+        "robust": 0
+      },
+      "BREAKOUT": {
+        "status": "COMPLETE",
+        "grid_size": 768,
+        "viable_train": 30,
+        "profitable_oos": 4,
+        "robust": 2
+      },
+      "COMBINED": {
+        "status": "COMPLETE",
+        "grid_size": 384,
+        "viable_train": 18,
+        "profitable_oos": 4,
+        "robust": 0
+      }
+    }
+  }
+}
