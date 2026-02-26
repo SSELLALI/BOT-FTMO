@@ -52,8 +52,8 @@ def run_scalping_with_params(
             risk_mgr.reset_daily()
         last_day = current_day
 
-        # Only trade during profitable hours
-        if hour not in (9, 10, 11, 13, 14, 17):
+        # Only trade 07-17 UTC
+        if hour < 7 or hour > 17:
             continue
 
         # Check open trade exit
