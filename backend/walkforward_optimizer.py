@@ -146,6 +146,8 @@ def walk_forward_optimize(
     top_n: int = 15,
     initial_balance: float = 100000,
     progress_key: str = "",
+    symbol: str = "EURUSD",
+    base_spread: float = 0.8,
 ) -> Dict:
     """
     Full walk-forward optimization:
