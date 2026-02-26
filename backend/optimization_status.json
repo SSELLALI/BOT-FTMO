@@ -1,7 +1,6 @@
 {
-  "strategy": "INTRADAY",
-  "phase": "grid_search",
-  "progress": "250/1728",
-  "elapsed_sec": 25.8,
-  "progress_key": "intraday_h1"
+  "phase": "COMPLETE",
+  "elapsed_sec": 429.5,
+  "results_file": "/app/backend/optimization_results.json",
+  "finished_at": "2026-02-26 10:49:48"
 }
