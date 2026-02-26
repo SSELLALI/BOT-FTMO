@@ -192,8 +192,10 @@ class PriceActionSignalGenerator:
         losses_arr = np.zeros(n)
         for i in range(1, n):
             d = closes[i] - closes[i-1]
-            if d > 0: gains[i] = d
-            else: losses_arr[i] = abs(d)
+            if d > 0:
+                gains[i] = d
+            else:
+                losses_arr[i] = abs(d)
         avg_g, avg_l = 0.0, 0.0
         for i in range(1, n):
             if i <= 14:
