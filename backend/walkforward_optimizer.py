@@ -260,7 +260,8 @@ def walk_forward_optimize(
             "progress_key": progress_key,
         })
 
-        is_robust, pass_rate = check_robustness(cand["params"], train, strategy_type)
+        is_robust, pass_rate = check_robustness(cand["params"], train, strategy_type,
+                                                symbol=symbol, base_spread=base_spread)
         cand["robust"] = is_robust
         cand["robustness_rate"] = pass_rate
         robust_results.append(cand)
