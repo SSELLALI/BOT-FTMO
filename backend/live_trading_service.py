@@ -290,9 +290,26 @@ class LiveTradingService:
                 "open": price, "high": price, "low": price, "close": price,
                 "volume": 100
             })
-            # Keep last 500 candles
             if len(self.candle_buffer_m15) > 500:
                 self.candle_buffer_m15 = self.candle_buffer_m15[-500:]
+
+        # Build M30 candles (for PA strategy)
+        m30_slot = now.replace(second=0, microsecond=0)
+        m30_slot = m30_slot.replace(minute=(m30_slot.minute // 30) * 30)
+
+        if self.candle_buffer_m30 and self.candle_buffer_m30[-1]["datetime"] == m30_slot:
+            c = self.candle_buffer_m30[-1]
+            c["high"] = max(c["high"], price)
+            c["low"] = min(c["low"], price)
+            c["close"] = price
+        else:
+            self.candle_buffer_m30.append({
+                "datetime": m30_slot,
+                "open": price, "high": price, "low": price, "close": price,
+                "volume": 100
+            })
+            if len(self.candle_buffer_m30) > 500:
+                self.candle_buffer_m30 = self.candle_buffer_m30[-500:]
 
         # Build H1 candles
         h1_slot = now.replace(minute=0, second=0, microsecond=0)
