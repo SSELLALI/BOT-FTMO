@@ -1,7 +1,7 @@
 {
   "phase": "train",
   "strategy": "BREAKOUT",
-  "progress": "250/576",
-  "elapsed_sec": 54.2,
+  "progress": "550/576",
+  "elapsed_sec": 115.2,
   "progress_key": "AUDCAD_breakout"
 }

@@ -1,0 +1,147 @@
+{
+  "pairs": {
+    "GBPJPY_bounce": {
+      "status": "NO_OOS_PROFITABLE",
+      "total_params_tested": 288,
+      "viable_on_train": 2,
+      "profitable_oos": 0,
+      "best_candidate": {
+        "params": {
+          "swing_lookback": 20,
+          "sr_cluster_pips": 20,
+          "sr_proximity_pips": 25,
+          "min_rr": 2.0,
+          "min_sl_pips": 20,
+          "max_sl_pips": 50,
+          "risk_per_trade": 0.005,
+          "sr_break_pips": 15,
+          "rsi_extreme": 33,
+          "min_zone_strength": 2,
+          "sl_buffer_pips": 8,
+          "session_start": 7,
+          "session_end": 17,
+          "max_daily_trades": 3,
+          "max_consecutive_losses": 2,
+          "sr_max_zones": 30
+        },
+        "train": {
+          "total_trades": 309,
+          "wins": 106,
+          "losses": 203,
+          "win_rate": 34.3,
+          "total_return_pct": 2.06,
+          "weekly_return_pct": 0.027,
+          "profit_factor": 1.02,
+          "max_drawdown_pct": 5.87,
+          "max_daily_loss_pct": 1.13,
+          "ftmo_compliant": "True",
+          "start_date": "2024-01-24",
+          "end_date": "2025-07-03",
+          "avg_trade_pnl": 6.66
+        },
+        "test": {
+          "total_trades": 33,
+          "wins": 7,
+          "losses": 26,
+          "win_rate": 21.2,
+          "total_return_pct": -6.19,
+          "weekly_return_pct": -1.238,
+          "profit_factor": 0.51,
+          "max_drawdown_pct": 6.19,
+          "max_daily_loss_pct": 1.01,
+          "ftmo_compliant": "True",
+          "start_date": "2025-07-14",
+          "end_date": "2025-08-19",
+          "avg_trade_pnl": -187.5
+        }
+      }
+    },
+    "GBPJPY_breakout": {
+      "status": "COMPLETE",
+      "total_params_tested": 576,
+      "viable_on_train": 18,
+      "profitable_oos": 1,
+      "robust_count": 0,
+      "results": [
+        {
+          "params": {
+            "swing_lookback": 20,
+            "sr_cluster_pips": 20,
+            "sr_proximity_pips": 15,
+            "min_rr": 2.5,
+            "min_sl_pips": 40,
+            "max_sl_pips": 50,
+            "risk_per_trade": 0.005,
+            "sr_break_pips": 20,
+            "rsi_extreme": 33,
+            "min_zone_strength": 2,
+            "sl_buffer_pips": 8,
+            "session_start": 7,
+            "session_end": 17,
+            "max_daily_trades": 3,
+            "max_consecutive_losses": 2,
+            "sr_max_zones": 30
+          },
+          "train": {
+            "total_trades": 204,
+            "wins": 59,
+            "losses": 145,
+            "win_rate": 28.9,
+            "total_return_pct": 0.49,
+            "weekly_return_pct": 0.007,
+            "profit_factor": 1.01,
+            "max_drawdown_pct": 4.12,
+            "max_daily_loss_pct": 1.11,
+            "ftmo_compliant": "True",
+            "start_date": "2024-01-26",
+            "end_date": "2025-07-03",
+            "avg_trade_pnl": 2.4
+          },
+          "test": {
+            "total_trades": 71,
+            "wins": 21,
+            "losses": 50,
+            "win_rate": 29.6,
+            "total_return_pct": 1.25,
+            "weekly_return_pct": 0.039,
+            "profit_factor": 1.05,
+            "max_drawdown_pct": 2.3,
+            "max_daily_loss_pct": 1.04,
+            "ftmo_compliant": "True",
+            "start_date": "2025-07-14",
+            "end_date": "2026-02-26",
+            "avg_trade_pnl": 17.56
+          },
+          "full_period": {
+            "total_trades": 277,
+            "wins": 83,
+            "losses": 194,
+            "win_rate": 30.0,
+            "total_return_pct": 5.71,
+            "weekly_return_pct": 0.053,
+            "profit_factor": 1.06,
+            "max_drawdown_pct": 1.89,
+            "max_daily_loss_pct": 1.12,
+            "ftmo_compliant": "True",
+            "start_date": "2024-01-26",
+            "end_date": "2026-02-26",
+            "avg_trade_pnl": 20.63
+          },
+          "robust": false,
+          "robustness_rate": 0.5
+        }
+      ]
+    },
+    "AUDCAD_bounce": {
+      "status": "NO_VIABLE_TRAIN",
+      "total_params_tested": 288,
+      "viable_on_train": 0
+    },
+    "AUDCAD_breakout": {
+      "status": "NO_VIABLE_TRAIN",
+      "total_params_tested": 576,
+      "viable_on_train": 0
+    }
+  },
+  "elapsed_sec": 359.6
+}
