@@ -75,6 +75,9 @@ class LiveTradingService:
         self._last_candle_time: Optional[datetime] = None
         self._last_pa_check: Optional[datetime] = None
 
+        # Pre-load historical data for PA strategy
+        self._init_historical_data()
+
     def configure(self, initial_balance: float = 10000.0, symbols: List[str] = None):
         self.initial_balance = initial_balance
         if symbols:
