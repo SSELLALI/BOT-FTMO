@@ -1,7 +1,7 @@
 {
-  "strategy": "SCALPING",
+  "strategy": "INTRADAY",
   "phase": "grid_search",
-  "progress": "1500/2304",
-  "elapsed_sec": 140.7,
-  "progress_key": "scalping_h1"
+  "progress": "200/1728",
+  "elapsed_sec": 20.2,
+  "progress_key": "intraday_h1"
 }
