@@ -495,10 +495,17 @@ class GBPJPYBreakoutBacktester:
 
     # ── Helpers ──
     def _find_h1_index(self, entry_time, h1_times):
-        for i in range(len(h1_times) - 1, -1, -1):
-            if h1_times[i] <= entry_time:
-                return i
-        return None
+        # Binary search for the last H1 candle <= entry_time
+        lo, hi = 0, len(h1_times) - 1
+        result = None
+        while lo <= hi:
+            mid = (lo + hi) // 2
+            if h1_times[mid] <= entry_time:
+                result = mid
+                lo = mid + 1
+            else:
+                hi = mid - 1
+        return result
 
     def _compute_rsi(self, closes, period=14):
         n = len(closes)
