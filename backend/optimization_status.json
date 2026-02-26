@@ -1,8 +1,8 @@
 {
   "phase": "train_grid",
-  "strategy": "BREAKOUT",
+  "strategy": "BOUNCE",
   "symbol": "GBPJPY",
-  "progress": "100/768",
-  "elapsed_sec": 68.5,
-  "progress_key": "GBPJPY_BREAKOUT"
+  "progress": "200/384",
+  "elapsed_sec": 246.3,
+  "progress_key": "GBPJPY_BOUNCE"
 }
