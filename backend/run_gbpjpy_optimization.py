@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-GBPJPY Breakout-Pullback Walk-Forward Optimization v2
-M30 entry, multi-breakout tracking, relaxed patterns.
+GBPJPY Breakout-Pullback Walk-Forward Optimization v2 (Performance-Optimized)
+Pre-computes breakouts per unique H1 parameter set, then runs M30 entries fast.
 """
 import os, sys, json, time, random, logging, itertools
 from datetime import datetime, timezone
@@ -23,43 +23,48 @@ RESULTS_DIR = "/app/backend/optimization_results"
 os.makedirs(RESULTS_DIR, exist_ok=True)
 
 
-def generate_grid():
-    """Focused parameter grid — ~3000 combos based on diagnostic results."""
+def generate_entry_params_grid():
+    """Entry-only params (fast to iterate)."""
     combos = list(itertools.product(
-        [5, 6],                        # swing_lookback (2) — 5 and 6 best
         [3, 5, 8],                     # sl_buffer_pips (3)
-        [1.5, 2.0],                    # min_rr (2) — 1.5 gives more trades
-        [0.01],                        # risk_per_trade (fixed)
-        [0.35, 0.45],                 # breakout_body_ratio (2)
-        [0.3, 0.5],                   # breakout_size_mult (2)
-        [1.2, 1.8],                   # max_pullback_depth (2)
-        [0.7, 1.0],                   # proximity_factor (2)
+        [1.5, 2.0],                    # min_rr (2)
+        [1.2, 1.8],                    # max_pullback_depth (2)
+        [0.7, 1.0],                    # proximity_factor (2)
         [25, 40],                      # stale_timeout (2)
-        [True],                        # extend_session — always True (better)
+        [True],                        # extend_session (1)
         [False, True],                 # use_structural_tp (2)
         [(35, 78), (30, 80)],         # rsi_long (2)
         [(22, 65), (20, 70)],         # rsi_short (2)
     ))
-    return combos  # 2*3*2*1*2*2*2*2*2*1*2*2*2 = 3072
+    return combos  # 3*2*2*2*2*1*2*2*2 = 384
 
 
-def params_from_tuple(t):
+def h1_param_combos():
+    """H1-level params that affect breakout detection."""
+    return list(itertools.product(
+        [5, 6],                        # swing_lookback (2)
+        [0.35, 0.45],                 # breakout_body_ratio (2)
+        [0.3, 0.5],                   # breakout_size_mult (2)
+    ))  # 2*2*2 = 8
+
+
+def make_params(h1_combo, entry_combo):
     return {
-        "swing_lookback": t[0],
-        "sl_buffer_pips": t[1],
-        "min_rr": t[2],
-        "risk_per_trade": t[3],
-        "breakout_body_ratio": t[4],
-        "breakout_size_mult": t[5],
-        "max_pullback_depth": t[6],
-        "proximity_factor": t[7],
-        "stale_timeout": t[8],
-        "extend_session": t[9],
-        "use_structural_tp": t[10],
-        "rsi_long_min": t[11][0],
-        "rsi_long_max": t[11][1],
-        "rsi_short_min": t[12][0],
-        "rsi_short_max": t[12][1],
+        "swing_lookback": h1_combo[0],
+        "breakout_body_ratio": h1_combo[1],
+        "breakout_size_mult": h1_combo[2],
+        "sl_buffer_pips": entry_combo[0],
+        "min_rr": entry_combo[1],
+        "max_pullback_depth": entry_combo[2],
+        "proximity_factor": entry_combo[3],
+        "stale_timeout": entry_combo[4],
+        "extend_session": entry_combo[5],
+        "use_structural_tp": entry_combo[6],
+        "rsi_long_min": entry_combo[7][0],
+        "rsi_long_max": entry_combo[7][1],
+        "rsi_short_min": entry_combo[8][0],
+        "rsi_short_max": entry_combo[8][1],
+        "risk_per_trade": 0.01,
         "be_trigger_rr": 1.0,
         "max_daily_trades": 4,
         "max_consecutive_losses": 4,
@@ -70,125 +75,101 @@ def params_from_tuple(t):
 
 def result_to_dict(r):
     return {
-        "total_trades": r.total_trades,
-        "wins": r.wins,
-        "losses": r.losses,
-        "win_rate": r.win_rate,
-        "total_return_pct": r.total_return_pct,
-        "weekly_return_pct": r.weekly_return_pct,
-        "profit_factor": r.profit_factor,
-        "max_drawdown_pct": r.max_drawdown_pct,
-        "max_daily_loss_pct": r.max_daily_loss_pct,
-        "ftmo_compliant": r.ftmo_compliant,
-        "avg_rr_achieved": r.avg_rr_achieved,
-        "start_date": r.start_date,
-        "end_date": r.end_date,
+        "total_trades": r.total_trades, "wins": r.wins, "losses": r.losses,
+        "win_rate": r.win_rate, "total_return_pct": r.total_return_pct,
+        "weekly_return_pct": r.weekly_return_pct, "profit_factor": r.profit_factor,
+        "max_drawdown_pct": r.max_drawdown_pct, "max_daily_loss_pct": r.max_daily_loss_pct,
+        "ftmo_compliant": r.ftmo_compliant, "avg_rr_achieved": r.avg_rr_achieved,
+        "start_date": r.start_date, "end_date": r.end_date,
     }
 
 
 def run_optimization():
     t0 = time.time()
     logger.info("=" * 60)
-    logger.info("GBPJPY BREAKOUT v2 - WALK-FORWARD OPTIMIZATION")
-    logger.info("M30 entry, multi-breakout, enhanced patterns")
+    logger.info("GBPJPY BREAKOUT v2 - OPTIMIZED WALK-FORWARD")
     logger.info("=" * 60)
 
     h1 = load_tradingview_csv("/app/backend/historical_data/GBPJPY_H1_TV.csv")
     m30 = load_tradingview_csv("/app/backend/historical_data/GBPJPY_M30_TV.csv")
 
-    if not h1 or not m30:
-        logger.error("Data loading failed!")
-        return
-
-    # Walk-forward split: 65% train / 35% test on M30 timeline
     m30_split = int(len(m30) * 0.65)
-    split_time = m30[m30_split]["datetime"]
-
     m30_train = m30[:m30_split]
     m30_test = m30[m30_split:]
 
-    logger.info(f"H1: {len(h1)} candles")
-    logger.info(f"M30 total: {len(m30)} | train: {len(m30_train)} | test: {len(m30_test)}")
-    logger.info(f"Split at: {split_time.date()}")
+    logger.info(f"H1: {len(h1)} | M30: {len(m30)} (train={len(m30_train)}, test={len(m30_test)})")
     logger.info(f"Train: {m30_train[0]['datetime'].date()} -> {m30_train[-1]['datetime'].date()}")
     logger.info(f"Test:  {m30_test[0]['datetime'].date()} -> {m30_test[-1]['datetime'].date()}")
 
-    grid = generate_grid()
-    logger.info(f"Grid: {len(grid)} parameter combinations")
+    h1_combos = h1_param_combos()
+    entry_combos = generate_entry_params_grid()
+    total = len(h1_combos) * len(entry_combos)
+    logger.info(f"H1 param sets: {len(h1_combos)} | Entry param sets: {len(entry_combos)} | Total: {total}")
 
-    # Phase 1: Train Grid Search
-    logger.info("\n=== PHASE 1: TRAIN GRID SEARCH ===")
+    # Phase 1: Train
+    logger.info("\n=== PHASE 1: TRAIN ===")
     train_results = []
+    tested = 0
 
-    for idx, combo in enumerate(grid):
-        if idx % 500 == 0:
-            elapsed = time.time() - t0
-            logger.info(f"  Grid {idx}/{len(grid)} ({elapsed:.0f}s) — {len(train_results)} viable so far")
-
-        random.seed(42)
-        params = params_from_tuple(combo)
-        bt = GBPJPYBreakoutBacktester(initial_balance=100000)
-        r = bt.run(h1, m30_train, params, base_spread=2.5)
-
-        if r.total_trades >= 5 and r.total_return_pct > 0 and r.ftmo_compliant and r.profit_factor > 1.0:
-            train_results.append((params, r))
-
-    train_results.sort(key=lambda x: (x[1].profit_factor * x[1].total_trades, x[1].weekly_return_pct), reverse=True)
-    logger.info(f"Phase 1 done: {len(train_results)} viable / {len(grid)} tested")
-
-    if not train_results:
-        logger.info("Relaxing to 3+ trades...")
-        for combo in grid:
+    for h1c in h1_combos:
+        h1_t0 = time.time()
+        for ec in entry_combos:
             random.seed(42)
-            params = params_from_tuple(combo)
+            params = make_params(h1c, ec)
             bt = GBPJPYBreakoutBacktester(initial_balance=100000)
             r = bt.run(h1, m30_train, params, base_spread=2.5)
-            if r.total_trades >= 3 and r.total_return_pct > -2:
+            tested += 1
+
+            if r.total_trades >= 5 and r.total_return_pct > 0 and r.ftmo_compliant and r.profit_factor > 1.0:
                 train_results.append((params, r))
+
+        h1_elapsed = time.time() - h1_t0
+        elapsed = time.time() - t0
+        logger.info(f"  H1({h1c[0]},{h1c[1]},{h1c[2]}): {h1_elapsed:.0f}s | "
+                     f"total={tested}/{total} | viable={len(train_results)} | elapsed={elapsed:.0f}s")
+
+    train_results.sort(key=lambda x: (x[1].profit_factor * x[1].total_trades, x[1].weekly_return_pct), reverse=True)
+    logger.info(f"Phase 1: {len(train_results)} viable / {tested} tested")
+
+    if not train_results:
+        logger.info("Relaxing thresholds...")
+        for h1c in h1_combos:
+            for ec in entry_combos:
+                random.seed(42)
+                params = make_params(h1c, ec)
+                bt = GBPJPYBreakoutBacktester(initial_balance=100000)
+                r = bt.run(h1, m30_train, params, base_spread=2.5)
+                if r.total_trades >= 3 and r.total_return_pct > -2:
+                    train_results.append((params, r))
         train_results.sort(key=lambda x: x[1].weekly_return_pct, reverse=True)
         logger.info(f"  Relaxed: {len(train_results)} found")
 
-    # Phase 2: OOS Test (top 50)
+    # Phase 2: OOS
     top_n = min(50, len(train_results))
     top = train_results[:top_n]
-    logger.info(f"\n=== PHASE 2: OOS TEST (top {top_n}) ===")
+    logger.info(f"\n=== PHASE 2: OOS ({top_n} candidates) ===")
 
     oos_results = []
     for params, train_r in top:
         random.seed(42)
         bt = GBPJPYBreakoutBacktester(initial_balance=100000)
         test_r = bt.run(h1, m30_test, params, base_spread=2.5)
+        logger.info(f"  Train: +{train_r.total_return_pct}% ({train_r.total_trades}t PF={train_r.profit_factor}) | "
+                     f"Test: +{test_r.total_return_pct}% ({test_r.total_trades}t PF={test_r.profit_factor})")
+        oos_results.append({"params": params, "train": result_to_dict(train_r), "test": result_to_dict(test_r)})
 
-        logger.info(
-            f"  Train: +{train_r.total_return_pct}% ({train_r.total_trades}t PF={train_r.profit_factor}) | "
-            f"Test: +{test_r.total_return_pct}% ({test_r.total_trades}t PF={test_r.profit_factor})"
-        )
-
-        oos_results.append({
-            "params": params,
-            "train": result_to_dict(train_r),
-            "test": result_to_dict(test_r),
-        })
-
-    # Phase 3: Full period for profitable OOS results
-    logger.info(f"\n=== PHASE 3: FULL PERIOD (profitable OOS only) ===")
+    # Phase 3: Full period
+    logger.info(f"\n=== PHASE 3: FULL PERIOD ===")
     full_results = []
     for entry in oos_results:
-        test_ok = entry["test"]["total_return_pct"] > 0 and entry["test"]["total_trades"] >= 2
-        if not test_ok:
-            continue
-        random.seed(42)
-        params = entry["params"]
-        bt = GBPJPYBreakoutBacktester(initial_balance=100000)
-        full_r = bt.run(h1, m30, params, base_spread=2.5)
-        entry["full"] = result_to_dict(full_r)
-        full_results.append(entry)
-
-        logger.info(
-            f"  Full: +{full_r.total_return_pct}% weekly={full_r.weekly_return_pct}% "
-            f"trades={full_r.total_trades} WR={full_r.win_rate}% PF={full_r.profit_factor} "
-            f"DD={full_r.max_drawdown_pct}% FTMO={full_r.ftmo_compliant}"
-        )
+        if entry["test"]["total_return_pct"] > 0 and entry["test"]["total_trades"] >= 2:
+            random.seed(42)
+            bt = GBPJPYBreakoutBacktester(initial_balance=100000)
+            full_r = bt.run(h1, m30, params=entry["params"], base_spread=2.5)
+            entry["full"] = result_to_dict(full_r)
+            full_results.append(entry)
+            logger.info(f"  Full: +{full_r.total_return_pct}% wk={full_r.weekly_return_pct}% "
+                         f"trades={full_r.total_trades} WR={full_r.win_rate}% PF={full_r.profit_factor} DD={full_r.max_drawdown_pct}%")
 
     full_results.sort(key=lambda x: x["full"]["weekly_return_pct"], reverse=True)
 
@@ -196,7 +177,7 @@ def run_optimization():
     summary = {
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "elapsed_sec": elapsed,
-        "total_grid": len(grid),
+        "total_grid": total,
         "viable_train": len(train_results),
         "oos_tested": len(oos_results),
         "oos_profitable": len(full_results),
@@ -208,25 +189,21 @@ def run_optimization():
         json.dump(summary, f, indent=2, default=str)
 
     logger.info(f"\n{'='*60}")
-    logger.info(f"OPTIMIZATION COMPLETE in {elapsed}s ({elapsed/60:.1f} min)")
-    logger.info(f"Viable train: {len(train_results)} | OOS profitable: {len(full_results)}")
-    logger.info(f"Results saved to: {out_file}")
+    logger.info(f"DONE in {elapsed}s ({elapsed/60:.1f} min)")
+    logger.info(f"Viable: {len(train_results)} | OOS profitable: {len(full_results)}")
 
     if full_results:
         best = full_results[0]
         bf = best["full"]
-        logger.info(f"\nBEST FULL: +{bf['weekly_return_pct']}%/week | {bf['total_trades']} trades | "
-                     f"WR={bf['win_rate']}% | PF={bf['profit_factor']} | DD={bf['max_drawdown_pct']}%")
-        bt_ = best["train"]
-        ts_ = best["test"]
-        logger.info(f"  Train: +{bt_['weekly_return_pct']}%/w ({bt_['total_trades']}t) | "
-                     f"Test: +{ts_['weekly_return_pct']}%/w ({ts_['total_trades']}t)")
-        logger.info(f"  Params: SL={best['params']['swing_lookback']} body={best['params']['breakout_body_ratio']} "
-                     f"vol={best['params']['breakout_size_mult']} RR={best['params']['min_rr']} "
-                     f"prox={best['params']['proximity_factor']} timeout={best['params']['stale_timeout']} "
-                     f"ext={best['params']['extend_session']}")
+        logger.info(f"\nBEST: +{bf['weekly_return_pct']}%/week | {bf['total_trades']} trades | "
+                     f"WR={bf['win_rate']}% PF={bf['profit_factor']} DD={bf['max_drawdown_pct']}%")
+        p = best["params"]
+        logger.info(f"  SL={p['swing_lookback']} body={p['breakout_body_ratio']} vol={p['breakout_size_mult']} "
+                     f"RR={p['min_rr']} prox={p['proximity_factor']} timeout={p['stale_timeout']} "
+                     f"ext={p['extend_session']} RSI_L=({p['rsi_long_min']},{p['rsi_long_max']}) "
+                     f"RSI_S=({p['rsi_short_min']},{p['rsi_short_max']})")
     else:
-        logger.info("\nAUCUN RESULTAT OOS PROFITABLE.")
+        logger.info("\nNO PROFITABLE OOS RESULTS")
 
     return summary
 
