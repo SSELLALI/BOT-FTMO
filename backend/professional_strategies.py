@@ -228,14 +228,15 @@ class ScalpingStrategy:
         self.name = "SCALPING"
         self.max_trades_per_day = 10
         self.max_consecutive_losses = 3
-        self.min_sl_pips = 15
+        # Optimized parameters from walk-forward analysis (Feb 2026)
+        self.min_sl_pips = 10
         self.max_sl_pips = 30
         self.min_rr = 2.5
-        self.fast_ema_period = 15
-        self.slow_ema_period = 30
-        self.atr_multiplier = 1.5
-        self.rsi_buy_max = 60
-        self.rsi_sell_min = 40
+        self.fast_ema_period = 20
+        self.slow_ema_period = 50
+        self.atr_multiplier = 1.0
+        self.rsi_buy_max = 70
+        self.rsi_sell_min = 30
 
     def is_valid_session(self, hour: int) -> bool:
         return 7 <= hour <= 17
