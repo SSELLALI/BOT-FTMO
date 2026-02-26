@@ -121,7 +121,7 @@ def run_optimization():
     train_results = []
 
     for idx, combo in enumerate(grid):
-        if idx % 2000 == 0:
+        if idx % 500 == 0:
             elapsed = time.time() - t0
             logger.info(f"  Grid {idx}/{len(grid)} ({elapsed:.0f}s) — {len(train_results)} viable so far")
 
