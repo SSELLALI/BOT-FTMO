@@ -621,6 +621,223 @@ class ProfessionalBacktester:
         end_date = m15_candles[-1]["datetime"] if m15_candles else datetime.now(timezone.utc)
         return self._compile_report(symbol, "SCALPING", start_date, end_date, data_source)
     
+    def _run_intraday_backtest(
+        self, symbol: str, h1_candles: List[Dict], data_source: str
+    ) -> BacktestReport:
+        """
+        Intraday backtest using H1 data only.
+        Ultra-simple: 1 indicator (EMA) + pullback entry + ATR-based SL.
+        """
+        rm = self.risk_manager
+        intra = self.intraday
+        open_trade = None
+        last_day = None
+        
+        closes = [c["close"] for c in h1_candles]
+        ema = TechnicalAnalysis.ema(closes, intra.ema_period)
+        
+        start_idx = intra.ema_period + 5
+        
+        for i in range(start_idx, len(h1_candles)):
+            candle = h1_candles[i]
+            hour = candle["datetime"].hour
+            current_day = candle["datetime"].date()
+            
+            if last_day and current_day != last_day:
+                if rm.intraday_state.is_stopped_today:
+                    self.days_stopped += 1
+                rm.reset_daily()
+            last_day = current_day
+            
+            if not intra.is_valid_session(hour):
+                continue
+            
+            price = candle["close"]
+            cur_ema = ema[i]
+            prev = h1_candles[i - 1]
+            atr = TechnicalAnalysis.atr(h1_candles[:i + 1], 14)
+            
+            if atr < 0.0003:
+                continue
+            
+            # === EXIT ===
+            if open_trade:
+                sig = open_trade["signal"]
+                exited = False
+                exit_price = 0
+                exit_reason = ""
+                
+                daily_loss = abs(rm.daily_pnl) / rm.initial_balance if rm.daily_pnl < 0 else 0
+                total_dd = (rm.initial_balance - rm.current_balance) / rm.initial_balance if rm.current_balance < rm.initial_balance else 0
+                
+                if daily_loss >= 0.03 or total_dd >= 0.06:
+                    exit_price = candle["close"]
+                    exit_reason = "SAFETY"
+                    exited = True
+                elif sig["direction"] == "BUY":
+                    if candle["low"] <= sig["sl"]:
+                        exit_price = sig["sl"]
+                        exit_reason = "SL"
+                        exited = True
+                    elif candle["high"] >= sig["tp"]:
+                        exit_price = sig["tp"]
+                        exit_reason = "TP"
+                        exited = True
+                else:
+                    if candle["high"] >= sig["sl"]:
+                        exit_price = sig["sl"]
+                        exit_reason = "SL"
+                        exited = True
+                    elif candle["low"] <= sig["tp"]:
+                        exit_price = sig["tp"]
+                        exit_reason = "TP"
+                        exited = True
+                
+                if exited:
+                    if sig["direction"] == "BUY":
+                        pnl_pips = (exit_price - sig["entry"]) * 10000
+                    else:
+                        pnl_pips = (sig["entry"] - exit_price) * 10000
+                    
+                    pnl = pnl_pips * sig["lot_size"] * 10
+                    
+                    if pnl < 0:
+                        max_loss = rm.max_daily_loss * rm.initial_balance - abs(min(0, rm.daily_pnl))
+                        if max_loss > 0 and abs(pnl) > max_loss:
+                            pnl = -max_loss
+                    
+                    rm.current_balance += pnl
+                    rm.daily_pnl += pnl
+                    rm.total_pnl += pnl
+                    if rm.current_balance > rm.peak_balance:
+                        rm.peak_balance = rm.current_balance
+                    
+                    if pnl < 0:
+                        rm.intraday_state.consecutive_losses += 1
+                    else:
+                        rm.intraday_state.consecutive_losses = 0
+                    
+                    current_dd = max(0, (self.initial_balance - rm.current_balance) / self.initial_balance)
+                    if current_dd > self.max_drawdown:
+                        self.max_drawdown = current_dd
+                    
+                    if pnl > 0:
+                        self.current_consecutive = max(1, self.current_consecutive + 1) if self.current_consecutive > 0 else 1
+                        self.max_consecutive_wins = max(self.max_consecutive_wins, self.current_consecutive)
+                    else:
+                        self.current_consecutive = min(-1, self.current_consecutive - 1) if self.current_consecutive < 0 else -1
+                        self.max_consecutive_losses = max(self.max_consecutive_losses, abs(self.current_consecutive))
+                    
+                    day_str = candle["datetime"].strftime("%Y-%m-%d")
+                    self.daily_pnl[day_str] = self.daily_pnl.get(day_str, 0) + pnl
+                    
+                    pnl_pct = pnl / (rm.current_balance - pnl) * 100 if (rm.current_balance - pnl) > 0 else 0
+                    self.trades.append(BacktestTrade(
+                        id=len(self.trades) + 1, symbol=symbol,
+                        direction=sig["direction"], strategy="INTRADAY",
+                        entry_price=sig["entry"], exit_price=exit_price,
+                        stop_loss=sig["sl"], take_profit=sig["tp"],
+                        sl_pips=round(sig["sl_pips"], 1), tp_pips=round(sig["tp_pips"], 1),
+                        lot_size=sig["lot_size"],
+                        entry_time=open_trade["entry_time"], exit_time=candle["datetime"],
+                        pnl=round(pnl, 2), pnl_percent=round(pnl_pct, 4),
+                        exit_reason=exit_reason,
+                        session="LONDON" if hour < 13 else "NY_OVERLAP"
+                    ))
+                    
+                    rm.open_trade_count = 0
+                    open_trade = None
+                    continue
+            
+            # === PRE-ENTRY CHECKS ===
+            if open_trade:
+                continue
+            if rm.intraday_state.is_stopped_today or rm.intraday_state.is_stopped_global:
+                continue
+            if rm.intraday_state.consecutive_losses >= intra.max_consecutive_losses:
+                continue
+            if rm.intraday_state.daily_trades >= intra.max_trades_per_day:
+                continue
+            if rm.open_trade_count >= 1:
+                continue
+            
+            daily_loss = abs(rm.daily_pnl) / rm.initial_balance if rm.daily_pnl < 0 else 0
+            if daily_loss >= 0.035:
+                continue
+            total_dd = (rm.initial_balance - rm.current_balance) / rm.initial_balance if rm.current_balance < rm.initial_balance else 0
+            if total_dd >= 0.07:
+                continue
+            
+            # === SIGNAL: 1 indicator (EMA) + pullback + continuation ===
+            bullish = price > cur_ema and ema[i] > ema[i - 1]
+            bearish = price < cur_ema and ema[i] < ema[i - 1]
+            
+            signal = None
+            
+            # BUY: prev candle pulled back near EMA, current closes bullish above prev high
+            if bullish:
+                near_ema = (prev["low"] <= cur_ema * (1 + intra.pullback_pct) and
+                           prev["low"] >= cur_ema * (1 - intra.pullback_pct))
+                bullish_candle = candle["close"] > candle["open"] and candle["close"] > prev["high"]
+                if near_ema and bullish_candle:
+                    sl_pips = max(intra.min_sl_pips, min(intra.max_sl_pips, round(atr * intra.atr_multiplier * 10000)))
+                    tp_pips = sl_pips * intra.min_rr
+                    lot = rm.calculate_lot_size(sl_pips, symbol)
+                    signal = {
+                        "direction": "BUY", "entry": price,
+                        "sl": price - sl_pips / 10000, "tp": price + tp_pips / 10000,
+                        "lot_size": lot, "sl_pips": sl_pips, "tp_pips": tp_pips
+                    }
+            
+            # SELL: prev candle pulled back near EMA, current closes bearish below prev low
+            if signal is None and bearish:
+                near_ema = (prev["high"] >= cur_ema * (1 - intra.pullback_pct) and
+                           prev["high"] <= cur_ema * (1 + intra.pullback_pct))
+                bearish_candle = candle["close"] < candle["open"] and candle["close"] < prev["low"]
+                if near_ema and bearish_candle:
+                    sl_pips = max(intra.min_sl_pips, min(intra.max_sl_pips, round(atr * intra.atr_multiplier * 10000)))
+                    tp_pips = sl_pips * intra.min_rr
+                    lot = rm.calculate_lot_size(sl_pips, symbol)
+                    signal = {
+                        "direction": "SELL", "entry": price,
+                        "sl": price + sl_pips / 10000, "tp": price - tp_pips / 10000,
+                        "lot_size": lot, "sl_pips": sl_pips, "tp_pips": tp_pips
+                    }
+            
+            if signal:
+                open_trade = {"signal": signal, "entry_time": candle["datetime"]}
+                rm.open_trade_count = 1
+                rm.intraday_state.daily_trades += 1
+            
+            if i % 100 == 0:
+                self.equity_curve.append({
+                    "timestamp": candle["datetime"].isoformat(),
+                    "equity": round(rm.current_balance, 2),
+                    "drawdown": round(max(0, (self.initial_balance - rm.current_balance) / self.initial_balance * 100), 2)
+                })
+        
+        # Close remaining trade
+        if open_trade and h1_candles:
+            last = h1_candles[-1]
+            sig = open_trade["signal"]
+            ep = last["close"]
+            pnl_pips = (ep - sig["entry"]) * 10000 if sig["direction"] == "BUY" else (sig["entry"] - ep) * 10000
+            pnl = pnl_pips * sig["lot_size"] * 10
+            rm.current_balance += pnl
+            self.trades.append(BacktestTrade(
+                id=len(self.trades) + 1, symbol=symbol, direction=sig["direction"],
+                strategy="INTRADAY", entry_price=sig["entry"], exit_price=ep,
+                stop_loss=sig["sl"], take_profit=sig["tp"],
+                sl_pips=round(sig["sl_pips"], 1), tp_pips=round(sig["tp_pips"], 1),
+                lot_size=sig["lot_size"], entry_time=open_trade["entry_time"],
+                exit_time=last["datetime"], pnl=round(pnl, 2), pnl_percent=0,
+                exit_reason="EOD", session="LONDON"
+            ))
+        
+        start_date = h1_candles[0]["datetime"] if h1_candles else datetime.now(timezone.utc)
+        end_date = h1_candles[-1]["datetime"] if h1_candles else datetime.now(timezone.utc)
+        return self._compile_report(symbol, "INTRADAY", start_date, end_date, data_source)
+    
     def _run_multi_strategy_backtest(
         self, symbol: str, strategy: str, m15_candles: List[Dict], h1_candles: List[Dict], data_source: str
     ) -> BacktestReport:
