@@ -382,7 +382,8 @@ class CTraderFIXClient:
             
         elif msg_type == "5":  # Logout
             self.logged_in = False
-            logger.info("Logged out")
+            reason = msg.get(58) or "No reason given"
+            logger.warning(f"Logged out by server. Reason: {reason}")
             
         elif msg_type == "0":  # Heartbeat
             self.last_heartbeat = time.time()
