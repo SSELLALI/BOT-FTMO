@@ -1,7 +1,7 @@
 {
   "phase": "train_grid",
   "strategy": "SCALPING",
-  "progress": "0/3240",
-  "elapsed_sec": 0.0,
+  "progress": "950/3240",
+  "elapsed_sec": 132.4,
   "progress_key": "USDJPY_scalping"
 }
