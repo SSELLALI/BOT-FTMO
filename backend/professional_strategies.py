@@ -273,7 +273,7 @@ class ScalpingStrategy:
 
         # =============== BUY SETUPS ===============
         ema_bullish = cur_fast > cur_slow
-        rsi_ok_buy = rsi > 30 and rsi < 65
+        rsi_ok_buy = rsi > 30 and rsi < self.rsi_buy_max
 
         if ema_bullish and rsi_ok_buy:
             entry_triggered = False
