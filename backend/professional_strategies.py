@@ -250,18 +250,18 @@ class ScalpingStrategy:
         # Extract data
         closes = [c["close"] for c in candles[:current_index + 1]]
 
-        # Indicators
-        ema9 = TechnicalAnalysis.ema(closes, 9)
-        ema21 = TechnicalAnalysis.ema(closes, 21)
+        # Indicators (optimized: EMA 15/30 instead of 9/21)
+        ema_fast = TechnicalAnalysis.ema(closes, self.fast_ema_period)
+        ema_slow = TechnicalAnalysis.ema(closes, self.slow_ema_period)
         rsi = TechnicalAnalysis.rsi(closes, 14)
         atr = TechnicalAnalysis.atr(candles[:current_index + 1], 14)
         bb_upper, bb_mid, bb_lower = TechnicalAnalysis.bollinger_bands(closes, 20, 2.0)
-        momentum = TechnicalAnalysis.momentum(closes, 5)
+        momentum = TechnicalAnalysis.momentum(closes, 8)
 
         current_price = closes[-1]
-        cur_ema9 = ema9[-1]
-        cur_ema21 = ema21[-1]
-        prev_ema9 = ema9[-2]
+        cur_fast = ema_fast[-1]
+        cur_slow = ema_slow[-1]
+        prev_fast = ema_fast[-2]
 
         # Minimum volatility filter (skip very quiet markets)
         min_atr = 0.00025 if "JPY" not in symbol else 0.025
