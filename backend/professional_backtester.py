@@ -259,9 +259,15 @@ class ProfessionalBacktester:
         self.intraday = IntradayStrategy()
         self.risk_manager = ProfessionalRiskManager(initial_balance)
         
+        # Realistic execution costs
+        self.spread_pips = 1.5       # EUR/USD typical spread
+        self.entry_slippage = 0.3    # Market order slippage
+        self.sl_slippage = 0.5       # Stop order slippage
+        self.tp_slippage = 0.0       # Limit order (no slippage)
+        
         # State
         self.trades: List[BacktestTrade] = []
-        self.open_trades: List[Tuple[TradeSignal, Dict]] = []  # (signal, entry_candle)
+        self.open_trades: List[Tuple[TradeSignal, Dict]] = []
         self.equity_curve: List[Dict] = []
         self.daily_pnl: Dict[str, float] = {}
         
