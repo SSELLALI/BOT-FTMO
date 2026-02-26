@@ -968,17 +968,20 @@ class ProfessionalBacktester:
     
     def _close_trade(self, signal: TradeSignal, exit_price: float, exit_time: datetime, exit_reason: str):
         """Close a trade and record results"""
-        # Calculate P&L
         if signal.direction == "BUY":
             pnl_pips = (exit_price - signal.entry_price) * 10000
         else:
             pnl_pips = (signal.entry_price - exit_price) * 10000
         
-        # Adjust for JPY pairs
         if "JPY" in signal.symbol:
             pnl_pips = pnl_pips / 100
         
-        pnl = pnl_pips * signal.lot_size * 10  # $10 per pip per lot for EUR/USD
+        # Deduct execution costs (spread + slippage)
+        pnl_pips -= (self.spread_pips + self.entry_slippage)
+        if exit_reason == "SL":
+            pnl_pips -= self.sl_slippage
+        
+        pnl = pnl_pips * signal.lot_size * 10
         
         # HARD CAP: Limit loss so daily never exceeds 4.5% of INITIAL balance
         if pnl < 0:
