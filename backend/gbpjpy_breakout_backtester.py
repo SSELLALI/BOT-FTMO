@@ -233,56 +233,61 @@ class GBPJPYBreakoutBacktester:
                 if h1_idx - bo["h1_idx"] <= stale_timeout
             ]
 
-            # ── H1 STRUCTURE + KEY LEVELS ──
+            # ── H1 STRUCTURE + KEY LEVELS (multiple levels tracked) ──
             swings = self._detect_swings(h1_highs, h1_lows, h1_idx, swing_lookback)
             bias = self._determine_bias(swings)
             if bias is None:
                 continue
 
-            key_resistance = key_support = None
+            # Track multiple key levels (last 3 each) for more breakout opportunities
+            resistances = []
+            supports = []
             for sp in reversed(swings):
-                if sp.type in ("HH", "LH") and key_resistance is None:
-                    key_resistance = sp.price
-                if sp.type in ("HL", "LL") and key_support is None:
-                    key_support = sp.price
-                if key_resistance and key_support:
-                    break
+                if sp.type in ("HH", "LH") and len(resistances) < 3:
+                    # Avoid duplicate levels (within 0.10 JPY)
+                    if not any(abs(sp.price - r) < 0.10 for r in resistances):
+                        resistances.append(sp.price)
+                if sp.type in ("HL", "LL") and len(supports) < 3:
+                    if not any(abs(sp.price - s) < 0.10 for s in supports):
+                        supports.append(sp.price)
 
-            # ── BREAKOUT DETECTION (multiple tracked simultaneously) ──
+            # ── BREAKOUT DETECTION (check all key levels, track multiple) ──
             h1_c = h1_candles[h1_idx]
             prev_h1_close = h1_closes[h1_idx - 1] if h1_idx > 0 else h1_c["close"]
 
-            if bias == "BULLISH" and key_resistance:
-                bk_key = f"B_{key_resistance:.2f}_{h1_idx}"
-                if bk_key not in detected_breakout_keys:
-                    if h1_c["close"] > key_resistance and prev_h1_close <= key_resistance:
-                        avg_range = float(np.mean(h1_ranges[max(0, h1_idx-10):h1_idx])) if h1_idx >= 10 else float(h1_ranges[h1_idx])
-                        cr = h1_c["high"] - h1_c["low"]
-                        cb = abs(h1_c["close"] - h1_c["open"])
-                        br = cb / cr if cr > 0 else 0
-                        if cr > avg_range * breakout_size_mult and br >= breakout_body_ratio:
-                            active_breakouts.append({
-                                "level": key_resistance, "direction": "BUY",
-                                "h1_idx": h1_idx, "candle_range": cr,
-                                "pb_low": ec_low, "pb_high": ec_high, "key": bk_key,
-                            })
-                            detected_breakout_keys.add(bk_key)
+            if bias == "BULLISH":
+                for key_r in resistances:
+                    bk_key = f"B_{key_r:.2f}_{h1_idx}"
+                    if bk_key not in detected_breakout_keys:
+                        if h1_c["close"] > key_r and prev_h1_close <= key_r:
+                            avg_range = float(np.mean(h1_ranges[max(0, h1_idx-10):h1_idx])) if h1_idx >= 10 else float(h1_ranges[h1_idx])
+                            cr = h1_c["high"] - h1_c["low"]
+                            cb = abs(h1_c["close"] - h1_c["open"])
+                            br = cb / cr if cr > 0 else 0
+                            if cr > avg_range * breakout_size_mult and br >= breakout_body_ratio:
+                                active_breakouts.append({
+                                    "level": key_r, "direction": "BUY",
+                                    "h1_idx": h1_idx, "candle_range": cr,
+                                    "pb_low": ec_low, "pb_high": ec_high, "key": bk_key,
+                                })
+                                detected_breakout_keys.add(bk_key)
 
-            if bias == "BEARISH" and key_support:
-                bk_key = f"S_{key_support:.2f}_{h1_idx}"
-                if bk_key not in detected_breakout_keys:
-                    if h1_c["close"] < key_support and prev_h1_close >= key_support:
-                        avg_range = float(np.mean(h1_ranges[max(0, h1_idx-10):h1_idx])) if h1_idx >= 10 else float(h1_ranges[h1_idx])
-                        cr = h1_c["high"] - h1_c["low"]
-                        cb = abs(h1_c["close"] - h1_c["open"])
-                        br = cb / cr if cr > 0 else 0
-                        if cr > avg_range * breakout_size_mult and br >= breakout_body_ratio:
-                            active_breakouts.append({
-                                "level": key_support, "direction": "SELL",
-                                "h1_idx": h1_idx, "candle_range": cr,
-                                "pb_low": ec_low, "pb_high": ec_high, "key": bk_key,
-                            })
-                            detected_breakout_keys.add(bk_key)
+            if bias == "BEARISH":
+                for key_s in supports:
+                    bk_key = f"S_{key_s:.2f}_{h1_idx}"
+                    if bk_key not in detected_breakout_keys:
+                        if h1_c["close"] < key_s and prev_h1_close >= key_s:
+                            avg_range = float(np.mean(h1_ranges[max(0, h1_idx-10):h1_idx])) if h1_idx >= 10 else float(h1_ranges[h1_idx])
+                            cr = h1_c["high"] - h1_c["low"]
+                            cb = abs(h1_c["close"] - h1_c["open"])
+                            br = cb / cr if cr > 0 else 0
+                            if cr > avg_range * breakout_size_mult and br >= breakout_body_ratio:
+                                active_breakouts.append({
+                                    "level": key_s, "direction": "SELL",
+                                    "h1_idx": h1_idx, "candle_range": cr,
+                                    "pb_low": ec_low, "pb_high": ec_high, "key": bk_key,
+                                })
+                                detected_breakout_keys.add(bk_key)
 
             if not active_breakouts:
                 continue
