@@ -147,6 +147,54 @@ class RealisticBacktester:
             atr[j] = (cs[j] - cs[j - period]) / period
         return atr.tolist()
 
+    @staticmethod
+    def precompute_rsi(closes: List[float], period: int = 14) -> List[float]:
+        """O(n) RSI array using Wilder's smoothing."""
+        n = len(closes)
+        rsi = [50.0] * n
+        if n < period + 1:
+            return rsi
+        deltas = [closes[i] - closes[i - 1] for i in range(1, n)]
+        gains = [max(0, d) for d in deltas]
+        losses = [max(0, -d) for d in deltas]
+        avg_g = sum(gains[:period]) / period
+        avg_l = sum(losses[:period]) / period
+        for i in range(period, len(deltas)):
+            avg_g = (avg_g * (period - 1) + gains[i]) / period
+            avg_l = (avg_l * (period - 1) + losses[i]) / period
+            rs = avg_g / avg_l if avg_l > 0 else 100
+            rsi[i + 1] = 100 - 100 / (1 + rs)
+        return rsi
+
+    @staticmethod
+    def precompute_momentum(closes: List[float], period: int = 8) -> List[float]:
+        """O(n) momentum percentage change."""
+        n = len(closes)
+        mom = [0.0] * n
+        for i in range(period, n):
+            if closes[i - period] > 0:
+                mom[i] = (closes[i] - closes[i - period]) / closes[i - period] * 100
+        return mom
+
+    @staticmethod
+    def precompute_bollinger(closes: List[float], period: int = 20, std_dev: float = 2.0):
+        """O(n) Bollinger Bands using cumulative sums."""
+        n = len(closes)
+        upper = [0.0] * n
+        lower = [0.0] * n
+        arr = np.array(closes)
+        cs = np.cumsum(arr)
+        cs2 = np.cumsum(arr ** 2)
+        for i in range(period - 1, n):
+            s = cs[i] - (cs[i - period] if i >= period else 0)
+            s2 = cs2[i] - (cs2[i - period] if i >= period else 0)
+            mean = s / period
+            var = s2 / period - mean ** 2
+            std = np.sqrt(max(0, var))
+            upper[i] = mean + std_dev * std
+            lower[i] = mean - std_dev * std
+        return upper, lower
+
     def __init__(self, config: ExecutionConfig = None, initial_balance: float = 100000):
         self.config = config or ExecutionConfig()
         self.initial_balance = initial_balance
