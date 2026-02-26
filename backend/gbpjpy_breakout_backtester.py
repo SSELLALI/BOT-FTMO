@@ -241,17 +241,25 @@ class GBPJPYBreakoutBacktester:
             if bias is None:
                 continue
 
-            # Track multiple key levels (last 3 each) for more breakout opportunities
+            # Track multiple key levels (last 3 swing-based + recent day/session extremes)
             resistances = []
             supports = []
             for sp in reversed(swings):
                 if sp.type in ("HH", "LH") and len(resistances) < 3:
-                    # Avoid duplicate levels (within 0.10 JPY)
                     if not any(abs(sp.price - r) < 0.10 for r in resistances):
                         resistances.append(sp.price)
                 if sp.type in ("HL", "LL") and len(supports) < 3:
                     if not any(abs(sp.price - s) < 0.10 for s in supports):
                         supports.append(sp.price)
+
+            # Add recent day high/low as additional key levels (Rule 4: "significant H1 high/low")
+            day_levels = self._get_recent_day_levels(h1_candles, h1_idx)
+            for dl in day_levels.get("highs", []):
+                if not any(abs(dl - r) < 0.10 for r in resistances):
+                    resistances.append(dl)
+            for dl in day_levels.get("lows", []):
+                if not any(abs(dl - s) < 0.10 for s in supports):
+                    supports.append(dl)
 
             # ── BREAKOUT DETECTION (scan recent H1 candles, not just current) ──
             # This catches breakouts that happened outside trading sessions
