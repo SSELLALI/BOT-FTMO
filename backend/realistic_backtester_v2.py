@@ -319,8 +319,7 @@ class RealisticBacktester:
         t = self.open_trade
         if not t:
             return None
-        pm = 10000
-        sp = spr / pm
+        sp = spr / self.pm
 
         # Safety close
         dl = abs(self.daily_pnl) / self.initial_balance if self.daily_pnl < 0 else 0
