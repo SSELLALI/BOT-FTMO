@@ -333,8 +333,10 @@ class ProfessionalBacktester:
         
         if strategy == "SCALPING":
             return self._run_scalping_backtest(symbol, m15_candles, h1_candles, data_source)
+        elif strategy == "INTRADAY":
+            return self._run_intraday_backtest(symbol, h1_candles, data_source)
         
-        # For INTRADAY or BOTH, use the multi-timeframe approach
+        # For BOTH, use the multi-timeframe approach
         return self._run_multi_strategy_backtest(symbol, strategy, m15_candles, h1_candles, data_source)
     
     def _run_scalping_backtest(
