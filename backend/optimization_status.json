@@ -1,7 +1,7 @@
 {
   "phase": "train_grid",
   "strategy": "BREAKOUT",
-  "progress": "150/576",
-  "elapsed_sec": 34.8,
+  "progress": "550/576",
+  "elapsed_sec": 133.4,
   "progress_key": "GBPJPY_breakout"
 }
