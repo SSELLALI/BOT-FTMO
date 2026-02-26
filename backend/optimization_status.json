@@ -1,15 +1,7 @@
 {
-  "phase": "COMPLETE",
-  "type": "MULTI_PAIR",
-  "elapsed_sec": 1657.8,
-  "combined_weekly": 2.422,
-  "combined_annual": 125.9,
-  "total_trades": 4264,
-  "pairs": [
-    "EURUSD",
-    "GBPUSD",
-    "AUDUSD",
-    "USDJPY"
-  ],
-  "finished_at": "2026-02-26 12:47:54"
+  "strategy": "INTRADAY",
+  "phase": "grid_search",
+  "progress": "500/1728",
+  "elapsed_sec": 57.6,
+  "progress_key": "GBPJPY_intraday"
 }
