@@ -32,16 +32,22 @@ def _write_status(data):
 
 
 def _generate_swing_grid(strategy_type):
-    """Generate parameter grid for swing strategies with higher-TF-appropriate ranges."""
+    """Generate parameter grid for swing strategies with higher-TF-appropriate ranges.
+    
+    Grid size per strategy:
+      BOUNCE/COMBINED: 384 combos
+      BREAKOUT: 768 combos (x2 for sr_break_pips)
+    Total per pair: 1536 combos → estimated ~25 min
+    """
     base = list(itertools.product(
-        [8, 12],              # d1_swing_lookback
-        [10, 15, 20],         # h4_swing_lookback
-        [40, 60, 80],         # sr_cluster_pips (wider for H4)
-        [25, 40, 55],         # sr_proximity_pips (wider for swing)
-        [2.5, 3.0, 3.5],     # min_rr (STRICT >= 2.5)
-        [25, 40],             # min_sl_pips (larger for swing)
-        [100, 150],           # max_sl_pips
-        [0.005, 0.008],       # risk_per_trade
+        [8, 12],              # d1_swing_lookback (2)
+        [12, 18],             # h4_swing_lookback (2)
+        [40, 65],             # sr_cluster_pips (2)
+        [25, 45],             # sr_proximity_pips (2)
+        [2.5, 3.0, 3.5],     # min_rr (3) — STRICT >= 2.5
+        [25, 40],             # min_sl_pips (2)
+        [100, 150],           # max_sl_pips (2)
+        [0.005, 0.008],       # risk_per_trade (2)
     ))
 
     if strategy_type == "BREAKOUT":
