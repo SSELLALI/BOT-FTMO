@@ -1,7 +1,7 @@
 {
   "phase": "train_grid",
   "strategy": "SCALPING",
-  "progress": "1100/3240",
-  "elapsed_sec": 149.7,
+  "progress": "2050/3240",
+  "elapsed_sec": 280.1,
   "progress_key": "EURUSD_scalping"
 }
