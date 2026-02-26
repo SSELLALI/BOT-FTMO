@@ -375,6 +375,7 @@ class CTraderFIXClient:
     def _handle_message(self, msg: FIXMessage):
         """Handle incoming FIX message"""
         msg_type = msg.get(35)
+        logger.info(f"Received FIX message type={msg_type} fields={dict(msg.fields)}")
         
         if msg_type == "A":  # Logon response
             self.logged_in = True
