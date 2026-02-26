@@ -188,7 +188,7 @@ def walk_forward_optimize(
             })
             logger.info(f"  [{strategy_type}] Grid {idx}/{total_params} ({elapsed:.0f}s)")
 
-        r = _run_one(train, params, strategy_type, initial_balance)
+        r = _run_one(train, params, strategy_type, initial_balance, symbol=symbol, base_spread=base_spread)
         if r.total_trades >= min_trades_train and r.ftmo_compliant:
             results.append((params, r))
 
