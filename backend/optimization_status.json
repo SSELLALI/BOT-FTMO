@@ -1,8 +1,8 @@
 {
   "phase": "train_grid",
-  "strategy": "COMBINED",
-  "symbol": "GBPJPY",
+  "strategy": "BOUNCE",
+  "symbol": "AUDCAD",
   "progress": "300/384",
-  "elapsed_sec": 169.6,
-  "progress_key": "GBPJPY_COMBINED"
+  "elapsed_sec": 93.3,
+  "progress_key": "AUDCAD_BOUNCE"
 }
