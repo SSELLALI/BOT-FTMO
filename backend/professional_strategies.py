@@ -300,9 +300,9 @@ class ScalpingStrategy:
                     entry_triggered = True
                     reason = f"Momentum candle, RSI {rsi:.0f}"
 
-            # Signal 4: Price crossed above EMA21 with momentum
+            # Signal 4: Price crossed above slow EMA with momentum
             if not entry_triggered:
-                if prev_candle["close"] <= cur_ema21 and current_price > cur_ema21 and momentum > 0:
+                if prev_candle["close"] <= cur_slow and current_price > cur_slow and momentum > 0:
                     entry_triggered = True
                     reason = f"EMA21 breakout, RSI {rsi:.0f}"
 
