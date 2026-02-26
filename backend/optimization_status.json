@@ -1,7 +1,7 @@
 {
   "phase": "train_grid",
-  "strategy": "SCALPING",
-  "progress": "2950/3240",
-  "elapsed_sec": 403.6,
-  "progress_key": "EURUSD_scalping"
+  "strategy": "INTRADAY",
+  "progress": "600/648",
+  "elapsed_sec": 86.6,
+  "progress_key": "EURUSD_intraday"
 }
