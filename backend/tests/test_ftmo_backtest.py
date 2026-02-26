@@ -15,7 +15,7 @@ import os
 import time
 
 # Use the public URL for testing
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://forex-optimizer-3.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://ftmo-bot-live.preview.emergentagent.com').rstrip('/')
 
 
 class TestFTMOBacktest:
