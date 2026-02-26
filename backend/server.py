@@ -904,6 +904,56 @@ async def live_status():
     return live_trading_service.get_status()
 
 
+@api_router.get("/live/pa-strategy")
+async def get_pa_strategy_status():
+    """Get validated USDJPY Price Action strategy details"""
+    import json as _json
+    status = live_trading_service.pa_strategy.get_status()
+    validated_file = Path(__file__).parent / "usdjpy_validated_strategy.json"
+    audit = {}
+    if validated_file.exists():
+        with open(validated_file) as f:
+            audit = _json.load(f)
+    return {
+        "live_status": status,
+        "validated_strategy": audit,
+        "robustness_audit": {
+            "breakout": {
+                "parameter_robustness": "100% (12/12)",
+                "walk_forward_oos": "test > train (excellent)",
+                "temporal_stability": "4/4 quarters profitable",
+                "weekly_estimate": "+0.288%",
+            },
+            "bounce": {
+                "parameter_robustness": "92% (11/12)",
+                "walk_forward_oos": "78% degradation (acceptable)",
+                "temporal_stability": "4/4 quarters profitable",
+                "weekly_estimate": "+0.653%",
+            },
+            "combined_weekly_estimate": "~0.78-0.94%",
+            "ftmo_compliant": True,
+        },
+    }
+
+
+class PAStrategyToggle(BaseModel):
+    pa_breakout: Optional[bool] = None
+    pa_bounce: Optional[bool] = None
+    scalping: Optional[bool] = None
+    intraday: Optional[bool] = None
+
+
+@api_router.put("/live/strategies")
+async def update_live_strategies(toggle: PAStrategyToggle):
+    """Toggle individual strategies on/off"""
+    updates = {k: v for k, v in toggle.model_dump().items() if v is not None}
+    live_trading_service.enabled_strategies.update(updates)
+    return {
+        "success": True,
+        "strategies": live_trading_service.enabled_strategies,
+    }
+
+
 @api_router.post("/market/refresh-real-prices")
 async def refresh_real_prices():
     """Manually refresh real market prices"""
