@@ -371,7 +371,7 @@ class RealisticBacktester:
             pnl_pips = (t.entry_price - exit_price) * self.pm
         if reason == "SL":
             pnl_pips -= exit_slip
-        pnl = pnl_pips * t.lot_size * 10 * t.fill_ratio
+        pnl = pnl_pips * t.lot_size * self.pip_value * t.fill_ratio
 
         # Hard cap daily loss
         if pnl < 0:
