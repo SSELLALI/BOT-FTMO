@@ -617,7 +617,7 @@ class RealisticBacktester:
             if hour < ss or hour > send:
                 continue
 
-            atr = TechnicalAnalysis.atr(candles[:i], 14)
+            atr = atr_all[i - 1]  # Pre-computed ATR (anti-lookahead)
             if atr < 0.0003:
                 continue
 
