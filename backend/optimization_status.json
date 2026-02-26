@@ -2,7 +2,7 @@
   "phase": "train_grid",
   "strategy": "COMBINED",
   "symbol": "GBPJPY",
-  "progress": "100/384",
-  "elapsed_sec": 63.8,
+  "progress": "300/384",
+  "elapsed_sec": 169.6,
   "progress_key": "GBPJPY_COMBINED"
 }
