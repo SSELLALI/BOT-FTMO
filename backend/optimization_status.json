@@ -1,7 +1,7 @@
 {
   "phase": "train",
   "strategy": "BREAKOUT",
-  "progress": "500/576",
-  "elapsed_sec": 97.4,
-  "progress_key": "GBPJPY_breakout"
+  "progress": "250/576",
+  "elapsed_sec": 54.2,
+  "progress_key": "AUDCAD_breakout"
 }
