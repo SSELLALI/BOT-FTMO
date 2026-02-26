@@ -96,8 +96,8 @@ def run_optimization():
     logger.info("=" * 60)
 
     # Load data
-    h1 = load_tradingview_csv("historical_data/GBPJPY_H1_TV.csv")
-    m15 = load_tradingview_csv("historical_data/GBPJPY_M15_TV.csv")
+    h1 = load_tradingview_csv("/app/backend/historical_data/GBPJPY_H1_TV.csv")
+    m15 = load_tradingview_csv("/app/backend/historical_data/GBPJPY_M15_TV.csv")
 
     if not h1 or not m15:
         logger.error("Data loading failed!")
