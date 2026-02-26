@@ -1,7 +1,7 @@
 {
-  "strategy": "INTRADAY",
+  "strategy": "SCALPING",
   "phase": "grid_search",
-  "progress": "450/1728",
-  "elapsed_sec": 59.7,
-  "progress_key": "AUDUSD_intraday"
+  "progress": "650/2304",
+  "elapsed_sec": 78.3,
+  "progress_key": "USDJPY_scalping"
 }
