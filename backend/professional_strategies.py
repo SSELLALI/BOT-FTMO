@@ -238,7 +238,9 @@ class ScalpingStrategy:
         self.rsi_sell_min = 40
 
     def is_valid_session(self, hour: int) -> bool:
-        return 7 <= hour <= 17  # Extended London + early NY
+        # Only trade during profitable hours (based on backtesting analysis)
+        # 09-11 UTC (London mid-session) + 13-14 UTC (London/NY overlap) + 17 UTC (NY session)
+        return hour in (9, 10, 11, 13, 14, 17)
 
     def analyze(self, candles: List[Dict], current_index: int, symbol: str = "EURUSD") -> Optional[TradeSignal]:
         if current_index < 50:
