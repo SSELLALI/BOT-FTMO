@@ -131,6 +131,22 @@ class RealisticBacktester:
         20: 1.1, 21: 1.2, 22: 1.3, 23: 1.4,
     }
 
+    @staticmethod
+    def precompute_atr(candles: List[Dict], period: int = 14) -> List[float]:
+        """O(n) ATR pre-computation using cumulative sum."""
+        n = len(candles)
+        tr = np.zeros(n)
+        for j in range(1, n):
+            c, pc = candles[j], candles[j - 1]
+            tr[j] = max(c["high"] - c["low"],
+                        abs(c["high"] - pc["close"]),
+                        abs(c["low"] - pc["close"]))
+        cs = np.cumsum(tr)
+        atr = np.zeros(n)
+        for j in range(period, n):
+            atr[j] = (cs[j] - cs[j - period]) / period
+        return atr.tolist()
+
     def __init__(self, config: ExecutionConfig = None, initial_balance: float = 100000):
         self.config = config or ExecutionConfig()
         self.initial_balance = initial_balance
