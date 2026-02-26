@@ -395,7 +395,7 @@ class GBPJPYBreakoutBacktester:
 
                 # Check if price is near the broken level
                 dist_to_level = abs(m15_close - level)
-                if dist_to_level > last_breakout["candle_range"] * 0.5:
+                if dist_to_level > last_breakout["candle_range"] * proximity_factor:
                     continue  # Not close enough to level yet
 
             elif direction == "SELL":
@@ -417,7 +417,7 @@ class GBPJPYBreakoutBacktester:
                     continue
 
                 dist_to_level = abs(m15_close - level)
-                if dist_to_level > last_breakout["candle_range"] * 0.5:
+                if dist_to_level > last_breakout["candle_range"] * proximity_factor:
                     continue
 
             # ── REJECTION CANDLE (Rule 7) ──
