@@ -24,21 +24,23 @@ os.makedirs(RESULTS_DIR, exist_ok=True)
 
 
 def generate_grid():
-    """Focused parameter grid based on diagnostic results."""
+    """Focused parameter grid — ~3000 combos based on diagnostic results."""
     combos = list(itertools.product(
-        [5, 6, 7],                    # swing_lookback (3)
-        [3, 5, 8],                    # sl_buffer_pips (3)
-        [1.5, 2.0, 2.5],             # min_rr (3)
+        [5, 6],                        # swing_lookback (2) — 5 and 6 best
+        [3, 5, 8],                     # sl_buffer_pips (3)
+        [1.5, 2.0],                    # min_rr (2) — 1.5 gives more trades
         [0.01],                        # risk_per_trade (fixed)
-        [0.35, 0.45, 0.55],          # breakout_body_ratio (3)
-        [0.3, 0.5, 0.7],             # breakout_size_mult (3)
-        [1.2, 1.5, 2.0],             # max_pullback_depth (3)
-        [0.7, 0.9, 1.2],             # proximity_factor (3)
-        [25, 35, 50],                 # stale_timeout (3)
-        [False, True],                # extend_session (2)
-        [False, True],                # use_structural_tp (2)
+        [0.35, 0.45],                 # breakout_body_ratio (2)
+        [0.3, 0.5],                   # breakout_size_mult (2)
+        [1.2, 1.8],                   # max_pullback_depth (2)
+        [0.7, 1.0],                   # proximity_factor (2)
+        [25, 40],                      # stale_timeout (2)
+        [True],                        # extend_session — always True (better)
+        [False, True],                 # use_structural_tp (2)
+        [(35, 78), (30, 80)],         # rsi_long (2)
+        [(22, 65), (20, 70)],         # rsi_short (2)
     ))
-    return combos  # 3*3*3*1*3*3*3*3*3*2*2 = 26244
+    return combos  # 2*3*2*1*2*2*2*2*2*1*2*2*2 = 3072
 
 
 def params_from_tuple(t):
