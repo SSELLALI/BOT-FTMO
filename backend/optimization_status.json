@@ -1,7 +1,7 @@
 {
   "phase": "train_grid",
-  "strategy": "SCALPING",
-  "progress": "3100/3240",
-  "elapsed_sec": 450.4,
-  "progress_key": "GBPJPY_scalping"
+  "strategy": "INTRADAY",
+  "progress": "350/648",
+  "elapsed_sec": 75.0,
+  "progress_key": "GBPJPY_intraday"
 }
