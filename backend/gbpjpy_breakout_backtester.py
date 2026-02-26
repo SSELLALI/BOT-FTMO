@@ -147,6 +147,7 @@ class GBPJPYBreakoutBacktester:
         pullback_active = False
         pullback_low = None
         pullback_high = None
+        detected_h1_breakouts = set()  # Track H1 indices where breakout was already detected
 
         # H1 structure state
         swings = []  # List of SwingPoint
