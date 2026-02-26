@@ -296,46 +296,45 @@ class GBPJPYBreakoutBacktester:
                     break
 
             # ── BREAKOUT DETECTION (Rule 4 + 5) ──
+            # Only look for NEW breakouts if we're NOT already tracking a pullback
             h1_c = h1_candles[h1_idx]
-            h1_prev = h1_candles[h1_idx - 1]
-
-            # Check if NEW breakout occurred on the latest completed H1 candle
             new_breakout = None
 
-            # Bullish breakout above resistance
-            if bias == "BULLISH" and key_resistance and h1_c["close"] > key_resistance and h1_c["open"] <= key_resistance:
-                # Rule 5: Volatility filter
-                avg_range = float(np.mean(h1_ranges[max(0, h1_idx-10):h1_idx])) if h1_idx >= 10 else h1_ranges[h1_idx]
-                candle_range = h1_c["high"] - h1_c["low"]
-                candle_body = abs(h1_c["close"] - h1_c["open"])
-                body_ratio = candle_body / candle_range if candle_range > 0 else 0
+            if not pullback_active:
+                # Bullish breakout above resistance
+                if bias == "BULLISH" and key_resistance and h1_idx not in detected_h1_breakouts:
+                    if h1_c["close"] > key_resistance and h1_c["open"] <= key_resistance:
+                        # Rule 5: Volatility filter
+                        avg_range = float(np.mean(h1_ranges[max(0, h1_idx-10):h1_idx])) if h1_idx >= 10 else h1_ranges[h1_idx]
+                        candle_range = h1_c["high"] - h1_c["low"]
+                        candle_body = abs(h1_c["close"] - h1_c["open"])
+                        body_ratio = candle_body / candle_range if candle_range > 0 else 0
 
-                if candle_range > avg_range * breakout_size_mult and body_ratio >= breakout_body_ratio:
-                    bk_key = f"BUY_{key_resistance:.3f}_{h1_idx}"
-                    if bk_key not in used_breakouts:
-                        new_breakout = {
-                            "level": key_resistance,
-                            "direction": "BUY",
-                            "h1_idx": h1_idx,
-                            "candle_range": candle_range,
-                        }
+                        if candle_range > avg_range * breakout_size_mult and body_ratio >= breakout_body_ratio:
+                            new_breakout = {
+                                "level": key_resistance,
+                                "direction": "BUY",
+                                "h1_idx": h1_idx,
+                                "candle_range": candle_range,
+                            }
+                            detected_h1_breakouts.add(h1_idx)
 
-            # Bearish breakout below support
-            if bias == "BEARISH" and key_support and h1_c["close"] < key_support and h1_c["open"] >= key_support:
-                avg_range = float(np.mean(h1_ranges[max(0, h1_idx-10):h1_idx])) if h1_idx >= 10 else h1_ranges[h1_idx]
-                candle_range = h1_c["high"] - h1_c["low"]
-                candle_body = abs(h1_c["close"] - h1_c["open"])
-                body_ratio = candle_body / candle_range if candle_range > 0 else 0
+                # Bearish breakout below support
+                if not new_breakout and bias == "BEARISH" and key_support and h1_idx not in detected_h1_breakouts:
+                    if h1_c["close"] < key_support and h1_c["open"] >= key_support:
+                        avg_range = float(np.mean(h1_ranges[max(0, h1_idx-10):h1_idx])) if h1_idx >= 10 else h1_ranges[h1_idx]
+                        candle_range = h1_c["high"] - h1_c["low"]
+                        candle_body = abs(h1_c["close"] - h1_c["open"])
+                        body_ratio = candle_body / candle_range if candle_range > 0 else 0
 
-                if candle_range > avg_range * breakout_size_mult and body_ratio >= breakout_body_ratio:
-                    bk_key = f"SELL_{key_support:.3f}_{h1_idx}"
-                    if bk_key not in used_breakouts:
-                        new_breakout = {
-                            "level": key_support,
-                            "direction": "SELL",
-                            "h1_idx": h1_idx,
-                            "candle_range": candle_range,
-                        }
+                        if candle_range > avg_range * breakout_size_mult and body_ratio >= breakout_body_ratio:
+                            new_breakout = {
+                                "level": key_support,
+                                "direction": "SELL",
+                                "h1_idx": h1_idx,
+                                "candle_range": candle_range,
+                            }
+                            detected_h1_breakouts.add(h1_idx)
 
             if new_breakout:
                 last_breakout = new_breakout
