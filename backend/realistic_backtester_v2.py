@@ -423,13 +423,13 @@ class RealisticBacktester:
             if cf > cs and rsi < rsi_bmax and rsi > 30:
                 hit = False
                 pp = candles[i - 2] if i >= 2 else pc
-                if len(ef) >= 2 and abs(pp["low"] - ef[-2]) / sig_price < 0.0006:
+                if len(ef) >= 2 and abs(pp["low"] - ef[-2]) / sig_price < pb_thresh:
                     if pc["close"] > pp["high"]:
                         hit = True
                 if not hit and TechnicalAnalysis.is_bullish_candle(pc):
-                    if (pc["close"] - pc["open"]) > atr * 0.4 and mom > 0.01:
+                    if (pc["close"] - pc["open"]) > atr * body_ratio and mom > mom_thresh:
                         hit = True
-                if not hit and sig_price <= bb_l * 1.001 and TechnicalAnalysis.is_bullish_candle(pc):
+                if not hit and sig_price <= bb_l * 1.002 and TechnicalAnalysis.is_bullish_candle(pc):
                     hit = True
                 if not hit and i >= 2 and TechnicalAnalysis.is_bullish_engulfing(candles, i - 1):
                     hit = True
@@ -440,13 +440,13 @@ class RealisticBacktester:
             elif cf < cs and rsi > rsi_smin and rsi < 70:
                 hit = False
                 pp = candles[i - 2] if i >= 2 else pc
-                if len(ef) >= 2 and abs(pp["high"] - ef[-2]) / sig_price < 0.0006:
+                if len(ef) >= 2 and abs(pp["high"] - ef[-2]) / sig_price < pb_thresh:
                     if pc["close"] < pp["low"]:
                         hit = True
                 if not hit and TechnicalAnalysis.is_bearish_candle(pc):
-                    if (pc["open"] - pc["close"]) > atr * 0.4 and mom < -0.01:
+                    if (pc["open"] - pc["close"]) > atr * body_ratio and mom < -mom_thresh:
                         hit = True
-                if not hit and sig_price >= bb_u * 0.999 and TechnicalAnalysis.is_bearish_candle(pc):
+                if not hit and sig_price >= bb_u * 0.998 and TechnicalAnalysis.is_bearish_candle(pc):
                     hit = True
                 if not hit and i >= 2 and TechnicalAnalysis.is_bearish_engulfing(candles, i - 1):
                     hit = True
