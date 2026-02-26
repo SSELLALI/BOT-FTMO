@@ -46,16 +46,6 @@ def write_status(data):
 
 def run_pair_optimization(pair, candles, strategy_type, base_spread):
     """Run optimization for a single pair with pair-specific spread."""
-    from walkforward_optimizer import SCALPING_GRID, INTRADAY_GRID, _run_one, check_robustness, _result_to_dict, _write_status
-
-    # Override base spread for this pair
-    grid = copy.deepcopy(SCALPING_GRID if strategy_type == "SCALPING" else INTRADAY_GRID)
-
-    # We need to patch the ExecutionConfig for this pair
-    # The simplest way: modify the config in _run_one temporarily
-    original_base = ExecutionConfig.base_spread_pips
-    ExecutionConfig.base_spread_pips = base_spread
-
     result = walk_forward_optimize(
         candles=candles,
         strategy_type=strategy_type,
@@ -64,10 +54,9 @@ def run_pair_optimization(pair, candles, strategy_type, base_spread):
         min_trades_total=300,
         top_n=10,
         progress_key=f"{pair}_{strategy_type.lower()}",
+        symbol=pair,
+        base_spread=base_spread,
     )
-
-    # Restore
-    ExecutionConfig.base_spread_pips = original_base
     return result
 
 
