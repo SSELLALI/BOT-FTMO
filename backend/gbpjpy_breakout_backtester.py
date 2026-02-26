@@ -223,7 +223,8 @@ class GBPJPYBreakoutBacktester:
             t_minutes = ec_time.hour * 60 + ec_time.minute
             in_london = 420 <= t_minutes <= 690
             in_ny = 810 <= t_minutes <= 990
-            if not (in_london or in_ny):
+            in_gap = extend_session and 690 < t_minutes < 810  # 11:30-13:30
+            if not (in_london or in_ny or in_gap):
                 continue
             if ec_time.weekday() >= 5:
                 continue
