@@ -1,7 +1,7 @@
 {
   "strategy": "INTRADAY",
   "phase": "grid_search",
-  "progress": "750/1728",
-  "elapsed_sec": 85.0,
+  "progress": "1700/1728",
+  "elapsed_sec": 186.2,
   "progress_key": "GBPJPY_intraday"
 }
