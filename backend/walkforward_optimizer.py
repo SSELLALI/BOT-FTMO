@@ -275,7 +275,8 @@ def walk_forward_optimize(
     # ── Phase 4: Full-period validation of winner ──
     if robust_results:
         winner = robust_results[0]
-        full_r = _run_one(candles, winner["params"], strategy_type, initial_balance)
+        full_r = _run_one(candles, winner["params"], strategy_type, initial_balance,
+                          symbol=symbol, base_spread=base_spread)
         winner["full_period"] = _result_to_dict(full_r)
 
         # Check minimum trades
