@@ -471,7 +471,7 @@ class RealisticBacktester:
                 continue
 
             atr = atr_all[i - 1]  # ATR up to completed candle i-1
-            if atr < 0.00025:
+            if atr < 2.5 / pm:  # Min ~2.5 pips, scaled per pair
                 continue
 
             is_news = news_calendar.is_news_window(c["datetime"], self.config.news_window_minutes)
