@@ -461,7 +461,7 @@ class IntradayStrategy:
         self.max_consecutive_losses = 2
         self.min_sl_pips = 12
         self.max_sl_pips = 35
-        self.min_rr = 2.0
+        self.min_rr = 1.5
 
     def is_valid_session(self, hour: int) -> bool:
         return 7 <= hour <= 21
