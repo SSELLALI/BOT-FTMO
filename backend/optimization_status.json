@@ -1,7 +1,26 @@
 {
   "strategy": "INTRADAY",
-  "phase": "grid_search",
-  "progress": "1700/1728",
-  "elapsed_sec": 186.2,
-  "progress_key": "GBPJPY_intraday"
+  "phase": "done",
+  "progress_key": "GBPJPY_intraday",
+  "status": "COMPLETE",
+  "train_period": "2024-01-01 \u2192 2025-07-04",
+  "test_period": "2025-07-04 \u2192 2026-02-26",
+  "total_params_tested": 1728,
+  "viable_on_train": 1092,
+  "profitable_oos": 6,
+  "robust_count": 4,
+  "winner_return": 5.9,
+  "winner_params": {
+    "ema_period": 15,
+    "min_rr": 3.0,
+    "atr_multiplier": 0.5,
+    "pullback_pct": 0.004,
+    "min_sl_pips": 12,
+    "max_sl_pips": 30,
+    "risk_per_trade": 0.005,
+    "session_start": 7,
+    "session_end": 21,
+    "max_daily_trades": 6,
+    "max_consecutive_losses": 3
+  }
 }
