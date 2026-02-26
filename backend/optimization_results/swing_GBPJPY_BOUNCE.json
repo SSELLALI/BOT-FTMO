@@ -5,7 +5,7 @@
   "total_params_tested": 384,
   "viable_on_train": 208,
   "profitable_oos": 0,
-  "elapsed_sec": 785.5,
+  "elapsed_sec": 222.5,
   "best_candidate": {
     "params": {
       "d1_swing_lookback": 8,
