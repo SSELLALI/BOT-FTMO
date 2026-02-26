@@ -419,6 +419,7 @@ class RealisticBacktester:
         Anti-lookahead: signal on candle[i-1], execute at open of candle[i].
         """
         self._reset_state()
+        self._setup_pair(symbol, candles)
 
         fe = params.get("fast_ema", 15)
         se = params.get("slow_ema", 30)
