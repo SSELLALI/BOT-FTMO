@@ -1,4 +1,7 @@
 {
-  "phase": "loading_data",
-  "started_at": "2026-02-26 10:42:38"
+  "strategy": "SCALPING",
+  "phase": "grid_search",
+  "progress": "350/2304",
+  "elapsed_sec": 33.5,
+  "progress_key": "scalping_h1"
 }
