@@ -362,7 +362,18 @@ class ProfessionalBacktester:
                 current_day = candle_day
             
             # Check open trades for exit
-            self._check_exits(m15_candle)
+            had_exit = self._check_exits(m15_candle)
+            
+            # Skip entry on the same candle as an exit (matches optimizer behavior)
+            if had_exit:
+                # Record equity periodically
+                if m15_idx % 50 == 0:
+                    self.equity_curve.append({
+                        "timestamp": candle_time.isoformat(),
+                        "equity": round(self.risk_manager.current_balance, 2),
+                        "drawdown": round((self.peak_balance - self.risk_manager.current_balance) / self.peak_balance * 100, 2)
+                    })
+                continue
             
             # Find corresponding H1 candle
             h1_time = candle_time.replace(minute=0, second=0, microsecond=0)
