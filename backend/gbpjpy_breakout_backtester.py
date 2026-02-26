@@ -116,21 +116,18 @@ class GBPJPYBreakoutBacktester:
         extend_session = params.get("extend_session", True)
 
         # ═══ Phase 1: Pre-scan ALL H1 breakouts (fast) ═══
-        # This avoids recalculating swings on every M30 candle
-        all_breakouts = []  # [(h1_idx, level, direction, candle_range)]
-        swing_cache = {}  # h1_idx -> (swings, bias)
+        all_breakouts = []
         detected_bo_keys = set()
 
         entry_start_time = entry_candles[0]["datetime"]
         entry_end_time = entry_candles[-1]["datetime"]
 
-        for hi in range(swing_lookback + 12, len(h1_candles)):
-            # Only scan H1 candles within entry data time range (with buffer)
-            h1_time = h1_candles[hi]["datetime"]
-            if h1_time < entry_start_time and (entry_start_time - h1_time).days > 2:
-                continue
-            if h1_time > entry_end_time:
-                break
+        # Find relevant H1 range with binary search
+        h1_start = self._find_h1_index(entry_start_time, h1_times) or 0
+        h1_start = max(swing_lookback + 12, h1_start - 50)
+        h1_end = self._find_h1_index(entry_end_time, h1_times) or (len(h1_candles) - 1)
+
+        for hi in range(h1_start, min(h1_end + 1, len(h1_candles))):
 
             swings = self._detect_swings(h1_highs, h1_lows, hi, swing_lookback)
             bias = self._determine_bias(swings)
