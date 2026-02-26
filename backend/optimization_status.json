@@ -1,7 +1,7 @@
 {
   "phase": "train_grid",
-  "strategy": "BOUNCE",
-  "progress": "250/288",
-  "elapsed_sec": 86.9,
-  "progress_key": "USDJPY_bounce"
+  "strategy": "BREAKOUT",
+  "progress": "300/576",
+  "elapsed_sec": 105.0,
+  "progress_key": "USDJPY_breakout"
 }
