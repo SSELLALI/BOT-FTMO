@@ -14,7 +14,7 @@ import pytest
 import requests
 import os
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://forex-backtest-pro-1.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://ftmo-strategy-forge.preview.emergentagent.com').rstrip('/')
 
 
 class TestLiveTradingAPI:
