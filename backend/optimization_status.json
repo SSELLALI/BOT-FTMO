@@ -2,7 +2,7 @@
   "phase": "train_grid",
   "strategy": "BREAKOUT",
   "symbol": "AUDCAD",
-  "progress": "200/768",
-  "elapsed_sec": 89.7,
+  "progress": "500/768",
+  "elapsed_sec": 224.3,
   "progress_key": "AUDCAD_BREAKOUT"
 }
