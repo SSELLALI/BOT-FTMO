@@ -95,6 +95,7 @@ class BacktestReport:
     equity_curve: List[Dict] = field(default_factory=list)
     trades: List[Dict] = field(default_factory=list)
     daily_returns: List[Dict] = field(default_factory=list)
+    data_source: str = "simulated"
 
 
 class MultiTimeframeDataGenerator:
