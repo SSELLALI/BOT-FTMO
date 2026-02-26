@@ -32,22 +32,22 @@ os.makedirs(RESULTS_DIR, exist_ok=True)
 
 
 def generate_grid():
-    """Focused grid — RSI ranges are the main optimization target."""
+    """Grid focused on M30 entry with relaxed conditions."""
     combos = list(itertools.product(
-        [10],                  # swing_lookback (fixed)
+        [8, 10, 12],          # swing_lookback (3)
         [5, 8],                # sl_buffer_pips (2)
         [2.0, 2.5],           # min_rr (2)
         [0.01],                # risk_per_trade (fixed)
-        [0.55, 0.60],         # breakout_body_ratio (2)
-        [0.85],                # breakout_size_mult (fixed)
-        [0.65, 0.85],         # max_pullback_depth (2)
-        # RSI long ranges — main optimization axis
-        [(45, 68), (48, 68), (50, 65), (52, 65), (45, 70), (48, 72)],  # (6)
-        # RSI short ranges
-        [(30, 52), (32, 52), (35, 48), (35, 55), (30, 55)],            # (5)
+        [0.50, 0.60],         # breakout_body_ratio — relaxed from 0.60 (2)
+        [0.5, 0.8],           # breakout_size_mult — relaxed from 1.0 (2)
+        [0.7, 0.9, 1.1],     # max_pullback_depth — wider (3)
+        # RSI ranges (optimized from Phase 1 + wider)
+        [(45, 68), (45, 72), (48, 68), (42, 70)],  # rsi_long (4)
+        [(30, 55), (32, 52), (28, 55), (35, 52)],  # rsi_short (4)
         [False, True],         # use_structural_tp (2)
+        [False, True],         # extend_session (gap 11:30-13:30) (2)
     ))
-    return combos  # 1*2*2*1*2*1*2*6*5*2 = 960
+    return combos  # 3*2*2*1*2*2*3*4*4*2*2 = 4608
 
 
 def params_from_tuple(t):
