@@ -163,10 +163,10 @@ def walk_forward_optimize_pa(
     final_results = []
     for params, train_res, test_res in oos_results:
         robust_count = 0
-        total_checks = 12
-        tunable = ["swing_lookback", "sr_cluster_pips", "sr_proximity_pips", "min_sl_pips"]
+        tunable = ["swing_lookback", "sr_cluster_pips", "sr_proximity_pips"]
+        total_checks = len(tunable) * 2  # each param tested at 0.85 and 1.15
 
-        for var_key in tunable[:3]:
+        for var_key in tunable:
             for mult in [0.85, 1.15]:
                 varied = params.copy()
                 orig = varied[var_key]
