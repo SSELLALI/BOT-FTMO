@@ -1188,7 +1188,9 @@ class ProfessionalBacktester:
             equity_curve=self.equity_curve,
             trades=trades_list,
             daily_returns=daily_returns,
-            data_source=data_source
+            data_source=data_source,
+            spread_pips=self.spread_pips,
+            slippage_pips=self.entry_slippage + self.sl_slippage
         )
 
 
