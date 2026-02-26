@@ -103,8 +103,7 @@ class LiveTradingService:
                         "account": os.environ.get("FIX_ACCOUNT", "17061677")
                     }
                 else:
-                    self.fix_client.logout()
-                    return {"success": False, "error": "FIX login failed - check password"}
+                    return {"success": False, "error": "FIX login failed - check password. See server logs for details."}
             else:
                 return {"success": False, "error": "Could not connect to FIX server"}
 
