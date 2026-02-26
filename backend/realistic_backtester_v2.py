@@ -431,9 +431,9 @@ class RealisticBacktester:
         all_closes = [x["close"] for x in candles]
         ef_all = TechnicalAnalysis.ema(all_closes, fe)
         esl_all = TechnicalAnalysis.ema(all_closes, se)
-        rsi_all = TechnicalAnalysis.rsi(all_closes, 14)
-        mom_all = TechnicalAnalysis.momentum(all_closes, 8)
-        bb_u_all, bb_m_all, bb_l_all = TechnicalAnalysis.bollinger_bands(all_closes, 20, 2.0)
+        rsi_all = self.precompute_rsi(all_closes, 14)
+        mom_all = self.precompute_momentum(all_closes, 8)
+        bb_u_all, bb_l_all = self.precompute_bollinger(all_closes, 20, 2.0)
         atr_all = self.precompute_atr(candles, 14)
 
         # Initial avg ATR
