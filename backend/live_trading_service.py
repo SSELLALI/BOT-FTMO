@@ -1,6 +1,8 @@
 """
 Live Trading Service - Connects Strategies to FIX API
-Manages real-time trading with FTMO safety barriers
+Manages real-time trading with FTMO safety barriers.
+
+Includes validated USDJPY Price Action strategy (BREAKOUT + BOUNCE).
 """
 import asyncio
 import threading
@@ -16,13 +18,14 @@ from professional_strategies import (
     ScalpingStrategy, IntradayStrategy, ProfessionalRiskManager,
     TradeSignal, TechnicalAnalysis
 )
+from usdjpy_pa_strategy import PriceActionSignalGenerator, PASignal
 
 logger = logging.getLogger(__name__)
 
 
 @dataclass
 class LiveTrade:
-    signal: TradeSignal
+    signal: object  # TradeSignal or PASignal
     cl_ord_id: str
     status: str = "PENDING"
     fill_price: float = 0.0
@@ -36,6 +39,10 @@ class LiveTradingService:
     """
     Orchestrates live trading using strategies + FIX API.
     Safety barriers are ALWAYS active - never bypassed.
+
+    Strategies:
+      - PA BREAKOUT + BOUNCE on USDJPY (validated +0.94%/week)
+      - Legacy Scalping + Intraday (optional)
     """
 
     def __init__(self):
@@ -43,6 +50,7 @@ class LiveTradingService:
         self.risk_manager: Optional[ProfessionalRiskManager] = None
         self.scalping = ScalpingStrategy()
         self.intraday = IntradayStrategy()
+        self.pa_strategy = PriceActionSignalGenerator()
 
         self.is_running = False
         self.is_connected = False
@@ -50,14 +58,22 @@ class LiveTradingService:
         self.closed_trades: List[LiveTrade] = []
         self.candle_buffer_m15: List[Dict] = []
         self.candle_buffer_h1: List[Dict] = []
+        self.candle_buffer_m30: List[Dict] = []
         self.market_prices: Dict[str, Dict] = {}
 
-        self.enabled_strategies = {"scalping": True, "intraday": True}
-        self.trading_symbols = ["EURUSD"]
+        self.enabled_strategies = {
+            "pa_breakout": True,
+            "pa_bounce": True,
+            "scalping": False,
+            "intraday": False,
+        }
+        self.trading_symbols = ["USDJPY"]
         self.initial_balance = 10000.0
+        self._h1_initialized = False
 
         self._trading_thread: Optional[threading.Thread] = None
         self._last_candle_time: Optional[datetime] = None
+        self._last_pa_check: Optional[datetime] = None
 
     def configure(self, initial_balance: float = 10000.0, symbols: List[str] = None):
         self.initial_balance = initial_balance
