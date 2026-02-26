@@ -182,69 +182,62 @@ class GBPJPYBreakoutBacktester:
         stale_timeout = params.get("stale_timeout", 30)
         extend_session = params.get("extend_session", True)
 
-        # ═══ Phase 1: Pre-scan ALL H1 breakouts (fast) ═══
-        all_breakouts = []
-        detected_bo_keys = set()
+        # ═══ Phase 1: Use precomputed breakouts or compute inline ═══
+        if not precomputed:
+            h1_closes = np.array([c["close"] for c in h1_candles])
+            h1_highs = np.array([c["high"] for c in h1_candles])
+            h1_lows = np.array([c["low"] for c in h1_candles])
+            h1_ranges = h1_highs - h1_lows
 
-        entry_start_time = entry_candles[0]["datetime"]
-        entry_end_time = entry_candles[-1]["datetime"]
+            all_breakouts = []
+            detected_bo_keys = set()
+            entry_start_time = entry_candles[0]["datetime"]
+            entry_end_time = entry_candles[-1]["datetime"]
+            h1_start = self._find_h1_index(entry_start_time, h1_times) or 0
+            h1_start = max(swing_lookback + 12, h1_start - 50)
+            h1_end = self._find_h1_index(entry_end_time, h1_times) or (len(h1_candles) - 1)
 
-        # Find relevant H1 range with binary search
-        h1_start = self._find_h1_index(entry_start_time, h1_times) or 0
-        h1_start = max(swing_lookback + 12, h1_start - 50)
-        h1_end = self._find_h1_index(entry_end_time, h1_times) or (len(h1_candles) - 1)
-
-        for hi in range(h1_start, min(h1_end + 1, len(h1_candles))):
-
-            swings = self._detect_swings(h1_highs, h1_lows, hi, swing_lookback)
-            bias = self._determine_bias(swings)
-
-            if bias is None:
-                continue
-
-            # Key levels
-            resistances = []
-            supports = []
-            for sp in reversed(swings):
-                if sp.type in ("HH", "LH") and len(resistances) < 3:
-                    if not any(abs(sp.price - r) < 0.10 for r in resistances):
-                        resistances.append(sp.price)
-                if sp.type in ("HL", "LL") and len(supports) < 3:
-                    if not any(abs(sp.price - s) < 0.10 for s in supports):
-                        supports.append(sp.price)
-
-            # Day levels
-            day_levels = self._get_recent_day_levels(h1_candles, hi)
-            for dl in day_levels.get("highs", []):
-                if not any(abs(dl - r) < 0.10 for r in resistances):
-                    resistances.append(dl)
-            for dl in day_levels.get("lows", []):
-                if not any(abs(dl - s) < 0.10 for s in supports):
-                    supports.append(dl)
-
-            prev_close = h1_closes[hi - 1]
-            h1_c = h1_candles[hi]
-            avg_range = float(np.mean(h1_ranges[max(0, hi-10):hi])) if hi >= 10 else float(h1_ranges[hi])
-            cr = h1_c["high"] - h1_c["low"]
-            cb = abs(h1_c["close"] - h1_c["open"])
-            br = cb / cr if cr > 0 else 0
-
-            if cr <= avg_range * breakout_size_mult or br < breakout_body_ratio:
-                continue  # Fails volatility/body filter
-
-            if bias == "BULLISH":
-                for key_r in resistances:
-                    bk = f"B_{key_r:.2f}_{hi}"
-                    if bk not in detected_bo_keys and h1_c["close"] > key_r and prev_close <= key_r:
-                        all_breakouts.append((hi, key_r, "BUY", cr, swings[:]))
-                        detected_bo_keys.add(bk)
-
-            if bias == "BEARISH":
-                for key_s in supports:
-                    bk = f"S_{key_s:.2f}_{hi}"
-                    if bk not in detected_bo_keys and h1_c["close"] < key_s and prev_close >= key_s:
-                        all_breakouts.append((hi, key_s, "SELL", cr, swings[:]))
-                        detected_bo_keys.add(bk)
+            for hi in range(h1_start, min(h1_end + 1, len(h1_candles))):
+                swings = self._detect_swings(h1_highs, h1_lows, hi, swing_lookback)
+                bias = self._determine_bias(swings)
+                if bias is None:
+                    continue
+                resistances = []
+                supports = []
+                for sp in reversed(swings):
+                    if sp.type in ("HH", "LH") and len(resistances) < 3:
+                        if not any(abs(sp.price - r) < 0.10 for r in resistances):
+                            resistances.append(sp.price)
+                    if sp.type in ("HL", "LL") and len(supports) < 3:
+                        if not any(abs(sp.price - s) < 0.10 for s in supports):
+                            supports.append(sp.price)
+                day_levels = self._get_recent_day_levels(h1_candles, hi)
+                for dl in day_levels.get("highs", []):
+                    if not any(abs(dl - r) < 0.10 for r in resistances):
+                        resistances.append(dl)
+                for dl in day_levels.get("lows", []):
+                    if not any(abs(dl - s) < 0.10 for s in supports):
+                        supports.append(dl)
+                prev_close = h1_closes[hi - 1]
+                h1_c = h1_candles[hi]
+                avg_range = float(np.mean(h1_ranges[max(0, hi-10):hi])) if hi >= 10 else float(h1_ranges[hi])
+                cr = h1_c["high"] - h1_c["low"]
+                cb = abs(h1_c["close"] - h1_c["open"])
+                br = cb / cr if cr > 0 else 0
+                if cr <= avg_range * breakout_size_mult or br < breakout_body_ratio:
+                    continue
+                if bias == "BULLISH":
+                    for key_r in resistances:
+                        bk = f"B_{key_r:.2f}_{hi}"
+                        if bk not in detected_bo_keys and h1_c["close"] > key_r and prev_close <= key_r:
+                            all_breakouts.append((hi, key_r, "BUY", cr, swings[:]))
+                            detected_bo_keys.add(bk)
+                if bias == "BEARISH":
+                    for key_s in supports:
+                        bk = f"S_{key_s:.2f}_{hi}"
+                        if bk not in detected_bo_keys and h1_c["close"] < key_s and prev_close >= key_s:
+                            all_breakouts.append((hi, key_s, "SELL", cr, swings[:]))
+                            detected_bo_keys.add(bk)
 
         # ═══ Phase 2: Iterate M30 candles for trade management + entry ═══
         consecutive_losses = 0
