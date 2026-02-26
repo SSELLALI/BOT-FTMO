@@ -186,13 +186,13 @@ class PriceActionBacktester:
         highs = np.array([c["high"] for c in h1_candles])
         lows = np.array([c["low"] for c in h1_candles])
 
-        # ATR (for SL sizing and spread calculation)
+        # ATR
         atr = np.zeros(n)
         for i in range(1, n):
             tr = max(highs[i] - lows[i], abs(highs[i] - closes[i - 1]), abs(lows[i] - closes[i - 1]))
             atr[i] = atr[i - 1] * 13 / 14 + tr / 14 if i > 1 else tr
 
-        # RSI (support indicator only)
+        # RSI
         rsi = np.full(n, 50.0)
         gains = np.zeros(n)
         losses_arr = np.zeros(n)
@@ -216,20 +216,22 @@ class PriceActionBacktester:
             else:
                 rsi[i] = 100 if avg_g > 0 else 50
 
-        # ── Swing Highs/Lows (with delayed confirmation for anti-lookahead) ──
+        # Swing detection with delayed confirmation
         swing_lookback = params.get("swing_lookback", 10)
-        swing_highs = []  # (candle_index, price, confirmed_at_index)
+        swing_highs = []
         swing_lows = []
 
         for i in range(swing_lookback, n - swing_lookback):
-            window_start = max(0, i - swing_lookback)
-            window_end = min(n, i + swing_lookback + 1)
-
-            if highs[i] >= np.max(highs[window_start:window_end]):
+            ws = max(0, i - swing_lookback)
+            we = min(n, i + swing_lookback + 1)
+            if highs[i] >= np.max(highs[ws:we]):
                 swing_highs.append((i, float(highs[i]), i + swing_lookback))
-
-            if lows[i] <= np.min(lows[window_start:window_end]):
+            if lows[i] <= np.min(lows[ws:we]):
                 swing_lows.append((i, float(lows[i]), i + swing_lookback))
+
+        # Sort by confirmed_at for binary search
+        swing_highs.sort(key=lambda x: x[2])
+        swing_lows.sort(key=lambda x: x[2])
 
         self.h1_atr = atr
         self.h1_rsi = rsi
@@ -239,45 +241,49 @@ class PriceActionBacktester:
         self.h1_lows = lows
         self.swing_highs = swing_highs
         self.swing_lows = swing_lows
+        self._sh_confs = [x[2] for x in swing_highs]
+        self._sl_confs = [x[2] for x in swing_lows]
+        self._zone_cache = {}
 
     def _get_sr_zones(self, h1_idx, params):
-        """Get active S/R zones at the given H1 index."""
+        """Get S/R zones with caching and binary search."""
+        cache_key = h1_idx // 3  # Cache every 3 H1 candles
+        if cache_key in self._zone_cache:
+            return self._zone_cache[cache_key]
+
         cluster_pips = params.get("sr_cluster_pips", 20)
         cluster_dist = cluster_pips / self.pm
-        max_zones = params.get("sr_max_zones", 30)
+        max_zones = 30
 
-        # Only use confirmed swings (confirmed_at <= h1_idx)
-        valid_highs = [(idx, price) for idx, price, conf in self.swing_highs if conf <= h1_idx]
-        valid_lows = [(idx, price) for idx, price, conf in self.swing_lows if conf <= h1_idx]
+        # Binary search for confirmed swings
+        hi_cutoff = bisect.bisect_right(self._sh_confs, h1_idx)
+        lo_cutoff = bisect.bisect_right(self._sl_confs, h1_idx)
 
-        # Take recent ones
-        recent_highs = valid_highs[-max_zones:]
-        recent_lows = valid_lows[-max_zones:]
+        recent_highs = self.swing_highs[max(0, hi_cutoff - max_zones):hi_cutoff]
+        recent_lows = self.swing_lows[max(0, lo_cutoff - max_zones):lo_cutoff]
 
-        all_levels = [price for _, price in recent_highs + recent_lows]
+        all_levels = sorted([p for _, p, _ in recent_highs] + [p for _, p, _ in recent_lows])
         if not all_levels:
+            self._zone_cache[cache_key] = []
             return []
 
-        all_levels.sort()
-
-        # Cluster nearby levels
+        # Cluster
         zones = []
         used = set()
         for i, level in enumerate(all_levels):
             if i in used:
                 continue
             cluster = [level]
-            for j in range(i + 1, len(all_levels)):
-                if j in used:
+            for j_ in range(i + 1, len(all_levels)):
+                if j_ in used:
                     continue
-                if abs(all_levels[j] - level) <= cluster_dist:
-                    cluster.append(all_levels[j])
-                    used.add(j)
+                if abs(all_levels[j_] - level) <= cluster_dist:
+                    cluster.append(all_levels[j_])
+                    used.add(j_)
             used.add(i)
-            zone_center = float(np.mean(cluster))
-            zone_strength = len(cluster)  # More touches = stronger
-            zones.append((zone_center, zone_strength))
+            zones.append((float(np.mean(cluster)), len(cluster)))
 
+        self._zone_cache[cache_key] = zones
         return zones
 
     # ── Execution Timeline ──
