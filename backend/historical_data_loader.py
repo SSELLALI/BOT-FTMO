@@ -64,25 +64,16 @@ def load_candles_from_csv(csv_path: str, max_candles: int = None) -> List[Dict]:
         return []
 
     try:
-        df = pd.read_csv(csv_path, parse_dates=True)
+        # yfinance CSVs have multi-level headers: Price, Ticker, Datetime
+        # Skip the first 2 header rows and read the 3rd (Datetime) as the index
+        df = pd.read_csv(csv_path, header=0, skiprows=[1, 2])
 
-        # Handle multi-level columns from yfinance
-        if isinstance(df.columns, pd.MultiIndex):
-            df.columns = df.columns.get_level_values(0)
-
-        # Find datetime column (first column or 'Datetime' or 'Date')
-        date_col = None
-        for col in df.columns:
-            if col.lower() in ("datetime", "date", "timestamp"):
-                date_col = col
-                break
-        if date_col is None:
-            date_col = df.columns[0]
-
+        # First column is the datetime
+        date_col = df.columns[0]
         df[date_col] = pd.to_datetime(df[date_col], utc=True)
         df = df.set_index(date_col)
 
-        # Normalize column names
+        # Map column names (Price row headers: Close, High, Low, Open, Volume)
         col_map = {}
         for col in df.columns:
             lower = col.lower().strip()
