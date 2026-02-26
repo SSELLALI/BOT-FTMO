@@ -450,6 +450,7 @@ class ProfessionalBacktester:
                 else:
                     safety_price = min(signal.stop_loss, candle["close"])
                 self._close_trade(signal, safety_price, candle["datetime"], "SAFETY_CLOSE")
+                had_exit = True
                 continue
 
             exit_price = None
@@ -472,6 +473,9 @@ class ProfessionalBacktester:
 
             if exit_price:
                 self._close_trade(signal, exit_price, candle["datetime"], exit_reason)
+                had_exit = True
+        
+        return had_exit
     
     def _close_trade(self, signal: TradeSignal, exit_price: float, exit_time: datetime, exit_reason: str):
         """Close a trade and record results"""
