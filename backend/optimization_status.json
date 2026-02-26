@@ -1,8 +1,8 @@
 {
   "phase": "train_grid",
-  "strategy": "BREAKOUT",
+  "strategy": "COMBINED",
   "symbol": "GBPJPY",
-  "progress": "600/768",
-  "elapsed_sec": 377.3,
-  "progress_key": "GBPJPY_BREAKOUT"
+  "progress": "100/384",
+  "elapsed_sec": 63.8,
+  "progress_key": "GBPJPY_COMBINED"
 }
