@@ -1,7 +1,7 @@
 {
   "phase": "train_grid",
   "strategy": "BREAKOUT",
-  "progress": "400/576",
-  "elapsed_sec": 81.1,
+  "progress": "450/576",
+  "elapsed_sec": 92.8,
   "progress_key": "EURUSD_breakout"
 }
