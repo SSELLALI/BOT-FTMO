@@ -1169,7 +1169,121 @@ async def run_professional_backtest(request: ProfessionalBacktestRequest):
         }
 
 
-# ==================== APP SETUP ====================
+# ---------- Realistic V2 Backtest Endpoints ----------
+
+@api_router.get("/optimization/status")
+async def get_optimization_status():
+    """Get current optimization status"""
+    import json
+    status_file = Path(__file__).parent / "optimization_status.json"
+    results_file = Path(__file__).parent / "optimization_results.json"
+    if status_file.exists():
+        with open(status_file) as f:
+            status = json.load(f)
+        if results_file.exists():
+            with open(results_file) as f:
+                results = json.load(f)
+            status["results_available"] = True
+            for key in ["scalping_h1", "intraday_h1"]:
+                r = results.get(key, {})
+                if r.get("results"):
+                    best = r["results"][0]
+                    fp = best.get("full_period", best.get("test", {}))
+                    status[f"{key}_summary"] = {
+                        "return_pct": fp.get("total_return_pct"),
+                        "weekly_pct": fp.get("weekly_return_pct"),
+                        "trades": fp.get("total_trades"),
+                        "win_rate": fp.get("win_rate"),
+                        "profit_factor": fp.get("profit_factor"),
+                        "max_dd": fp.get("max_drawdown_pct"),
+                        "robust": best.get("robust"),
+                        "robustness_rate": best.get("robustness_rate"),
+                        "params": best.get("params"),
+                    }
+        else:
+            status["results_available"] = False
+        return status
+    return {"phase": "NOT_STARTED"}
+
+
+@api_router.get("/optimization/results")
+async def get_optimization_results():
+    """Get full optimization results"""
+    import json
+    results_file = Path(__file__).parent / "optimization_results.json"
+    if results_file.exists():
+        with open(results_file) as f:
+            return json.load(f)
+    raise HTTPException(404, "No optimization results available")
+
+
+@api_router.post("/backtest/realistic")
+async def run_realistic_backtest(request: ProfessionalBacktestRequest):
+    """Run realistic V2 backtest with full market simulation."""
+    from realistic_backtester_v2 import RealisticBacktester
+    from historical_data_loader import load_candles_from_csv
+
+    try:
+        h1_path = Path(__file__).parent / "historical_data" / f"{request.symbol}_H1.csv"
+        if not h1_path.exists():
+            raise HTTPException(400, f"No H1 data for {request.symbol}")
+
+        candles = load_candles_from_csv(str(h1_path))
+        bt = RealisticBacktester(initial_balance=request.initial_balance)
+
+        import json as _json
+        results_file = Path(__file__).parent / "optimization_results.json"
+        params = None
+        if results_file.exists():
+            with open(results_file) as f:
+                opt = _json.load(f)
+            key = "scalping_h1" if request.strategy == "SCALPING" else "intraday_h1"
+            if opt.get(key, {}).get("results"):
+                params = opt[key]["results"][0]["params"]
+
+        if request.strategy == "SCALPING":
+            if not params:
+                params = {"fast_ema": 20, "slow_ema": 50, "rsi_buy_max": 70, "rsi_sell_min": 30,
+                          "min_rr": 2.5, "atr_multiplier": 1.0, "min_sl_pips": 10, "max_sl_pips": 30,
+                          "pullback_threshold": 0.0012, "body_atr_ratio": 0.35, "momentum_threshold": 0.008,
+                          "risk_per_trade": 0.0075, "session_start": 7, "session_end": 17,
+                          "max_daily_trades": 10, "max_consecutive_losses": 3}
+            result = bt.run_scalping(candles, params)
+        else:
+            if not params:
+                params = {"ema_period": 15, "min_rr": 3.0, "atr_multiplier": 0.5, "pullback_pct": 0.004,
+                          "min_sl_pips": 12, "max_sl_pips": 30, "risk_per_trade": 0.005,
+                          "session_start": 7, "session_end": 21, "max_daily_trades": 6,
+                          "max_consecutive_losses": 3}
+            result = bt.run_intraday(candles, params)
+
+        return {
+            "success": True,
+            "params_used": params,
+            "result": {
+                "strategy": result.strategy, "symbol": result.symbol, "timeframe": result.timeframe,
+                "start_date": result.start_date, "end_date": result.end_date,
+                "initial_balance": result.initial_balance, "final_balance": result.final_balance,
+                "total_return_pct": result.total_return_pct, "weekly_return_pct": result.weekly_return_pct,
+                "total_trades": result.total_trades, "wins": result.wins, "losses": result.losses,
+                "win_rate": result.win_rate, "profit_factor": result.profit_factor,
+                "max_drawdown_pct": result.max_drawdown_pct, "max_daily_loss_pct": result.max_daily_loss_pct,
+                "sharpe_ratio": result.sharpe_ratio, "ftmo_compliant": result.ftmo_compliant,
+                "avg_spread": result.avg_spread, "avg_slippage": result.avg_slippage,
+                "rejected_orders": result.rejected_orders, "partial_fills": result.partial_fills,
+                "requotes": result.requotes,
+                "max_consecutive_losses": result.max_consecutive_losses,
+                "avg_risk_reward": result.avg_risk_reward,
+                "equity_curve": result.equity_curve,
+                "trades": result.trades[-50:],
+                "daily_returns": result.daily_returns[-60:],
+            }
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Realistic backtest error: {e}")
+        return {"success": False, "error": str(e)}
 
 # Include router
 app.include_router(api_router)
