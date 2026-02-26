@@ -1,0 +1,67 @@
+{
+  "validated_at": "2026-02-26",
+  "pair": "USDJPY",
+  "data_source": "TradingView Pro (FXCM)",
+  "method": "Price Action (S/R + Candlestick Patterns) + MTF (H1 indicators + M30 execution)",
+  "combined_weekly_pct": 1.38,
+  "status": "VALIDATED — NE PAS MODIFIER",
+  "strategies": {
+    "BREAKOUT": {
+      "weekly_pct": 0.73,
+      "profit_factor": 1.24,
+      "max_drawdown_pct": 5.54,
+      "win_rate": 30.0,
+      "total_trades": 357,
+      "robustness": "100% (6/6)",
+      "oos_pass_rate": "15/15",
+      "train_weekly": 0.50,
+      "test_weekly": 0.59,
+      "degradation": "-17% (test > train)",
+      "params": {
+        "swing_lookback": 15,
+        "sr_cluster_pips": 15,
+        "sr_proximity_pips": 10,
+        "min_rr": 3.0,
+        "min_sl_pips": 20,
+        "max_sl_pips": 45,
+        "risk_per_trade": 0.005,
+        "sr_break_pips": 12,
+        "rsi_extreme": 33,
+        "min_zone_strength": 2,
+        "sl_buffer_pips": 5,
+        "session_start": 7,
+        "session_end": 20,
+        "max_daily_trades": 5,
+        "max_consecutive_losses": 3
+      }
+    },
+    "BOUNCE": {
+      "weekly_pct": 0.653,
+      "profit_factor": 1.26,
+      "max_drawdown_pct": 0.32,
+      "win_rate": 30.8,
+      "total_trades": 555,
+      "robustness": "83% (5/6)",
+      "oos_pass_rate": "2/15",
+      "train_weekly": 0.859,
+      "test_weekly": 0.187,
+      "degradation": "78%",
+      "params": {
+        "swing_lookback": 10,
+        "sr_cluster_pips": 25,
+        "sr_proximity_pips": 18,
+        "min_rr": 3.0,
+        "min_sl_pips": 20,
+        "max_sl_pips": 30,
+        "risk_per_trade": 0.005,
+        "rsi_extreme": 33,
+        "min_zone_strength": 2,
+        "sl_buffer_pips": 5,
+        "session_start": 7,
+        "session_end": 20,
+        "max_daily_trades": 5,
+        "max_consecutive_losses": 3
+      }
+    }
+  }
+}
