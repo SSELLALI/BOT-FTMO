@@ -116,6 +116,7 @@ class GBPJPYBreakoutBacktester:
         max_sl_pips = params.get("max_sl_pips", 70)
         proximity_factor = params.get("proximity_factor", 0.7)
         stale_timeout = params.get("stale_timeout", 25)
+        extend_session = params.get("extend_session", False)  # Fill 11:30-13:30 gap
 
         consecutive_losses = 0
         daily_trade_count = {}
