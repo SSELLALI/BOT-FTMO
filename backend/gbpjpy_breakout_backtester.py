@@ -356,12 +356,14 @@ class GBPJPYBreakoutBacktester:
                 has_rej = False
                 if direction == "BUY":
                     has_rej = any(p in patterns for p in
-                        ("BULLISH_ENGULFING", "BULLISH_PINBAR", "HAMMER", "STRONG_BULLISH"))
+                        ("BULLISH_ENGULFING", "BULLISH_PINBAR", "HAMMER",
+                         "STRONG_BULLISH", "BULLISH_CLOSE_HIGH"))
                     if not (ec_close > ec_open):
                         has_rej = False
                 elif direction == "SELL":
                     has_rej = any(p in patterns for p in
-                        ("BEARISH_ENGULFING", "BEARISH_PINBAR", "SHOOTING_STAR", "STRONG_BEARISH"))
+                        ("BEARISH_ENGULFING", "BEARISH_PINBAR", "SHOOTING_STAR",
+                         "STRONG_BEARISH", "BEARISH_CLOSE_LOW"))
                     if not (ec_close < ec_open):
                         has_rej = False
                 if not has_rej:
