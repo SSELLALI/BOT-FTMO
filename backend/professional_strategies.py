@@ -229,8 +229,11 @@ class ScalpingStrategy:
         self.max_trades_per_day = 10
         self.max_consecutive_losses = 3
         self.min_sl_pips = 5
-        self.max_sl_pips = 15
-        self.min_rr = 1.3
+        self.max_sl_pips = 20
+        self.min_rr = 1.5
+        self.fast_ema_period = 15
+        self.slow_ema_period = 30
+        self.atr_multiplier = 2.0
 
     def is_valid_session(self, hour: int) -> bool:
         return 7 <= hour <= 17  # Extended London + early NY
