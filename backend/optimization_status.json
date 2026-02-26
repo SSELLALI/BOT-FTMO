@@ -1,7 +1,7 @@
 {
   "strategy": "SCALPING",
   "phase": "grid_search",
-  "progress": "350/2304",
-  "elapsed_sec": 33.5,
+  "progress": "1450/2304",
+  "elapsed_sec": 135.2,
   "progress_key": "scalping_h1"
 }
