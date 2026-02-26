@@ -356,8 +356,8 @@ class GBPJPYBreakoutBacktester:
             if not pullback_active or last_breakout is None:
                 continue
 
-            # Stale breakout check (more than 20 H1 candles = ~20 hours)
-            if h1_idx - last_breakout["h1_idx"] > 20:
+            # Stale breakout check (parameterized timeout)
+            if h1_idx - last_breakout["h1_idx"] > stale_timeout:
                 last_breakout = None
                 pullback_active = False
                 continue
