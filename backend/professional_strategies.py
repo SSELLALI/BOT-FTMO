@@ -272,45 +272,36 @@ class ScalpingStrategy:
 
         # =============== BUY SETUPS ===============
         ema_bullish = cur_fast > cur_slow
-        rsi_ok_buy = 30 <= rsi <= 65
+        rsi_ok_buy = rsi > 30 and rsi < 65
 
         if ema_bullish and rsi_ok_buy:
-            # Optimized: EMA 15/30 trend filter + 1 confirmation
             entry_triggered = False
             reason = ""
             prev_candle = candles[current_index - 1]
 
-            # Signal 1: Price bounced from fast EMA area
-            near_ema = abs(prev_candle["low"] - prev_fast) / current_price < 0.0006
-            if near_ema and current_price > prev_candle["high"]:
-                entry_triggered = True
-                reason = f"EMA9 bounce, RSI {rsi:.0f}"
-
-            # Signal 2: Bullish candle pattern
-            if not entry_triggered:
-                if (TechnicalAnalysis.is_bullish_engulfing(candles, current_index) or
-                        TechnicalAnalysis.is_bullish_rejection(current_candle)):
+            # Signal 1: Pullback to fast EMA
+            if abs(prev_candle["low"] - ema_fast[-2]) / current_price < 0.0006:
+                if current_price > prev_candle["high"]:
                     entry_triggered = True
-                    reason = f"Bullish pattern, RSI {rsi:.0f}"
+                    reason = f"EMA pullback, RSI {rsi:.0f}"
 
-            # Signal 3: Strong momentum candle in trend
+            # Signal 2: Strong bullish candle + momentum
             if not entry_triggered and TechnicalAnalysis.is_bullish_candle(current_candle):
                 body = current_candle["close"] - current_candle["open"]
                 if body > atr * 0.4 and momentum > 0.01:
                     entry_triggered = True
                     reason = f"Momentum candle, RSI {rsi:.0f}"
 
-            # Signal 4: Price crossed above slow EMA with momentum
-            if not entry_triggered:
-                if prev_candle["close"] <= cur_slow and current_price > cur_slow and momentum > 0:
-                    entry_triggered = True
-                    reason = f"EMA21 breakout, RSI {rsi:.0f}"
-
-            # Signal 5: BB lower band reversal
+            # Signal 3: BB lower band bounce
             if not entry_triggered and current_price <= bb_lower * 1.001:
                 if TechnicalAnalysis.is_bullish_candle(current_candle):
                     entry_triggered = True
-                    reason = f"BB lower reversal, RSI {rsi:.0f}"
+                    reason = f"BB lower bounce, RSI {rsi:.0f}"
+
+            # Signal 4: Bullish engulfing pattern
+            if not entry_triggered and TechnicalAnalysis.is_bullish_engulfing(candles, current_index):
+                entry_triggered = True
+                reason = f"Bullish engulfing, RSI {rsi:.0f}"
 
             if entry_triggered:
                 # Dynamic SL with optimized ATR multiplier (2.0)
@@ -356,44 +347,36 @@ class ScalpingStrategy:
 
         # =============== SELL SETUPS ===============
         ema_bearish = cur_fast < cur_slow
-        rsi_ok_sell = 35 <= rsi <= 70
+        rsi_ok_sell = rsi > 35 and rsi < 70
 
         if signal is None and ema_bearish and rsi_ok_sell:
             entry_triggered = False
             reason = ""
             prev_candle = candles[current_index - 1]
 
-            # Signal 1: Fast EMA rejection
-            near_ema = abs(prev_candle["high"] - prev_fast) / current_price < 0.0006
-            if near_ema and current_price < prev_candle["low"]:
-                entry_triggered = True
-                reason = f"EMA rejection, RSI {rsi:.0f}"
-
-            # Signal 2: Bearish pattern
-            if not entry_triggered:
-                if (TechnicalAnalysis.is_bearish_engulfing(candles, current_index) or
-                        TechnicalAnalysis.is_bearish_rejection(current_candle)):
+            # Signal 1: Pullback to fast EMA
+            if abs(prev_candle["high"] - ema_fast[-2]) / current_price < 0.0006:
+                if current_price < prev_candle["low"]:
                     entry_triggered = True
-                    reason = f"Bearish pattern, RSI {rsi:.0f}"
+                    reason = f"EMA pullback, RSI {rsi:.0f}"
 
-            # Signal 3: Strong bearish momentum
+            # Signal 2: Strong bearish candle + momentum
             if not entry_triggered and TechnicalAnalysis.is_bearish_candle(current_candle):
                 body = current_candle["open"] - current_candle["close"]
                 if body > atr * 0.4 and momentum < -0.01:
                     entry_triggered = True
                     reason = f"Bearish momentum, RSI {rsi:.0f}"
 
-            # Signal 4: Break below slow EMA
-            if not entry_triggered:
-                if prev_candle["close"] >= cur_slow and current_price < cur_slow and momentum < 0:
-                    entry_triggered = True
-                    reason = f"EMA breakdown, RSI {rsi:.0f}"
-
-            # Signal 5: BB upper band rejection
+            # Signal 3: BB upper band bounce
             if not entry_triggered and current_price >= bb_upper * 0.999:
                 if TechnicalAnalysis.is_bearish_candle(current_candle):
                     entry_triggered = True
-                    reason = f"BB upper rejection, RSI {rsi:.0f}"
+                    reason = f"BB upper bounce, RSI {rsi:.0f}"
+
+            # Signal 4: Bearish engulfing pattern
+            if not entry_triggered and TechnicalAnalysis.is_bearish_engulfing(candles, current_index):
+                entry_triggered = True
+                reason = f"Bearish engulfing, RSI {rsi:.0f}"
 
             if entry_triggered:
                 reason_text = reason
