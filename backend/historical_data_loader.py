@@ -110,11 +110,10 @@ def load_candles_from_csv(csv_path: str, max_candles: int = None) -> List[Dict]:
         # Convert to list of dicts
         candles = []
         for idx, row in df.iterrows():
-            dt = idx
-            if hasattr(dt, 'to_pydatetime'):
-                dt = dt.to_pydatetime()
+            dt = pd.Timestamp(idx)
             if dt.tzinfo is None:
-                dt = dt.replace(tzinfo=timezone.utc)
+                dt = dt.tz_localize("UTC")
+            dt = dt.to_pydatetime()
 
             candles.append({
                 "datetime": dt,
