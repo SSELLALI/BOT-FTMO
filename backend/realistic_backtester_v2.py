@@ -361,16 +361,28 @@ class RealisticBacktester:
 
         start_idx = max(se + 10, 50)
         pm = 10000
+        n = len(candles)
 
-        # Compute initial avg ATR
-        atrs = []
-        for j in range(start_idx, min(start_idx + 200, len(candles))):
-            atrs.append(TechnicalAnalysis.atr(candles[:j + 1], 14))
-        avg_atr = float(np.mean(atrs)) if atrs else 0.001
+        # ── PRE-COMPUTE all indicators (O(n) once, not O(n²)) ──
+        all_closes = [x["close"] for x in candles]
+        ef_all = TechnicalAnalysis.ema(all_closes, fe)
+        esl_all = TechnicalAnalysis.ema(all_closes, se)
+        rsi_all = TechnicalAnalysis.rsi(all_closes, 14)
+        mom_all = TechnicalAnalysis.momentum(all_closes, 8)
+        bb_u_all, bb_m_all, bb_l_all = TechnicalAnalysis.bollinger_bands(all_closes, 20, 2.0)
+
+        # Pre-compute ATR for all candles
+        atr_all = [0.0] * n
+        for j in range(14, n):
+            atr_all[j] = TechnicalAnalysis.atr(candles[:j + 1], 14)
+
+        # Initial avg ATR
+        init_atrs = [atr_all[j] for j in range(start_idx, min(start_idx + 200, n)) if atr_all[j] > 0]
+        avg_atr = float(np.mean(init_atrs)) if init_atrs else 0.001
 
         last_day = None
 
-        for i in range(start_idx + 1, len(candles)):
+        for i in range(start_idx + 1, n):
             c = candles[i]
             pc = candles[i - 1]
             hour = c["datetime"].hour
@@ -383,7 +395,10 @@ class RealisticBacktester:
             if hour < ss or hour > send:
                 continue
 
-            atr = TechnicalAnalysis.atr(candles[:i], 14)
+            atr = atr_all[i - 1]  # ATR up to completed candle i-1
+            if atr < 0.00025:
+                continue
+
             is_news = news_calendar.is_news_window(c["datetime"], self.config.news_window_minutes)
             spr = self.spread(hour, atr, avg_atr, is_news)
             avg_atr = avg_atr * 0.99 + atr * 0.01
@@ -403,30 +418,25 @@ class RealisticBacktester:
             if self.daily_trades_count >= max_daily:
                 continue
 
-            # SIGNAL on completed candles only (anti-lookahead)
-            closes = [x["close"] for x in candles[:i]]
-            ef = TechnicalAnalysis.ema(closes, fe)
-            esl = TechnicalAnalysis.ema(closes, se)
-            rsi = TechnicalAnalysis.rsi(closes, 14)
-            mom = TechnicalAnalysis.momentum(closes, 8)
-            bb_u, bb_m, bb_l = TechnicalAnalysis.bollinger_bands(closes, 20, 2.0)
-
-            sig_price = closes[-1]
-            cf = ef[-1]
-            cs = esl[-1]
-
-            if atr < 0.00025:
-                continue
+            # SIGNAL from pre-computed indicators (anti-lookahead: index i-1)
+            sig_price = all_closes[i - 1]
+            cf = ef_all[i - 1]
+            cs_val = esl_all[i - 1]
+            rsi = rsi_all[i - 1] if i - 1 < len(rsi_all) else 50
+            mom = mom_all[i - 1] if i - 1 < len(mom_all) else 0
+            bb_l = bb_l_all[i - 1] if i - 1 < len(bb_l_all) else 0
+            bb_u = bb_u_all[i - 1] if i - 1 < len(bb_u_all) else 999
 
             sig_dir = None
+            pp = candles[i - 2] if i >= 2 else pc
 
             # BUY signals (trend = bullish: fast EMA > slow EMA)
-            if cf > cs and rsi < rsi_bmax and rsi > 30:
+            if cf > cs_val and rsi < rsi_bmax and rsi > 30:
                 hit = False
-                pp = candles[i - 2] if i >= 2 else pc
 
                 # S1: Pullback to EMA zone + breakout
-                if len(ef) >= 2 and abs(pp["low"] - ef[-2]) / sig_price < pb_thresh:
+                cf_prev = ef_all[i - 2] if i >= 2 else cf
+                if abs(pp["low"] - cf_prev) / sig_price < pb_thresh:
                     if pc["close"] > pp["high"]:
                         hit = True
 
@@ -443,52 +453,44 @@ class RealisticBacktester:
                 if not hit and i >= 2 and TechnicalAnalysis.is_bullish_engulfing(candles, i - 1):
                     hit = True
 
-                # S5: EMA zone bounce (price within 1 ATR of fast EMA + bullish candle)
+                # S5: EMA zone bounce
                 if not hit and TechnicalAnalysis.is_bullish_candle(pc):
-                    dist_to_ema = abs(pc["low"] - cf)
-                    if dist_to_ema < atr * 1.2 and pc["close"] > cf:
+                    if abs(pc["low"] - cf) < atr * 1.2 and pc["close"] > cf:
                         hit = True
 
-                # S6: Trend continuation (bullish candle closing above prev high in trend)
+                # S6: Trend continuation
                 if not hit and TechnicalAnalysis.is_bullish_candle(pc):
-                    if pc["close"] > pp["high"] and cf > cs * 1.0005:
+                    if pc["close"] > pp["high"] and cf > cs_val * 1.0005:
                         hit = True
 
                 if hit:
                     sig_dir = "BUY"
 
             # SELL signals (trend = bearish: fast EMA < slow EMA)
-            elif cf < cs and rsi > rsi_smin and rsi < 70:
+            elif cf < cs_val and rsi > rsi_smin and rsi < 70:
                 hit = False
-                pp = candles[i - 2] if i >= 2 else pc
 
-                # S1: Pullback to EMA zone + breakdown
-                if len(ef) >= 2 and abs(pp["high"] - ef[-2]) / sig_price < pb_thresh:
+                cf_prev = ef_all[i - 2] if i >= 2 else cf
+                if abs(pp["high"] - cf_prev) / sig_price < pb_thresh:
                     if pc["close"] < pp["low"]:
                         hit = True
 
-                # S2: Strong bearish momentum candle
                 if not hit and TechnicalAnalysis.is_bearish_candle(pc):
                     if (pc["open"] - pc["close"]) > atr * body_ratio and mom < -mom_thresh:
                         hit = True
 
-                # S3: Bollinger upper band rejection
                 if not hit and sig_price >= bb_u * 0.998 and TechnicalAnalysis.is_bearish_candle(pc):
                     hit = True
 
-                # S4: Bearish engulfing
                 if not hit and i >= 2 and TechnicalAnalysis.is_bearish_engulfing(candles, i - 1):
                     hit = True
 
-                # S5: EMA zone rejection (price within 1 ATR of fast EMA + bearish candle)
                 if not hit and TechnicalAnalysis.is_bearish_candle(pc):
-                    dist_to_ema = abs(pc["high"] - cf)
-                    if dist_to_ema < atr * 1.2 and pc["close"] < cf:
+                    if abs(pc["high"] - cf) < atr * 1.2 and pc["close"] < cf:
                         hit = True
 
-                # S6: Trend continuation (bearish candle closing below prev low in trend)
                 if not hit and TechnicalAnalysis.is_bearish_candle(pc):
-                    if pc["close"] < pp["low"] and cf < cs * 0.9995:
+                    if pc["close"] < pp["low"] and cf < cs_val * 0.9995:
                         hit = True
 
                 if hit:
@@ -548,7 +550,7 @@ class RealisticBacktester:
                 self.daily_trades_count += 1
 
             # Equity snapshot
-            if i % max(1, len(candles) // 200) == 0:
+            if i % max(1, n // 200) == 0:
                 dd = max(0, (self.initial_balance - self.balance) / self.initial_balance * 100)
                 self.equity_curve.append({
                     "timestamp": c["datetime"].isoformat(),
