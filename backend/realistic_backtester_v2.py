@@ -354,6 +354,9 @@ class RealisticBacktester:
         send = params.get("session_end", 17)
         max_daily = params.get("max_daily_trades", 10)
         self.config.max_consecutive_losses = params.get("max_consecutive_losses", 3)
+        pb_thresh = params.get("pullback_threshold", 0.001)
+        body_ratio = params.get("body_atr_ratio", 0.4)
+        mom_thresh = params.get("momentum_threshold", 0.01)
 
         start_idx = max(se + 10, 50)
         pm = 10000
