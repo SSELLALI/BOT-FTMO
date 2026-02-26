@@ -113,11 +113,20 @@ def run_optimization():
 
     for h1c in h1_combos:
         h1_t0 = time.time()
+
+        # Pre-compute breakouts ONCE for this H1 combo
+        bt_prescan = GBPJPYBreakoutBacktester(initial_balance=100000)
+        train_time_range = (m30_train[0]["datetime"], m30_train[-1]["datetime"])
+        precomputed_train = bt_prescan.pre_scan_breakouts(
+            h1, train_time_range, h1c[0], h1c[1], h1c[2])
+
+        logger.info(f"  H1({h1c[0]},{h1c[1]},{h1c[2]}): pre-scanned {len(precomputed_train[0])} breakouts")
+
         for ec in entry_combos:
             random.seed(42)
             params = make_params(h1c, ec)
             bt = GBPJPYBreakoutBacktester(initial_balance=100000)
-            r = bt.run(h1, m30_train, params, base_spread=2.5)
+            r = bt.run(h1, m30_train, params, base_spread=2.5, precomputed=precomputed_train)
             tested += 1
 
             if r.total_trades >= 5 and r.total_return_pct > 0 and r.ftmo_compliant and r.profit_factor > 1.0:
