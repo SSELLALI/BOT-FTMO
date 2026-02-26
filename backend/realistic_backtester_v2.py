@@ -648,6 +648,7 @@ class RealisticBacktester:
         Intraday backtest: EMA pullback on H1 with full realistic simulation.
         """
         self._reset_state()
+        self._setup_pair(symbol, candles)
 
         ema_per = params.get("ema_period", 20)
         min_rr = params.get("min_rr", 2.5)
@@ -666,7 +667,7 @@ class RealisticBacktester:
         ema_all = TechnicalAnalysis.ema(closes_all, ema_per)
 
         start_idx = ema_per + 5
-        pm = 10000
+        pm = self.pm
         n = len(candles)
 
         # Pre-compute ATR (O(n) once)
