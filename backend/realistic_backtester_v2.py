@@ -386,11 +386,7 @@ class RealisticBacktester:
         rsi_all = TechnicalAnalysis.rsi(all_closes, 14)
         mom_all = TechnicalAnalysis.momentum(all_closes, 8)
         bb_u_all, bb_m_all, bb_l_all = TechnicalAnalysis.bollinger_bands(all_closes, 20, 2.0)
-
-        # Pre-compute ATR for all candles
-        atr_all = [0.0] * n
-        for j in range(14, n):
-            atr_all[j] = TechnicalAnalysis.atr(candles[:j + 1], 14)
+        atr_all = self.precompute_atr(candles, 14)
 
         # Initial avg ATR
         init_atrs = [atr_all[j] for j in range(start_idx, min(start_idx + 200, n)) if atr_all[j] > 0]
