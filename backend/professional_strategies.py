@@ -313,8 +313,8 @@ class ScalpingStrategy:
                     reason = f"BB lower reversal, RSI {rsi:.0f}"
 
             if entry_triggered:
-                # Dynamic SL based on ATR
-                sl_distance = max(atr * 1.2, self.min_sl_pips / 10000)
+                # Dynamic SL with optimized ATR multiplier (2.0)
+                sl_distance = max(atr * self.atr_multiplier, self.min_sl_pips / 10000)
                 sl_price = current_price - sl_distance
                 sl_pips = (current_price - sl_price) * 10000
 
