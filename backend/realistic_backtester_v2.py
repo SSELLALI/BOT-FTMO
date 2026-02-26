@@ -583,6 +583,7 @@ class RealisticBacktester:
         max_daily = params.get("max_daily_trades", 6)
         max_cl = params.get("max_consecutive_losses", 3)
         self.config.max_consecutive_losses = max_cl
+        self.config.risk_per_trade = params.get("risk_per_trade", 0.01)
 
         closes_all = [x["close"] for x in candles]
         ema_all = TechnicalAnalysis.ema(closes_all, ema_per)
