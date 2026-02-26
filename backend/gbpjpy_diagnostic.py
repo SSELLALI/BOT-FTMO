@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run actual backtester with relaxed params on M30 data."""
+"""Quick test of rewritten backtester with M30."""
 import sys, os
 sys.path.insert(0, os.path.dirname(__file__))
 from tradingview_loader import load_tradingview_csv
@@ -9,7 +9,7 @@ h1 = load_tradingview_csv("historical_data/GBPJPY_H1_TV.csv")
 m30 = load_tradingview_csv("historical_data/GBPJPY_M30_TV.csv")
 
 params = {
-    "swing_lookback": 10,
+    "swing_lookback": 8,
     "sl_buffer_pips": 5,
     "min_rr": 2.0,
     "risk_per_trade": 0.01,
@@ -33,20 +33,15 @@ params = {
 bt = GBPJPYBreakoutBacktester(initial_balance=100000)
 r = bt.run(h1, m30, params, base_spread=2.5)
 
-print(f"RESULTS (M30 entry, relaxed params):")
-print(f"  Trades: {r.total_trades}")
-print(f"  Wins/Losses: {r.wins}/{r.losses} (WR: {r.win_rate}%)")
+weeks = 60
+print(f"RESULTS (v2, M30, multi-breakout):")
+print(f"  Trades: {r.total_trades} ({r.total_trades/weeks:.2f}/week)")
+print(f"  W/L: {r.wins}/{r.losses} (WR: {r.win_rate}%)")
 print(f"  Total Return: {r.total_return_pct}%")
 print(f"  Weekly Return: {r.weekly_return_pct}%")
-print(f"  Profit Factor: {r.profit_factor}")
-print(f"  Max DD: {r.max_drawdown_pct}%")
-print(f"  Max Daily Loss: {r.max_daily_loss_pct}%")
+print(f"  PF: {r.profit_factor} | Avg RR: {r.avg_rr_achieved}")
+print(f"  Max DD: {r.max_drawdown_pct}% | Daily Loss: {r.max_daily_loss_pct}%")
 print(f"  FTMO: {r.ftmo_compliant}")
-print(f"  Avg RR: {r.avg_rr_achieved}")
-print(f"  Period: {r.start_date} -> {r.end_date}")
-days = 420
-weeks = days / 7
-print(f"  Trades/week: {r.total_trades/weeks:.2f}")
 print(f"\nAll trades:")
 for t in r.trades:
     print(f"  {t}")
