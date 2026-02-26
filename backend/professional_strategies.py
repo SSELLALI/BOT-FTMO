@@ -441,11 +441,14 @@ class IntradayStrategy:
 
     def __init__(self):
         self.name = "INTRADAY"
-        self.max_trades_per_day = 5
-        self.max_consecutive_losses = 2
-        self.min_sl_pips = 12
-        self.max_sl_pips = 35
-        self.min_rr = 1.5
+        self.max_trades_per_day = 6
+        self.max_consecutive_losses = 3
+        self.min_sl_pips = 8
+        self.max_sl_pips = 25
+        self.min_rr = 2.5
+        self.ema_period = 20
+        self.atr_multiplier = 0.5
+        self.pullback_pct = 0.003
 
     def is_valid_session(self, hour: int) -> bool:
         return 7 <= hour <= 21
