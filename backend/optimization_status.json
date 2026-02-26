@@ -1,7 +1,7 @@
 {
   "strategy": "INTRADAY",
   "phase": "grid_search",
-  "progress": "250/1728",
-  "elapsed_sec": 37.5,
+  "progress": "1550/1728",
+  "elapsed_sec": 227.1,
   "progress_key": "GBPUSD_intraday"
 }
