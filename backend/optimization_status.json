@@ -1,7 +1,7 @@
 {
   "strategy": "SCALPING",
   "phase": "grid_search",
-  "progress": "250/2304",
-  "elapsed_sec": 33.2,
+  "progress": "1200/2304",
+  "elapsed_sec": 163.5,
   "progress_key": "GBPUSD_scalping"
 }
