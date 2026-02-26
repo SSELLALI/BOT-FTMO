@@ -288,7 +288,7 @@ class RealisticBacktester:
 
     def _lot_size(self, sl_pips: float) -> float:
         risk_amt = self.balance * self.config.risk_per_trade * 0.95
-        lot = risk_amt / (sl_pips * 10.0)
+        lot = risk_amt / (sl_pips * self.pip_value)
         return max(0.01, round(lot, 2))
 
     def _can_trade(self) -> bool:
