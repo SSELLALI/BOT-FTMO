@@ -1,7 +1,8 @@
 {
-  "phase": "train",
+  "phase": "train_grid",
   "strategy": "BREAKOUT",
-  "progress": "550/576",
-  "elapsed_sec": 115.2,
-  "progress_key": "AUDCAD_breakout"
+  "symbol": "GBPJPY",
+  "progress": "100/768",
+  "elapsed_sec": 68.5,
+  "progress_key": "GBPJPY_BREAKOUT"
 }

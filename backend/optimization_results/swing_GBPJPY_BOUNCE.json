@@ -1,0 +1,57 @@
+{
+  "status": "NO_OOS_PROFITABLE",
+  "symbol": "GBPJPY",
+  "strategy_type": "BOUNCE",
+  "total_params_tested": 384,
+  "viable_on_train": 208,
+  "profitable_oos": 0,
+  "elapsed_sec": 209.9,
+  "best_candidate": {
+    "params": {
+      "d1_swing_lookback": 8,
+      "h4_swing_lookback": 12,
+      "sr_cluster_pips": 40,
+      "sr_proximity_pips": 45,
+      "min_rr": 3.0,
+      "min_sl_pips": 25,
+      "max_sl_pips": 100,
+      "risk_per_trade": 0.008,
+      "sr_break_pips": 20,
+      "sl_buffer_pips": 10,
+      "min_zone_strength": 2,
+      "max_hold_bars": 96,
+      "max_daily_trades": 3,
+      "max_consecutive_losses": 2
+    },
+    "train": {
+      "total_trades": 566,
+      "wins": 169,
+      "losses": 397,
+      "win_rate": 29.9,
+      "total_return_pct": 118.73,
+      "weekly_return_pct": 0.464,
+      "profit_factor": 1.23,
+      "max_drawdown_pct": 3.46,
+      "max_daily_loss_pct": 3.62,
+      "ftmo_compliant": "True",
+      "start_date": "2019-02-06",
+      "end_date": "2024-01-03",
+      "avg_trade_pnl": 209.77
+    },
+    "test": {
+      "total_trades": 131,
+      "wins": 32,
+      "losses": 99,
+      "win_rate": 24.4,
+      "total_return_pct": -6.42,
+      "weekly_return_pct": -0.128,
+      "profit_factor": 0.92,
+      "max_drawdown_pct": 6.42,
+      "max_daily_loss_pct": 1.82,
+      "ftmo_compliant": "True",
+      "start_date": "2024-02-15",
+      "end_date": "2025-01-30",
+      "avg_trade_pnl": -49.04
+    }
+  }
+}
