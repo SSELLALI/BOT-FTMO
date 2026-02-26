@@ -198,7 +198,23 @@ class RealisticBacktester:
     def __init__(self, config: ExecutionConfig = None, initial_balance: float = 100000):
         self.config = config or ExecutionConfig()
         self.initial_balance = initial_balance
+        self.pm = 10000  # Default, updated per symbol
+        self.pip_value = 10.0  # USD per pip per lot, updated per symbol
         self._reset_state()
+
+    def _setup_pair(self, symbol: str, candles: List[Dict] = None):
+        """Configure pip multiplier and pip value for the trading pair."""
+        if "JPY" in symbol:
+            self.pm = 100
+            # pip value = 1000 / rate. Use mid-range of candle data.
+            if candles:
+                mid = candles[len(candles) // 2]["close"]
+                self.pip_value = 1000.0 / mid  # ~$6.5-7 for USDJPY
+            else:
+                self.pip_value = 7.0
+        else:
+            self.pm = 10000
+            self.pip_value = 10.0
 
     def _reset_state(self):
         self.balance = self.initial_balance
