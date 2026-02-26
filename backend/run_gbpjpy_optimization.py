@@ -1,150 +1,224 @@
 #!/usr/bin/env python3
 """
-GBPJPY Walk-Forward Optimization
+GBPJPY Breakout-Pullback Optimization Runner
 
-Runs full walk-forward optimization on GBPJPY using TradingView H1 data.
-Applies the same 10 strict realism rules as EURUSD/USDJPY.
-Adapts spread and pip values for GBPJPY characteristics.
+Grid search with walk-forward validation on the user-defined strategy.
+Tests parameter variations while respecting core rules.
 """
-import json
-import logging
-import time
-import sys
 import os
+import sys
+import json
+import time
+import logging
+import itertools
+from datetime import datetime, timezone
 
 sys.path.insert(0, os.path.dirname(__file__))
 
 from tradingview_loader import load_tradingview_csv
-from walkforward_optimizer import walk_forward_optimize
+from gbpjpy_breakout_backtester import GBPJPYBreakoutBacktester
 
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
     handlers=[
-        logging.StreamHandler(),
-        logging.FileHandler("/app/backend/gbpjpy_optimization.log"),
-    ]
+        logging.FileHandler("/app/backend/gbpjpy_optimization.log", mode="w"),
+        logging.StreamHandler(sys.stdout),
+    ],
 )
 logger = logging.getLogger(__name__)
-
-RESULTS_FILE = "/app/backend/gbpjpy_optimization_results.json"
-DATA_FILE = "/app/backend/historical_data/GBPJPY_H1_TV.csv"
-
-# GBPJPY specific: higher base spread than EURUSD
-# Typical GBPJPY spread on cTrader/FTMO: 1.5-2.5 pips
-GBPJPY_BASE_SPREAD = 1.8
+RESULTS_DIR = "/app/backend/optimization_results"
+os.makedirs(RESULTS_DIR, exist_ok=True)
 
 
-def main():
-    logger.info("=" * 80)
-    logger.info("GBPJPY WALK-FORWARD OPTIMIZATION")
-    logger.info("Data source: TradingView Pro (FOREXCOM)")
-    logger.info(f"Base spread: {GBPJPY_BASE_SPREAD} pips")
-    logger.info("=" * 80)
+def generate_grid():
+    """Parameter grid respecting user rules, with RSI as variable."""
+    combos = list(itertools.product(
+        [8, 10, 12],           # swing_lookback (3)
+        [5, 7, 10],            # sl_buffer_pips (3)
+        [2.0, 2.5, 3.0],      # min_rr (3)
+        [0.008, 0.01],         # risk_per_trade (2)
+        [0.55, 0.60],          # breakout_body_ratio (2)
+        [0.8, 1.0],            # breakout_size_mult (2)
+        [0.6, 0.75, 0.9],     # max_pullback_depth (3)
+        # RSI ranges — key optimization target
+        [(48, 68), (50, 65), (52, 65), (45, 70)],   # rsi_long (min, max) (4)
+        [(32, 52), (35, 48), (35, 52), (30, 55)],   # rsi_short (min, max) (4)
+        [False, True],         # use_structural_tp (2)
+    ))
+    return combos  # 3*3*3*2*2*2*3*4*4*2 = 10368
 
-    # Load TradingView H1 data
-    candles = load_tradingview_csv(DATA_FILE)
-    if not candles:
-        logger.error("No data loaded. Aborting.")
-        return
 
-    logger.info(f"Loaded {len(candles)} H1 candles")
-    logger.info(f"Period: {candles[0]['datetime']} -> {candles[-1]['datetime']}")
-    days = (candles[-1]["datetime"] - candles[0]["datetime"]).days
-    logger.info(f"Coverage: {days} days ({days/30.44:.1f} months)")
-
-    results = {
-        "pair": "GBPJPY",
-        "data_source": "TradingView Pro (FOREXCOM)",
-        "total_candles": len(candles),
-        "period_start": candles[0]["datetime"].isoformat(),
-        "period_end": candles[-1]["datetime"].isoformat(),
-        "base_spread_pips": GBPJPY_BASE_SPREAD,
-        "pair_results": {},
+def params_from_tuple(t):
+    return {
+        "swing_lookback": t[0],
+        "sl_buffer_pips": t[1],
+        "min_rr": t[2],
+        "risk_per_trade": t[3],
+        "breakout_body_ratio": t[4],
+        "breakout_size_mult": t[5],
+        "max_pullback_depth": t[6],
+        "rsi_long_min": t[7][0],
+        "rsi_long_max": t[7][1],
+        "rsi_short_min": t[8][0],
+        "rsi_short_max": t[8][1],
+        "be_trigger_rr": 1.0,
+        "max_daily_trades": 4,
+        "max_consecutive_losses": 3,
+        "min_sl_pips": 15,
+        "max_sl_pips": 60,
     }
 
+
+def result_to_dict(r):
+    return {
+        "total_trades": r.total_trades,
+        "wins": r.wins,
+        "losses": r.losses,
+        "win_rate": r.win_rate,
+        "total_return_pct": r.total_return_pct,
+        "weekly_return_pct": r.weekly_return_pct,
+        "profit_factor": r.profit_factor,
+        "max_drawdown_pct": r.max_drawdown_pct,
+        "max_daily_loss_pct": r.max_daily_loss_pct,
+        "ftmo_compliant": r.ftmo_compliant,
+        "avg_rr_achieved": r.avg_rr_achieved,
+        "start_date": r.start_date,
+        "end_date": r.end_date,
+    }
+
+
+def run_optimization():
     t0 = time.time()
-
-    # ── SCALPING ──
-    logger.info("\n" + "=" * 60)
-    logger.info("PHASE 1: SCALPING OPTIMIZATION")
+    logger.info("=" * 60)
+    logger.info("GBPJPY BREAKOUT-PULLBACK OPTIMIZATION")
     logger.info("=" * 60)
 
-    scalp_result = walk_forward_optimize(
-        candles=candles,
-        strategy_type="SCALPING",
-        train_pct=0.70,
-        min_trades_train=60,
-        min_trades_total=200,
-        top_n=15,
-        initial_balance=100000,
-        progress_key="GBPJPY_scalping",
-        symbol="GBPJPY",
-        base_spread=GBPJPY_BASE_SPREAD,
-    )
-    results["pair_results"]["GBPJPY_scalping"] = scalp_result
-    logger.info(f"Scalping done: {scalp_result.get('status', 'UNKNOWN')}")
+    # Load data
+    h1 = load_tradingview_csv("historical_data/GBPJPY_H1_TV.csv")
+    m15 = load_tradingview_csv("historical_data/GBPJPY_M15_TV.csv")
 
-    # ── INTRADAY ──
-    logger.info("\n" + "=" * 60)
-    logger.info("PHASE 2: INTRADAY OPTIMIZATION")
-    logger.info("=" * 60)
+    if not h1 or not m15:
+        logger.error("Data loading failed!")
+        return
 
-    intra_result = walk_forward_optimize(
-        candles=candles,
-        strategy_type="INTRADAY",
-        train_pct=0.70,
-        min_trades_train=60,
-        min_trades_total=200,
-        top_n=15,
-        initial_balance=100000,
-        progress_key="GBPJPY_intraday",
-        symbol="GBPJPY",
-        base_spread=GBPJPY_BASE_SPREAD,
-    )
-    results["pair_results"]["GBPJPY_intraday"] = intra_result
-    logger.info(f"Intraday done: {intra_result.get('status', 'UNKNOWN')}")
+    # Walk-forward split: 70% train / 30% test on M15 timeline
+    m15_split = int(len(m15) * 0.70)
+    split_time = m15[m15_split]["datetime"]
 
-    elapsed = time.time() - t0
-    results["elapsed_sec"] = round(elapsed, 1)
+    m15_train = m15[:m15_split]
+    m15_test = m15[m15_split:]
 
-    # ── Summary ──
-    logger.info("\n" + "=" * 80)
-    logger.info("GBPJPY OPTIMIZATION COMPLETE")
-    logger.info(f"Total time: {elapsed:.0f}s ({elapsed/60:.1f} min)")
-    logger.info("=" * 80)
+    logger.info(f"H1: {len(h1)} candles")
+    logger.info(f"M15 total: {len(m15)} | train: {len(m15_train)} | test: {len(m15_test)}")
+    logger.info(f"Split at: {split_time.date()}")
+    logger.info(f"Train: {m15_train[0]['datetime'].date()} -> {m15_train[-1]['datetime'].date()}")
+    logger.info(f"Test: {m15_test[0]['datetime'].date()} -> {m15_test[-1]['datetime'].date()}")
 
-    for key in ["GBPJPY_scalping", "GBPJPY_intraday"]:
-        r = results["pair_results"][key]
-        status = r.get("status", "?")
-        strat = key.split("_")[1].upper()
-        logger.info(f"\n  {strat}: {status}")
+    grid = generate_grid()
+    logger.info(f"Grid: {len(grid)} parameter combinations")
 
-        if status == "COMPLETE":
-            robust_count = r.get("robust_count", 0)
-            logger.info(f"    Params tested: {r.get('total_params_tested', 0)}")
-            logger.info(f"    Viable on train: {r.get('viable_on_train', 0)}")
-            logger.info(f"    Profitable OOS: {r.get('profitable_oos', 0)}")
-            logger.info(f"    Robust: {robust_count}")
+    # ═══ Phase 1: Train Grid Search ═══
+    logger.info("\n=== PHASE 1: TRAIN GRID SEARCH ===")
+    train_results = []
 
-            if r.get("results"):
-                best = r["results"][0]
-                fp = best.get("full_period", best.get("test", {}))
-                logger.info(f"    BEST: return={fp.get('total_return_pct', '?')}% "
-                           f"weekly={fp.get('weekly_return_pct', '?')}% "
-                           f"PF={fp.get('profit_factor', '?')} "
-                           f"DD={fp.get('max_drawdown_pct', '?')}% "
-                           f"robust={best.get('robust', '?')}")
-        elif status == "NO_OOS_PROFITABLE":
-            best = r.get("best_candidate", {})
-            test = best.get("test", {})
-            logger.info(f"    No OOS profitable. Best OOS return: {test.get('total_return_pct', '?')}%")
+    for idx, combo in enumerate(grid):
+        if idx % 500 == 0:
+            elapsed = time.time() - t0
+            logger.info(f"  Grid {idx}/{len(grid)} ({elapsed:.0f}s)")
 
-    # Save results
-    with open(RESULTS_FILE, "w") as f:
-        json.dump(results, f, indent=2, default=str)
-    logger.info(f"\nResults saved to {RESULTS_FILE}")
+        params = params_from_tuple(combo)
+        bt = GBPJPYBreakoutBacktester(initial_balance=100000)
+        r = bt.run(h1, m15_train, params, base_spread=2.5)
+
+        if r.total_trades >= 3 and r.total_return_pct > 0 and r.ftmo_compliant:
+            train_results.append((params, r))
+
+    train_results.sort(key=lambda x: x[1].weekly_return_pct, reverse=True)
+    logger.info(f"Phase 1 done: {len(train_results)} viable / {len(grid)} tested")
+
+    if not train_results:
+        # Relax to min 2 trades
+        logger.info("No viable with 3+ trades. Relaxing to 2+ trades...")
+        for idx, combo in enumerate(grid):
+            params = params_from_tuple(combo)
+            bt = GBPJPYBreakoutBacktester(initial_balance=100000)
+            r = bt.run(h1, m15_train, params, base_spread=2.5)
+            if r.total_trades >= 2 and r.total_return_pct > -1:
+                train_results.append((params, r))
+        train_results.sort(key=lambda x: x[1].weekly_return_pct, reverse=True)
+        logger.info(f"  Relaxed: {len(train_results)} found")
+
+    # ═══ Phase 2: OOS Test (top 30) ═══
+    top_n = min(30, len(train_results))
+    top = train_results[:top_n]
+    logger.info(f"\n=== PHASE 2: OOS TEST (top {top_n}) ===")
+
+    oos_results = []
+    for params, train_r in top:
+        bt = GBPJPYBreakoutBacktester(initial_balance=100000)
+        test_r = bt.run(h1, m15_test, params, base_spread=2.5)
+
+        logger.info(
+            f"  Train: +{train_r.total_return_pct}% ({train_r.total_trades}t) | "
+            f"Test: +{test_r.total_return_pct}% ({test_r.total_trades}t) | "
+            f"RSI_L={params['rsi_long_min']}-{params['rsi_long_max']} RSI_S={params['rsi_short_min']}-{params['rsi_short_max']}"
+        )
+
+        oos_results.append({
+            "params": params,
+            "train": result_to_dict(train_r),
+            "test": result_to_dict(test_r),
+        })
+
+    # ═══ Phase 3: Full period for top candidates ═══
+    logger.info(f"\n=== PHASE 3: FULL PERIOD ===")
+    full_results = []
+    for entry in oos_results[:15]:
+        params = entry["params"]
+        bt = GBPJPYBreakoutBacktester(initial_balance=100000)
+        full_r = bt.run(h1, m15, params, base_spread=2.5)
+        entry["full"] = result_to_dict(full_r)
+        full_results.append(entry)
+
+        logger.info(
+            f"  Full: +{full_r.total_return_pct}% weekly={full_r.weekly_return_pct}% "
+            f"trades={full_r.total_trades} WR={full_r.win_rate}% PF={full_r.profit_factor} "
+            f"DD={full_r.max_drawdown_pct}% FTMO={full_r.ftmo_compliant}"
+        )
+
+    full_results.sort(key=lambda x: x["full"]["weekly_return_pct"], reverse=True)
+
+    elapsed = round(time.time() - t0, 1)
+    summary = {
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "elapsed_sec": elapsed,
+        "total_grid": len(grid),
+        "viable_train": len(train_results),
+        "oos_tested": len(oos_results),
+        "results": full_results,
+    }
+
+    out_file = os.path.join(RESULTS_DIR, "gbpjpy_breakout_optimization.json")
+    with open(out_file, "w") as f:
+        json.dump(summary, f, indent=2, default=str)
+
+    logger.info(f"\n{'='*60}")
+    logger.info(f"OPTIMIZATION COMPLETE in {elapsed}s ({elapsed/60:.1f} min)")
+    logger.info(f"Results saved to: {out_file}")
+
+    if full_results:
+        best = full_results[0]
+        bf = best["full"]
+        logger.info(f"\nBEST: +{bf['weekly_return_pct']}%/week | {bf['total_trades']} trades | "
+                     f"WR={bf['win_rate']}% | PF={bf['profit_factor']} | DD={bf['max_drawdown_pct']}%")
+        logger.info(f"  RSI: long={best['params']['rsi_long_min']}-{best['params']['rsi_long_max']} "
+                     f"short={best['params']['rsi_short_min']}-{best['params']['rsi_short_max']}")
+    else:
+        logger.info("\nAUCUN RÉSULTAT VIABLE.")
+
+    return summary
 
 
 if __name__ == "__main__":
-    main()
+    run_optimization()
