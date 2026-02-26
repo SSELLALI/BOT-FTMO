@@ -2,7 +2,7 @@
   "phase": "train_grid",
   "strategy": "BOUNCE",
   "symbol": "GBPJPY",
-  "progress": "0/384",
-  "elapsed_sec": 0.0,
+  "progress": "100/384",
+  "elapsed_sec": 80.5,
   "progress_key": "GBPJPY_BOUNCE"
 }
