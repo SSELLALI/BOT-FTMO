@@ -435,8 +435,9 @@ class ProfessionalBacktester:
         
         logger.debug(f"Opened {signal.strategy} {signal.direction} {signal.symbol} @ {signal.entry_price}")
     
-    def _check_exits(self, candle: Dict):
-        """Check if any open trades should be closed, with safety checks after each"""
+    def _check_exits(self, candle: Dict) -> bool:
+        """Check if any open trades should be closed. Returns True if any trade was closed."""
+        had_exit = False
         for signal, entry_candle in self.open_trades[:]:
             # SAFETY BARRIER: Check limits vs INITIAL BALANCE (FTMO rule)
             daily_loss_pct = abs(self.risk_manager.daily_pnl) / self.risk_manager.initial_balance if self.risk_manager.daily_pnl < 0 else 0
