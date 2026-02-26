@@ -1091,7 +1091,8 @@ async def run_professional_backtest(request: ProfessionalBacktestRequest):
         report = backtester.run_backtest(
             symbol=request.symbol,
             strategy=request.strategy,
-            days=request.days
+            days=request.days,
+            use_real_data=True
         )
         
         # Convert to dict for storage
@@ -1135,6 +1136,7 @@ async def run_professional_backtest(request: ProfessionalBacktestRequest):
             "equity_curve": report.equity_curve,
             "trades": report.trades,
             "daily_returns": report.daily_returns,
+            "data_source": report.data_source,
             "created_at": datetime.now(timezone.utc).isoformat()
         }
         
