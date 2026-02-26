@@ -338,6 +338,7 @@ class LiveTradingService:
                 # Check for new day -> reset daily counters
                 if self._last_candle_time and self._last_candle_time.date() != now.date():
                     self.risk_manager.reset_daily()
+                    self.pa_strategy.current_date = None  # Force daily reset
                     logger.info("New trading day - counters reset")
 
                 # Only trade during valid sessions (07-21 UTC weekdays)
@@ -345,12 +346,34 @@ class LiveTradingService:
                     time.sleep(30)
                     continue
 
-                # Need enough candle data
+                # ── PA Strategy Check (on every new M30 candle) ──
+                if self.enabled_strategies.get("pa_breakout") or self.enabled_strategies.get("pa_bounce"):
+                    m30_slot = now.replace(second=0, microsecond=0)
+                    m30_slot = m30_slot.replace(minute=(m30_slot.minute // 30) * 30)
+
+                    if self._last_pa_check is None or self._last_pa_check < m30_slot:
+                        self._last_pa_check = m30_slot
+
+                        # Update PA strategy with latest candle data
+                        if len(self.candle_buffer_h1) >= 100:
+                            self.pa_strategy.update(self.candle_buffer_h1, self.candle_buffer_m30)
+
+                            # Check for signals
+                            signals = self.pa_strategy.check_signals(
+                                self.risk_manager.current_balance if self.risk_manager else self.initial_balance
+                            )
+                            for sig in signals:
+                                if sig.strategy == "PA_BREAKOUT" and not self.enabled_strategies.get("pa_breakout"):
+                                    continue
+                                if sig.strategy == "PA_BOUNCE" and not self.enabled_strategies.get("pa_bounce"):
+                                    continue
+                                self._execute_pa_trade(sig)
+
+                # ── Legacy Strategy Check (on M15 candle) ──
                 if len(self.candle_buffer_m15) < 50:
                     time.sleep(15)
                     continue
 
-                # Check if new M15 candle formed
                 current_m15 = now.replace(second=0, microsecond=0)
                 current_m15 = current_m15.replace(minute=(current_m15.minute // 15) * 15)
 
@@ -360,9 +383,10 @@ class LiveTradingService:
 
                 self._last_candle_time = current_m15
 
-                # Run strategy analysis
+                # Legacy strategy analysis
                 for symbol in self.trading_symbols:
-                    self._analyze_and_trade(symbol)
+                    if symbol != "USDJPY":
+                        self._analyze_and_trade(symbol)
 
                 time.sleep(10)
 
