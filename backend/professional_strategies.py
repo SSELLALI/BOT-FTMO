@@ -348,7 +348,7 @@ class ScalpingStrategy:
 
         # =============== SELL SETUPS ===============
         ema_bearish = cur_fast < cur_slow
-        rsi_ok_sell = rsi > 35 and rsi < 70
+        rsi_ok_sell = rsi > self.rsi_sell_min and rsi < 70
 
         if signal is None and ema_bearish and rsi_ok_sell:
             entry_triggered = False
