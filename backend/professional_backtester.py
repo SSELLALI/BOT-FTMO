@@ -567,7 +567,8 @@ class ProfessionalBacktester:
         symbol: str,
         strategy: str,
         start_date: datetime,
-        end_date: datetime
+        end_date: datetime,
+        data_source: str = "simulated"
     ) -> BacktestReport:
         """Compile comprehensive backtest report"""
         
