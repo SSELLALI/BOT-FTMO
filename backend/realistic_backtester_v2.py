@@ -592,11 +592,15 @@ class RealisticBacktester:
 
         start_idx = ema_per + 5
         pm = 10000
+        n = len(candles)
 
-        atrs = []
-        for j in range(start_idx, min(start_idx + 200, len(candles))):
-            atrs.append(TechnicalAnalysis.atr(candles[:j + 1], 14))
-        avg_atr = float(np.mean(atrs)) if atrs else 0.001
+        # Pre-compute ATR for all candles (O(n) once)
+        atr_all = [0.0] * n
+        for j in range(14, n):
+            atr_all[j] = TechnicalAnalysis.atr(candles[:j + 1], 14)
+
+        init_atrs = [atr_all[j] for j in range(start_idx, min(start_idx + 200, n)) if atr_all[j] > 0]
+        avg_atr = float(np.mean(init_atrs)) if init_atrs else 0.001
 
         last_day = None
 
