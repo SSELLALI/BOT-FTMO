@@ -261,7 +261,6 @@ class ScalpingStrategy:
         current_price = closes[-1]
         cur_fast = ema_fast[-1]
         cur_slow = ema_slow[-1]
-        prev_fast = ema_fast[-2]
 
         # Minimum volatility filter (skip very quiet markets)
         min_atr = 0.00025 if "JPY" not in symbol else 0.025
