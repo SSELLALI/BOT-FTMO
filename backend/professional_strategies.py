@@ -296,7 +296,7 @@ class ScalpingStrategy:
             # Signal 3: Strong momentum candle in trend
             if not entry_triggered and TechnicalAnalysis.is_bullish_candle(current_candle):
                 body = current_candle["close"] - current_candle["open"]
-                if body > atr * 0.4 and momentum > 0:
+                if body > atr * 0.4 and momentum > 0.01:
                     entry_triggered = True
                     reason = f"Momentum candle, RSI {rsi:.0f}"
 
