@@ -176,11 +176,10 @@ def walk_forward_optimize_mtf(
     final_results = []
     for params, train_res, test_res in oos_results:
         robust_count = 0
-        total_checks = 12
-        variations = [0.85, 0.90, 0.95, 1.05, 1.10, 1.15]
-        tunable = ["ema_period", "atr_multiplier", "pullback_pct", "min_sl_pips"]
+        tunable = ["ema_period", "atr_multiplier", "pullback_pct"]
+        total_checks = len(tunable) * 2
 
-        for var_key in tunable[:3]:
+        for var_key in tunable:
             for mult in [0.85, 1.15]:
                 varied = params.copy()
                 orig = varied[var_key]
