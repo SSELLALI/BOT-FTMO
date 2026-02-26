@@ -57,14 +57,19 @@ for fe in [8, 12, 15, 20]:
             for rr in [1.5, 2.0, 2.5]:
                 for atr_m in [1.0, 1.5, 2.0]:
                     for min_sl in [10, 15, 20]:
-                        SCALPING_GRID.append({
-                            "fast_ema": fe, "slow_ema": se,
-                            "rsi_buy_max": rsi_bm, "rsi_sell_min": 100 - rsi_bm,
-                            "min_rr": rr, "atr_multiplier": atr_m,
-                            "min_sl_pips": min_sl, "max_sl_pips": 30,
-                            "session_start": 7, "session_end": 17,
-                            "max_daily_trades": 10, "max_consecutive_losses": 3,
-                        })
+                        for pb_t in [0.0008, 0.0012, 0.0018]:
+                            SCALPING_GRID.append({
+                                "fast_ema": fe, "slow_ema": se,
+                                "rsi_buy_max": rsi_bm, "rsi_sell_min": 100 - rsi_bm,
+                                "min_rr": rr, "atr_multiplier": atr_m,
+                                "min_sl_pips": min_sl, "max_sl_pips": 30,
+                                "pullback_threshold": pb_t,
+                                "body_atr_ratio": 0.35,
+                                "momentum_threshold": 0.008,
+                                "session_start": 7, "session_end": 17,
+                                "max_daily_trades": 10,
+                                "max_consecutive_losses": 3,
+                            })
 
 INTRADAY_GRID = []
 for ep in [15, 20, 25, 30]:
