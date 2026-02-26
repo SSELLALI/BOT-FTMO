@@ -615,6 +615,7 @@ class ProfessionalBacktester:
                 pnl_pips = (exit_price - sig["entry"]) * 10000
             else:
                 pnl_pips = (sig["entry"] - exit_price) * 10000
+            pnl_pips -= (self.spread_pips + self.entry_slippage)
             pnl = pnl_pips * sig["lot_size"] * 10
             rm.current_balance += pnl
             rm.daily_pnl += pnl
