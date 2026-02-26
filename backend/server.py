@@ -855,8 +855,13 @@ async def toggle_real_data():
 
 class LiveTradingConfig(BaseModel):
     initial_balance: float = 10000.0
-    symbols: List[str] = ["EURUSD"]
-    strategies: dict = {"scalping": True, "intraday": True}
+    symbols: List[str] = ["USDJPY"]
+    strategies: dict = {
+        "pa_breakout": True,
+        "pa_bounce": True,
+        "scalping": False,
+        "intraday": False,
+    }
 
 
 @api_router.post("/live/connect")
