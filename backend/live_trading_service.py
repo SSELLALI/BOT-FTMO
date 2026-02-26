@@ -431,6 +431,34 @@ class LiveTradingService:
                 else:
                     logger.info(f"Intraday blocked: {reason}")
 
+    def _execute_pa_trade(self, signal: PASignal):
+        """Execute a Price Action trade via FIX API."""
+        if not self.fix_client or not self.fix_client.logged_in:
+            logger.error("Cannot execute PA trade: FIX not connected")
+            return
+
+        # Convert lot size to volume (0.01 lot = 1000 units for FIX)
+        quantity = int(signal.lot_size * 100000)
+
+        cl_ord_id = self.fix_client.place_order(
+            symbol=signal.symbol,
+            side=signal.direction,
+            quantity=quantity,
+            order_type="MARKET"
+        )
+
+        if cl_ord_id:
+            self.active_trades[cl_ord_id] = LiveTrade(
+                signal=signal,
+                cl_ord_id=cl_ord_id,
+                status="SENT"
+            )
+            logger.info(
+                f"PA Order sent: {signal.direction} {signal.lot_size} lots {signal.symbol} "
+                f"SL:{signal.stop_loss} TP:{signal.take_profit} "
+                f"R:R={signal.risk_reward} ({signal.strategy}: {signal.reason})"
+            )
+
     def _execute_trade(self, signal: TradeSignal):
         """Send order to FIX API"""
         if not self.fix_client or not self.fix_client.logged_in:
