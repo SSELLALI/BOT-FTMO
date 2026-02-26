@@ -1285,6 +1285,9 @@ async def run_realistic_backtest(request: ProfessionalBacktestRequest):
         logger.error(f"Realistic backtest error: {e}")
         return {"success": False, "error": str(e)}
 
+
+# ==================== APP SETUP ====================
+
 # Include router
 app.include_router(api_router)
 
