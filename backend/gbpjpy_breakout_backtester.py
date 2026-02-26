@@ -373,16 +373,12 @@ class GBPJPYBreakoutBacktester:
                 if direction == "BUY":
                     if not (rsi_long_min <= rsi_val <= rsi_long_max):
                         continue
-                    if rsi_val <= rsi_prev:
-                        continue
-                    if rsi_val > 70 or rsi_val < 30:
+                    if rsi_val <= rsi_prev:  # Must be rising
                         continue
                 elif direction == "SELL":
                     if not (rsi_short_min <= rsi_val <= rsi_short_max):
                         continue
-                    if rsi_val >= rsi_prev:
-                        continue
-                    if rsi_val > 70 or rsi_val < 30:
+                    if rsi_val >= rsi_prev:  # Must be falling
                         continue
 
                 # ── SPREAD CHECK (Rule 13) ──
