@@ -94,12 +94,15 @@ for ep in [15, 20, 25, 30]:
 
 # ── Helper: single backtest ───────────────────────────────────────
 
-def _run_one(candles, params, strategy_type, initial_balance=100000) -> BacktestResultV2:
-    bt = RealisticBacktester(initial_balance=initial_balance)
+def _run_one(candles, params, strategy_type, initial_balance=100000,
+             symbol="EURUSD", base_spread=0.8) -> BacktestResultV2:
+    config = ExecutionConfig()
+    config.base_spread_pips = base_spread
+    bt = RealisticBacktester(config=config, initial_balance=initial_balance)
     if strategy_type == "SCALPING":
-        return bt.run_scalping(candles, params)
+        return bt.run_scalping(candles, params, symbol=symbol)
     else:
-        return bt.run_intraday(candles, params)
+        return bt.run_intraday(candles, params, symbol=symbol)
 
 
 # ── Robustness Check ─────────────────────────────────────────────
