@@ -230,10 +230,12 @@ class ScalpingStrategy:
         self.max_consecutive_losses = 3
         self.min_sl_pips = 5
         self.max_sl_pips = 20
-        self.min_rr = 1.5
-        self.fast_ema_period = 15
+        self.min_rr = 2.5
+        self.fast_ema_period = 10
         self.slow_ema_period = 30
-        self.atr_multiplier = 2.0
+        self.atr_multiplier = 1.0
+        self.rsi_buy_max = 60
+        self.rsi_sell_min = 40
 
     def is_valid_session(self, hour: int) -> bool:
         return 7 <= hour <= 17  # Extended London + early NY
