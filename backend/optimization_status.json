@@ -1,7 +1,7 @@
 {
-  "strategy": "INTRADAY",
+  "strategy": "SCALPING",
   "phase": "grid_search",
-  "progress": "150/1728",
-  "elapsed_sec": 54.0,
-  "progress_key": "GBPJPY_intraday"
+  "progress": "1050/2304",
+  "elapsed_sec": 331.9,
+  "progress_key": "GBPJPY_scalping"
 }
