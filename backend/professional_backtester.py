@@ -839,6 +839,7 @@ class ProfessionalBacktester:
             sig = open_trade["signal"]
             ep = last["close"]
             pnl_pips = (ep - sig["entry"]) * 10000 if sig["direction"] == "BUY" else (sig["entry"] - ep) * 10000
+            pnl_pips -= (self.spread_pips + self.entry_slippage)
             pnl = pnl_pips * sig["lot_size"] * 10
             rm.current_balance += pnl
             self.trades.append(BacktestTrade(
