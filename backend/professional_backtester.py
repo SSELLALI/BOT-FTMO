@@ -290,26 +290,45 @@ class ProfessionalBacktester:
         self,
         symbol: str = "EURUSD",
         strategy: str = "BOTH",  # SCALPING, INTRADAY, or BOTH
-        days: int = 180
+        days: int = 180,
+        use_real_data: bool = True
     ) -> BacktestReport:
         """
-        Run complete backtest with multi-timeframe data
-        Optimized to use M15 instead of M5 for faster execution
+        Run complete backtest with multi-timeframe data.
+        Uses real historical data when available, falls back to simulated.
         """
         self.reset()
         
-        # Generate data - round to hour boundary for alignment
-        end_date = datetime.now(timezone.utc).replace(minute=0, second=0, microsecond=0)
-        start_date = end_date - timedelta(days=days)
-        start_date = start_date.replace(minute=0, second=0, microsecond=0)
+        data_source = "simulated"
+        m15_candles = []
+        h1_candles = []
         
-        logger.info(f"Generating multi-timeframe data for {symbol}...")
+        # Try to load real historical data first
+        if use_real_data:
+            try:
+                h1_candles, m15_candles = get_real_data(symbol, days)
+                if len(m15_candles) > 100 and len(h1_candles) > 200:
+                    data_source = "real"
+                    logger.info(f"Using REAL data: M15={len(m15_candles)}, H1={len(h1_candles)}")
+                else:
+                    logger.warning(f"Not enough real data (M15={len(m15_candles)}, H1={len(h1_candles)}), falling back to simulated")
+                    m15_candles = []
+                    h1_candles = []
+            except Exception as e:
+                logger.warning(f"Could not load real data: {e}, falling back to simulated")
         
-        # Skip M5 for performance - use M15 for both strategies
-        m15_candles = MultiTimeframeDataGenerator.generate_m15_data(symbol, start_date, end_date)
-        h1_candles = MultiTimeframeDataGenerator.generate_h1_data(symbol, start_date, end_date)
+        # Fallback to simulated data
+        if not m15_candles:
+            data_source = "simulated"
+            end_date = datetime.now(timezone.utc).replace(minute=0, second=0, microsecond=0)
+            start_date = end_date - timedelta(days=days)
+            start_date = start_date.replace(minute=0, second=0, microsecond=0)
+            
+            logger.info(f"Generating simulated data for {symbol}...")
+            m15_candles = MultiTimeframeDataGenerator.generate_m15_data(symbol, start_date, end_date)
+            h1_candles = MultiTimeframeDataGenerator.generate_h1_data(symbol, start_date, end_date)
         
-        logger.info(f"Data generated: M15={len(m15_candles)}, H1={len(h1_candles)}")
+        logger.info(f"Data source: {data_source} | M15={len(m15_candles)}, H1={len(h1_candles)}")
         
         # Create time index mapping for H1 candles
         h1_by_time = {}
