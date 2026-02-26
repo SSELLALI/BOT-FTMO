@@ -64,11 +64,23 @@ def load_candles_from_csv(csv_path: str, max_candles: int = None) -> List[Dict]:
         return []
 
     try:
-        df = pd.read_csv(csv_path, index_col=0, parse_dates=True)
+        df = pd.read_csv(csv_path, parse_dates=True)
 
         # Handle multi-level columns from yfinance
         if isinstance(df.columns, pd.MultiIndex):
             df.columns = df.columns.get_level_values(0)
+
+        # Find datetime column (first column or 'Datetime' or 'Date')
+        date_col = None
+        for col in df.columns:
+            if col.lower() in ("datetime", "date", "timestamp"):
+                date_col = col
+                break
+        if date_col is None:
+            date_col = df.columns[0]
+
+        df[date_col] = pd.to_datetime(df[date_col], utc=True)
+        df = df.set_index(date_col)
 
         # Normalize column names
         col_map = {}
