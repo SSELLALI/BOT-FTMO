@@ -1,7 +1,7 @@
 {
   "strategy": "INTRADAY",
   "phase": "grid_search",
-  "progress": "200/1728",
-  "elapsed_sec": 20.2,
+  "progress": "250/1728",
+  "elapsed_sec": 25.8,
   "progress_key": "intraday_h1"
 }
