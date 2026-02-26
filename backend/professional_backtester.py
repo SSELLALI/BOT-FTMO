@@ -13,6 +13,7 @@ from professional_strategies import (
     ScalpingStrategy, IntradayStrategy, ProfessionalRiskManager,
     TradeSignal, StrategyState, TechnicalAnalysis
 )
+from historical_data_loader import get_real_data
 
 logger = logging.getLogger(__name__)
 
