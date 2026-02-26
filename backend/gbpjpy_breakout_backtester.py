@@ -307,7 +307,7 @@ class GBPJPYBreakoutBacktester:
             if not pullback_active:
                 # Bullish breakout above resistance
                 if bias == "BULLISH" and key_resistance:
-                    bk_key = f"BUY_{key_resistance:.3f}"
+                    bk_key = f"BUY_{key_resistance:.2f}_{h1_idx}"
                     if bk_key not in detected_breakout_levels:
                         # First close above resistance (prev H1 was at/below)
                         if h1_c["close"] > key_resistance and prev_h1_close <= key_resistance:
