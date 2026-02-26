@@ -1208,11 +1208,16 @@ async def get_optimization_status():
 
 @api_router.get("/optimization/results")
 async def get_optimization_results():
-    """Get full optimization results"""
+    """Get full optimization results (single pair or multi-pair)"""
     import json
-    results_file = Path(__file__).parent / "optimization_results.json"
-    if results_file.exists():
-        with open(results_file) as f:
+    # Prefer multi-pair results if available
+    mp_file = Path(__file__).parent / "multipair_results.json"
+    sp_file = Path(__file__).parent / "optimization_results.json"
+    if mp_file.exists():
+        with open(mp_file) as f:
+            return json.load(f)
+    if sp_file.exists():
+        with open(sp_file) as f:
             return json.load(f)
     raise HTTPException(404, "No optimization results available")
 
