@@ -131,7 +131,6 @@ class GBPJPYBreakoutBacktester:
 
             swings = self._detect_swings(h1_highs, h1_lows, hi, swing_lookback)
             bias = self._determine_bias(swings)
-            swing_cache[hi] = (swings, bias)
 
             if bias is None:
                 continue
