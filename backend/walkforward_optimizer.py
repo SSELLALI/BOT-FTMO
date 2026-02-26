@@ -221,7 +221,7 @@ def walk_forward_optimize(
             "progress_key": progress_key,
         })
 
-        test_r = _run_one(test, params, strategy_type, initial_balance)
+        test_r = _run_one(test, params, strategy_type, initial_balance, symbol=symbol, base_spread=base_spread)
         oos_results.append({
             "params": params,
             "train": _result_to_dict(train_r),
