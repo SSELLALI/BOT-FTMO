@@ -1,7 +1,7 @@
 {
   "phase": "train_grid",
-  "strategy": "BOUNCE",
-  "progress": "100/288",
-  "elapsed_sec": 26.4,
-  "progress_key": "EURUSD_bounce"
+  "strategy": "BREAKOUT",
+  "progress": "400/576",
+  "elapsed_sec": 81.1,
+  "progress_key": "EURUSD_breakout"
 }
