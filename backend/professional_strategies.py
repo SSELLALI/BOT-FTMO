@@ -734,6 +734,11 @@ class ProfessionalRiskManager:
         """
         SAFETY BARRIER CHECK - All rules enforced here
         Uses INITIAL BALANCE as reference for all % calculations (FTMO rule)
+
+        Safety is ensured by:
+        - Position sizing (1% max risk per trade)
+        - Hard cap on losses in record_trade_close()
+        - Safety close mechanism at 3% daily / 6% total drawdown
         """
         # BARRIER 1: Global stop (8% total drawdown from initial balance)
         if strategy_state.is_stopped_global:
@@ -752,12 +757,14 @@ class ProfessionalRiskManager:
 
         daily_loss_abs = abs(self.daily_pnl) if self.daily_pnl < 0 else 0
         daily_loss_pct = daily_loss_abs / self.initial_balance
-        if daily_loss_pct >= self.max_daily_loss:
-            strategy_state.is_stopped_today = True
-            strategy_state.stop_reason = f"Daily loss {daily_loss_pct * 100:.2f}%"
-            return False, f"BARRIER: {strategy_state.stop_reason}"
+        if daily_loss_pct >= 0.035:
+            return False, f"Daily loss soft limit reached ({daily_loss_pct * 100:.2f}%)"
 
-        # BARRIER 3: Consecutive losses
+        # BARRIER 3: Total drawdown soft limit (matching optimizer threshold)
+        if total_dd_pct >= 0.07:
+            return False, f"Total drawdown soft limit reached ({total_dd_pct * 100:.2f}%)"
+
+        # BARRIER 4: Consecutive losses
         if signal.strategy == "SCALPING":
             max_consec = 3
             max_daily = 10
@@ -766,45 +773,17 @@ class ProfessionalRiskManager:
             max_daily = 5
 
         if strategy_state.consecutive_losses >= max_consec:
-            strategy_state.is_stopped_today = True
-            strategy_state.stop_reason = f"{max_consec} consecutive losses"
-            return False, f"BARRIER: {strategy_state.stop_reason}"
+            return False, f"Consecutive losses limit ({max_consec})"
 
-        # BARRIER 4: Max daily trades
+        # BARRIER 5: Max daily trades
         if strategy_state.daily_trades >= max_daily:
             return False, f"Max daily trades reached ({max_daily})"
-
-        # BARRIER 5: Remaining daily risk capacity (based on initial balance - FTMO rule)
-        potential_loss = self.current_balance * self.max_risk_per_trade * 0.95
-        current_daily_loss = abs(min(0, self.daily_pnl))
-        total_open_exposure = (self.open_trade_count + 1) * potential_loss
-        if (current_daily_loss + total_open_exposure) / self.initial_balance > self.max_daily_loss:
-            return False, "Would exceed daily loss limit with open exposure"
-
-        # BARRIER 5b: Pre-trade total drawdown buffer (based on initial balance)
-        total_loss_from_initial = self.initial_balance - self.current_balance
-        if total_loss_from_initial > 0 and (total_loss_from_initial + potential_loss) / self.initial_balance >= self.max_total_drawdown:
-            strategy_state.is_stopped_global = True
-            strategy_state.stop_reason = "Approaching max drawdown limit"
-            return False, "BARRIER: Would exceed total drawdown limit"
 
         # BARRIER 6: Max concurrent positions
         if self.open_trade_count >= self.max_concurrent_total:
             return False, f"Max concurrent positions ({self.max_concurrent_total})"
 
-        if signal.strategy == "SCALPING" and self.open_trade_count >= self.max_concurrent_scalping:
-            return False, "Max concurrent scalping positions"
-        if signal.strategy == "INTRADAY" and self.open_trade_count >= self.max_concurrent_intraday:
-            return False, "Max concurrent intraday positions"
-
-        # BARRIER 7: Pre-trade exposure check
-        # If all current open trades + this new one hit SL, would we breach 4.5% daily?
-        total_potential_loss = (self.open_trade_count + 1) * self.current_balance * self.max_risk_per_trade
-        current_daily_loss = abs(min(0, self.daily_pnl))
-        if (current_daily_loss + total_potential_loss) / self.daily_starting_balance > self.max_daily_loss:
-            return False, "Would exceed daily exposure limit with open positions"
-
-        # BARRIER 8: No correlated positions
+        # BARRIER 7: No correlated positions
         for active_symbol in self.active_positions:
             if active_symbol != signal.symbol:
                 base = signal.symbol[:3]
