@@ -331,105 +331,297 @@ class ProfessionalBacktester:
         
         logger.info(f"Data source: {data_source} | M15={len(m15_candles)}, H1={len(h1_candles)}")
         
-        # Create time index mapping for H1 candles
-        h1_by_time = {}
-        for i, c in enumerate(h1_candles):
-            # Map to the hour (rounded down)
-            t = c["datetime"]
-            key = t.replace(minute=0, second=0, microsecond=0)
-            h1_by_time[key] = i
+        if strategy == "SCALPING":
+            return self._run_scalping_backtest(symbol, m15_candles, h1_candles, data_source)
         
-        # Track current day for daily reset
-        current_day = None
+        # For INTRADAY or BOTH, use the multi-timeframe approach
+        return self._run_multi_strategy_backtest(symbol, strategy, m15_candles, h1_candles, data_source)
+    
+    def _run_scalping_backtest(
+        self, symbol: str, m15_candles: List[Dict], h1_candles: List[Dict], data_source: str
+    ) -> BacktestReport:
+        """
+        Scalping backtest using the proven optimizer loop structure.
+        Inline signal generation + risk management for deterministic results.
+        """
+        rm = self.risk_manager
+        sc = self.scalping
+        open_trade = None
+        last_day = None
+        start_idx = max(sc.slow_ema_period + 10, 50)
         
-        # Main backtest loop using M15 candles
-        for m15_idx, m15_candle in enumerate(m15_candles):
-            if m15_idx < 50:  # Need enough data for indicators
-                continue
-            
-            candle_time = m15_candle["datetime"]
-            candle_day = candle_time.strftime("%Y-%m-%d")
+        for i in range(start_idx, len(m15_candles)):
+            candle = m15_candles[i]
+            hour = candle["datetime"].hour
+            current_day = candle["datetime"].date()
             
             # Daily reset
-            if candle_day != current_day:
-                if current_day is not None:
-                    # Check if trading was stopped today
-                    if self.risk_manager.scalping_state.is_stopped_today or \
-                       self.risk_manager.intraday_state.is_stopped_today:
-                        self.days_stopped += 1
-                
-                self.risk_manager.reset_daily()
-                current_day = candle_day
+            if last_day and current_day != last_day:
+                if rm.scalping_state.is_stopped_today:
+                    self.days_stopped += 1
+                rm.reset_daily()
+            last_day = current_day
             
-            # Check open trades for exit
-            had_exit = self._check_exits(m15_candle)
-            
-            # Skip entry on the same candle as an exit (matches optimizer behavior)
-            if had_exit:
-                # Record equity periodically
-                if m15_idx % 50 == 0:
-                    self.equity_curve.append({
-                        "timestamp": candle_time.isoformat(),
-                        "equity": round(self.risk_manager.current_balance, 2),
-                        "drawdown": round((self.peak_balance - self.risk_manager.current_balance) / self.peak_balance * 100, 2)
-                    })
+            # Session filter
+            if not sc.is_valid_session(hour):
                 continue
             
-            # Find corresponding H1 candle
-            h1_time = candle_time.replace(minute=0, second=0, microsecond=0)
-            h1_idx = h1_by_time.get(h1_time, -1)
-            
-            # === SCALPING STRATEGY (using M15 data) ===
-            if strategy in ["SCALPING", "BOTH"]:
-                if not self.risk_manager.scalping_state.is_stopped_today and \
-                   not self.risk_manager.scalping_state.is_stopped_global:
+            # === EXIT LOGIC ===
+            if open_trade:
+                sig = open_trade["signal"]
+                exited = False
+                exit_price = 0
+                exit_reason = ""
+                
+                # Safety close at 3% daily / 6% total drawdown
+                daily_loss = abs(rm.daily_pnl) / rm.initial_balance if rm.daily_pnl < 0 else 0
+                total_dd = (rm.initial_balance - rm.current_balance) / rm.initial_balance if rm.current_balance < rm.initial_balance else 0
+                
+                if daily_loss >= 0.03 or total_dd >= 0.06:
+                    exit_price = candle["close"]
+                    exit_reason = "SAFETY"
+                    exited = True
+                elif sig["direction"] == "BUY":
+                    if candle["low"] <= sig["sl"]:
+                        exit_price = sig["sl"]
+                        exit_reason = "SL"
+                        exited = True
+                    elif candle["high"] >= sig["tp"]:
+                        exit_price = sig["tp"]
+                        exit_reason = "TP"
+                        exited = True
+                else:
+                    if candle["high"] >= sig["sl"]:
+                        exit_price = sig["sl"]
+                        exit_reason = "SL"
+                        exited = True
+                    elif candle["low"] <= sig["tp"]:
+                        exit_price = sig["tp"]
+                        exit_reason = "TP"
+                        exited = True
+                
+                if exited:
+                    if sig["direction"] == "BUY":
+                        pnl_pips = (exit_price - sig["entry"]) * 10000
+                    else:
+                        pnl_pips = (sig["entry"] - exit_price) * 10000
                     
-                    signal = self.scalping.analyze(m15_candles, m15_idx, symbol)
+                    if "JPY" in symbol:
+                        pnl_pips = pnl_pips / 100
                     
-                    if signal:
-                        can_trade, reason = self.risk_manager.can_open_trade(
-                            signal, self.risk_manager.scalping_state
-                        )
-                        
-                        if can_trade:
-                            self._open_trade(signal, m15_candle)
+                    pnl = pnl_pips * sig["lot_size"] * 10
+                    
+                    # Hard cap: don't exceed daily loss limit
+                    if pnl < 0:
+                        max_loss = rm.max_daily_loss * rm.initial_balance - abs(min(0, rm.daily_pnl))
+                        if max_loss > 0 and abs(pnl) > max_loss:
+                            pnl = -max_loss
+                    
+                    # Update balances
+                    rm.current_balance += pnl
+                    rm.daily_pnl += pnl
+                    rm.total_pnl += pnl
+                    if rm.current_balance > rm.peak_balance:
+                        rm.peak_balance = rm.current_balance
+                    
+                    if pnl < 0:
+                        rm.scalping_state.consecutive_losses += 1
+                    else:
+                        rm.scalping_state.consecutive_losses = 0
+                    
+                    # Track max drawdown from initial
+                    current_dd = max(0, (self.initial_balance - rm.current_balance) / self.initial_balance)
+                    if current_dd > self.max_drawdown:
+                        self.max_drawdown = current_dd
+                    
+                    # Track consecutive streaks
+                    if pnl > 0:
+                        if self.current_consecutive > 0:
+                            self.current_consecutive += 1
+                        else:
+                            self.current_consecutive = 1
+                        self.max_consecutive_wins = max(self.max_consecutive_wins, self.current_consecutive)
+                    else:
+                        if self.current_consecutive < 0:
+                            self.current_consecutive -= 1
+                        else:
+                            self.current_consecutive = -1
+                        self.max_consecutive_losses = max(self.max_consecutive_losses, abs(self.current_consecutive))
+                    
+                    # Record daily P&L
+                    day_str = candle["datetime"].strftime("%Y-%m-%d")
+                    self.daily_pnl[day_str] = self.daily_pnl.get(day_str, 0) + pnl
+                    
+                    # Record trade
+                    pnl_pct = pnl / (rm.current_balance - pnl) * 100 if (rm.current_balance - pnl) > 0 else 0
+                    self.trades.append(BacktestTrade(
+                        id=len(self.trades) + 1,
+                        symbol=symbol,
+                        direction=sig["direction"],
+                        strategy="SCALPING",
+                        entry_price=sig["entry"],
+                        exit_price=exit_price,
+                        stop_loss=sig["sl"],
+                        take_profit=sig["tp"],
+                        sl_pips=round(sig["sl_pips"], 1),
+                        tp_pips=round(sig["tp_pips"], 1),
+                        lot_size=sig["lot_size"],
+                        entry_time=open_trade["entry_time"],
+                        exit_time=candle["datetime"],
+                        pnl=round(pnl, 2),
+                        pnl_percent=round(pnl_pct, 4),
+                        exit_reason=exit_reason,
+                        session="LONDON" if hour < 13 else "NY_OVERLAP"
+                    ))
+                    
+                    rm.open_trade_count = 0
+                    open_trade = None
+                    continue  # Skip to next candle (matches optimizer)
             
-            # === INTRADAY STRATEGY (H1 + M15) ===
-            if strategy in ["INTRADAY", "BOTH"]:
-                if h1_idx >= 200:
-                    if not self.risk_manager.intraday_state.is_stopped_today and \
-                       not self.risk_manager.intraday_state.is_stopped_global:
-                        
-                        signal = self.intraday.analyze(
-                            h1_candles, m15_candles,
-                            h1_idx, m15_idx, symbol
-                        )
-                        
-                        if signal:
-                            can_trade, reason = self.risk_manager.can_open_trade(
-                                signal, self.risk_manager.intraday_state
-                            )
-                            
-                            if can_trade:
-                                self._open_trade(signal, m15_candle)
+            # === PRE-ENTRY CHECKS (inline, matching optimizer) ===
+            if open_trade:
+                continue
+            if rm.scalping_state.is_stopped_today or rm.scalping_state.is_stopped_global:
+                continue
+            if rm.scalping_state.consecutive_losses >= 3:
+                continue
+            if rm.open_trade_count >= 1:
+                continue
+            
+            daily_loss = abs(rm.daily_pnl) / rm.initial_balance if rm.daily_pnl < 0 else 0
+            if daily_loss >= 0.035:
+                continue
+            total_dd = (rm.initial_balance - rm.current_balance) / rm.initial_balance if rm.current_balance < rm.initial_balance else 0
+            if total_dd >= 0.07:
+                continue
+            
+            # === SIGNAL GENERATION (inline, matching optimizer) ===
+            closes = [c["close"] for c in m15_candles[:i + 1]]
+            ema_fast = TechnicalAnalysis.ema(closes, sc.fast_ema_period)
+            ema_slow = TechnicalAnalysis.ema(closes, sc.slow_ema_period)
+            rsi = TechnicalAnalysis.rsi(closes, 14)
+            atr = TechnicalAnalysis.atr(m15_candles[:i + 1], 14)
+            momentum = TechnicalAnalysis.momentum(closes, 8)
+            bb_upper, bb_mid, bb_lower = TechnicalAnalysis.bollinger_bands(closes, 20, 2.0)
+            
+            current_price = closes[-1]
+            cur_fast = ema_fast[-1]
+            cur_slow = ema_slow[-1]
+            prev_candle = m15_candles[i - 1]
+            
+            if atr < 0.00025:
+                continue
+            
+            signal = None
+            
+            # BUY
+            if cur_fast > cur_slow and rsi < sc.rsi_buy_max and rsi > 30:
+                entry = False
+                
+                if abs(prev_candle["low"] - ema_fast[-2]) / current_price < 0.0006:
+                    if current_price > prev_candle["high"]:
+                        entry = True
+                
+                if not entry and TechnicalAnalysis.is_bullish_candle(candle):
+                    body = candle["close"] - candle["open"]
+                    if body > atr * 0.4 and momentum > 0.01:
+                        entry = True
+                
+                if not entry and current_price <= bb_lower * 1.001:
+                    if TechnicalAnalysis.is_bullish_candle(candle):
+                        entry = True
+                
+                if not entry and TechnicalAnalysis.is_bullish_engulfing(m15_candles, i):
+                    entry = True
+                
+                if entry:
+                    sl_dist = max(atr * sc.atr_multiplier, sc.min_sl_pips / 10000)
+                    sl_pips = sl_dist * 10000
+                    if sl_pips < sc.min_sl_pips:
+                        sl_pips = sc.min_sl_pips
+                    elif sl_pips > sc.max_sl_pips:
+                        sl_pips = sc.max_sl_pips
+                    tp_pips = sl_pips * sc.min_rr
+                    sl = current_price - (sl_pips / 10000)
+                    tp = current_price + (tp_pips / 10000)
+                    lot = rm.calculate_lot_size(sl_pips, symbol)
+                    signal = {"direction": "BUY", "entry": current_price, "sl": sl, "tp": tp, "lot_size": lot, "sl_pips": sl_pips, "tp_pips": tp_pips}
+            
+            # SELL
+            elif cur_fast < cur_slow and rsi > sc.rsi_sell_min and rsi < 70:
+                entry = False
+                
+                if abs(prev_candle["high"] - ema_fast[-2]) / current_price < 0.0006:
+                    if current_price < prev_candle["low"]:
+                        entry = True
+                
+                if not entry and TechnicalAnalysis.is_bearish_candle(candle):
+                    body = candle["open"] - candle["close"]
+                    if body > atr * 0.4 and momentum < -0.01:
+                        entry = True
+                
+                if not entry and current_price >= bb_upper * 0.999:
+                    if TechnicalAnalysis.is_bearish_candle(candle):
+                        entry = True
+                
+                if not entry and TechnicalAnalysis.is_bearish_engulfing(m15_candles, i):
+                    entry = True
+                
+                if entry:
+                    sl_dist = max(atr * sc.atr_multiplier, sc.min_sl_pips / 10000)
+                    sl_pips = sl_dist * 10000
+                    if sl_pips < sc.min_sl_pips:
+                        sl_pips = sc.min_sl_pips
+                    elif sl_pips > sc.max_sl_pips:
+                        sl_pips = sc.max_sl_pips
+                    tp_pips = sl_pips * sc.min_rr
+                    sl = current_price + (sl_pips / 10000)
+                    tp = current_price - (tp_pips / 10000)
+                    lot = rm.calculate_lot_size(sl_pips, symbol)
+                    signal = {"direction": "SELL", "entry": current_price, "sl": sl, "tp": tp, "lot_size": lot, "sl_pips": sl_pips, "tp_pips": tp_pips}
+            
+            if signal:
+                open_trade = {"signal": signal, "entry_time": candle["datetime"]}
+                rm.open_trade_count = 1
+                rm.scalping_state.daily_trades += 1
             
             # Record equity periodically
-            if m15_idx % 50 == 0:
+            if i % 50 == 0:
                 self.equity_curve.append({
-                    "timestamp": candle_time.isoformat(),
-                    "equity": round(self.risk_manager.current_balance, 2),
-                    "drawdown": round((self.peak_balance - self.risk_manager.current_balance) / self.peak_balance * 100, 2)
+                    "timestamp": candle["datetime"].isoformat(),
+                    "equity": round(rm.current_balance, 2),
+                    "drawdown": round(max(0, (self.initial_balance - rm.current_balance) / self.initial_balance * 100), 2)
                 })
         
-        # Close any remaining trades
-        if m15_candles:
-            last_candle = m15_candles[-1]
-            for signal, _ in self.open_trades[:]:
-                self._close_trade(signal, last_candle["close"], last_candle["datetime"], "EOD")
+        # Close remaining trade at market
+        if open_trade and m15_candles:
+            last = m15_candles[-1]
+            sig = open_trade["signal"]
+            exit_price = last["close"]
+            if sig["direction"] == "BUY":
+                pnl_pips = (exit_price - sig["entry"]) * 10000
+            else:
+                pnl_pips = (sig["entry"] - exit_price) * 10000
+            pnl = pnl_pips * sig["lot_size"] * 10
+            rm.current_balance += pnl
+            rm.daily_pnl += pnl
+            self.trades.append(BacktestTrade(
+                id=len(self.trades) + 1, symbol=symbol, direction=sig["direction"],
+                strategy="SCALPING", entry_price=sig["entry"], exit_price=exit_price,
+                stop_loss=sig["sl"], take_profit=sig["tp"],
+                sl_pips=round(sig["sl_pips"], 1), tp_pips=round(sig["tp_pips"], 1),
+                lot_size=sig["lot_size"], entry_time=open_trade["entry_time"],
+                exit_time=last["datetime"], pnl=round(pnl, 2), pnl_percent=0,
+                exit_reason="EOD", session="LONDON"
+            ))
         
-        # Compile report
         start_date = m15_candles[0]["datetime"] if m15_candles else datetime.now(timezone.utc)
         end_date = m15_candles[-1]["datetime"] if m15_candles else datetime.now(timezone.utc)
+        return self._compile_report(symbol, "SCALPING", start_date, end_date, data_source)
+    
+    def _run_multi_strategy_backtest(
+        self, symbol: str, strategy: str, m15_candles: List[Dict], h1_candles: List[Dict], data_source: str
+    ) -> BacktestReport:
         return self._compile_report(symbol, strategy, start_date, end_date, data_source)
     
     def _open_trade(self, signal: TradeSignal, candle: Dict):
