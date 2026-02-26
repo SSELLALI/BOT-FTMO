@@ -622,6 +622,61 @@ class ProfessionalBacktester:
     def _run_multi_strategy_backtest(
         self, symbol: str, strategy: str, m15_candles: List[Dict], h1_candles: List[Dict], data_source: str
     ) -> BacktestReport:
+        """Multi-strategy backtest for INTRADAY or BOTH modes."""
+        h1_by_time = {}
+        for i, c in enumerate(h1_candles):
+            t = c["datetime"]
+            key = t.replace(minute=0, second=0, microsecond=0)
+            h1_by_time[key] = i
+        
+        current_day = None
+        
+        for m15_idx, m15_candle in enumerate(m15_candles):
+            if m15_idx < 50:
+                continue
+            
+            candle_time = m15_candle["datetime"]
+            candle_day = candle_time.strftime("%Y-%m-%d")
+            
+            if candle_day != current_day:
+                if current_day is not None:
+                    if self.risk_manager.scalping_state.is_stopped_today or \
+                       self.risk_manager.intraday_state.is_stopped_today:
+                        self.days_stopped += 1
+                self.risk_manager.reset_daily()
+                current_day = candle_day
+            
+            had_exit = self._check_exits(m15_candle)
+            if had_exit:
+                continue
+            
+            h1_time = candle_time.replace(minute=0, second=0, microsecond=0)
+            h1_idx = h1_by_time.get(h1_time, -1)
+            
+            if strategy in ["INTRADAY", "BOTH"]:
+                if h1_idx >= 200:
+                    if not self.risk_manager.intraday_state.is_stopped_today and \
+                       not self.risk_manager.intraday_state.is_stopped_global:
+                        signal = self.intraday.analyze(h1_candles, m15_candles, h1_idx, m15_idx, symbol)
+                        if signal:
+                            can_trade, reason = self.risk_manager.can_open_trade(signal, self.risk_manager.intraday_state)
+                            if can_trade:
+                                self._open_trade(signal, m15_candle)
+            
+            if m15_idx % 50 == 0:
+                self.equity_curve.append({
+                    "timestamp": candle_time.isoformat(),
+                    "equity": round(self.risk_manager.current_balance, 2),
+                    "drawdown": round(max(0, (self.initial_balance - self.risk_manager.current_balance) / self.initial_balance * 100), 2)
+                })
+        
+        if m15_candles:
+            last_candle = m15_candles[-1]
+            for signal, _ in self.open_trades[:]:
+                self._close_trade(signal, last_candle["close"], last_candle["datetime"], "EOD")
+        
+        start_date = m15_candles[0]["datetime"] if m15_candles else datetime.now(timezone.utc)
+        end_date = m15_candles[-1]["datetime"] if m15_candles else datetime.now(timezone.utc)
         return self._compile_report(symbol, strategy, start_date, end_date, data_source)
     
     def _open_trade(self, signal: TradeSignal, candle: Dict):
