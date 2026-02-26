@@ -1,8 +1,8 @@
 {
   "phase": "train_grid",
-  "strategy": "BREAKOUT",
+  "strategy": "COMBINED",
   "symbol": "USDJPY",
-  "progress": "200/768",
-  "elapsed_sec": 82.6,
-  "progress_key": "USDJPY_BREAKOUT"
+  "progress": "100/384",
+  "elapsed_sec": 33.3,
+  "progress_key": "USDJPY_COMBINED"
 }
