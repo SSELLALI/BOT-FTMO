@@ -1,6 +1,4 @@
 {
-  "phase": "COMPLETE",
-  "elapsed_sec": 429.5,
-  "results_file": "/app/backend/optimization_results.json",
-  "finished_at": "2026-02-26 10:49:48"
+  "phase": "starting",
+  "started_at": "2026-02-26 12:20:16"
 }
