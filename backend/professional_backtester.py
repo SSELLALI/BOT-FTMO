@@ -455,12 +455,8 @@ class ProfessionalBacktester:
             total_dd = (self.risk_manager.initial_balance - self.risk_manager.current_balance) / self.risk_manager.initial_balance if self.risk_manager.current_balance < self.risk_manager.initial_balance else 0
 
             if daily_loss_pct >= 0.03 or total_dd >= 0.06:
-                # Safety close at the BETTER price (max of SL and close for BUY, min for SELL)
-                if signal.direction == "BUY":
-                    safety_price = max(signal.stop_loss, candle["close"])
-                else:
-                    safety_price = min(signal.stop_loss, candle["close"])
-                self._close_trade(signal, safety_price, candle["datetime"], "SAFETY_CLOSE")
+                # Safety close at market price (matches optimizer)
+                self._close_trade(signal, candle["close"], candle["datetime"], "SAFETY_CLOSE")
                 had_exit = True
                 continue
 
