@@ -444,12 +444,13 @@ class IntradayStrategy:
         self.name = "INTRADAY"
         self.max_trades_per_day = 6
         self.max_consecutive_losses = 3
-        self.min_sl_pips = 8
-        self.max_sl_pips = 25
-        self.min_rr = 2.5
-        self.ema_period = 20
+        # Optimized parameters from walk-forward analysis (Feb 2026)
+        self.min_sl_pips = 12
+        self.max_sl_pips = 30
+        self.min_rr = 3.0
+        self.ema_period = 15
         self.atr_multiplier = 0.5
-        self.pullback_pct = 0.003
+        self.pullback_pct = 0.004
 
     def is_valid_session(self, hour: int) -> bool:
         return 7 <= hour <= 21
