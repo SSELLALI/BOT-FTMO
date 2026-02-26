@@ -692,7 +692,7 @@ class RealisticBacktester:
                 continue
 
             atr = atr_all[i - 1]  # Pre-computed ATR (anti-lookahead)
-            if atr < 0.0003:
+            if atr < 3.0 / pm:  # Min ~3 pips, scaled per pair
                 continue
 
             is_news = news_calendar.is_news_window(c["datetime"], self.config.news_window_minutes)
