@@ -96,6 +96,8 @@ class BacktestReport:
     trades: List[Dict] = field(default_factory=list)
     daily_returns: List[Dict] = field(default_factory=list)
     data_source: str = "simulated"
+    spread_pips: float = 1.5
+    slippage_pips: float = 0.8
 
 
 class MultiTimeframeDataGenerator:
