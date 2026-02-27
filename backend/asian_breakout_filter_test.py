@@ -336,7 +336,8 @@ def run_filtered_backtest(daily_candles, daily_ind, pip_size, params,
 
 def quick_stats(trades):
     if not trades:
-        return {'n': 0, 'pnl_pct': 0, 'wr': 0, 'pf': 0, 'dd': 0, 'weekly': 0}
+        return {'n': 0, 'pnl_pct': 0, 'wr': 0, 'pf': 0, 'dd': 0, 'weekly': 0,
+                'weeks': 0, 'tp': 0, 'sl': 0, 'time': 0}
     n = len(trades)
     wins = [t for t in trades if t['pnl'] > 0]
     losses = [t for t in trades if t['pnl'] < 0]
