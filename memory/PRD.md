@@ -1,53 +1,92 @@
-# Bot de Trading FTMO - PRD
+# Bot de Trading FTMO - Portfolio de Stratégies
 
-## Problème Original
-Trading bot pour FTMO/cTrader pour paires forex majeures, implémentant des stratégies Price Action avec gestion de risque stricte (1% risque/trade, 4.5% perte journalière, 8% perte totale) et objectif >2% profit hebdomadaire.
+## Objectif Principal
+Développer un portfolio de stratégies de trading automatisées pour la plateforme FTMO via cTrader, déployées en tant que cBots C# sur cTrader Cloud pour une exécution 24/7.
 
-## Architecture
+## Stratégies Déployées
+
+### 1. USDJPY Price Action (Intraday)
+- **Statut**: DEPLOYE sur cTrader Cloud
+- **Performance validée**: +0.85%/semaine (walk-forward)
+- **Fichier cBot**: `backend/usdjpy_pa_cbots/ValidatedUSDJPY_PA_cBot.cs`
+- **Timeframe**: M30 entry, H1 structure
+- **Type**: Support/Résistance + Price Action
+
+### 2. GBPJPY Breakout-Pullback-Rejection (Intraday)
+- **Statut**: DEPLOYE sur cTrader Cloud (27/02/2026)
+- **Performance validée (Walk-Forward)**:
+  - Train: +15.16% (23 trades, PF=3.45, DD=1.78%)
+  - OOS: +7.74% (14 trades, PF=3.10)
+  - Full: +0.25%/semaine
+  - Monte Carlo (20 seeds): 100% profitable, mean +11.11%
+  - Stress test (spread 4.0): toujours profitable (+10.94%)
+- **Fichier cBot**: `backend/usdjpy_pa_cbots/GBPJPY_BreakoutPullback_cBot.cs`
+- **Timeframe**: M30 entry, H1 structure
+- **Paramètres optimaux**: swing=5, body=0.45, vol=0.3, RR=1.5, prox=1.0, timeout=25h
+- **Limitations connues**: ~0.4 trades/semaine, clustering de trades
+
+### Performance Portfolio Combinée
+- USDJPY: +0.85%/semaine
+- GBPJPY: +0.25%/semaine
+- **Total estimé: ~1.1%/semaine**
+- FTMO Compliant: Oui (DD combiné max ~4% < 8%)
+
+## Architecture Technique
+
+### Backend (Python/FastAPI)
 ```
 /app/backend/
-├── server.py                           # FastAPI principal
-├── live_trading_service.py             # Service de trading live (FIX API)
-├── usdjpy_pa_strategy.py              # Stratégie PA validée (BREAKOUT + BOUNCE)
-├── usdjpy_validated_strategy.json     # Paramètres verrouillés
-├── price_action_backtester.py         # Backtester Price Action (H1/M30)
-├── swing_backtester.py                # Backtester Swing (D1/H4/H2)
-├── walkforward_optimizer_pa.py        # Optimiseur walk-forward PA
-├── walkforward_optimizer_swing.py     # Optimiseur walk-forward Swing
-├── run_swing_optimization.py          # Runner swing optimization
-├── ctrader_fix_client.py              # Client FIX API
-├── historical_data/                   # Données TradingView (M5 à D1)
-└── optimization_results/              # Résultats JSON
+├── server.py                                    # FastAPI server
+├── gbpjpy_breakout_backtester.py               # v2 optimisé (pre-scan H1)
+├── run_gbpjpy_optimization.py                   # Walk-forward optimizer
+├── realistic_backtester_v3_price_action.py     # USDJPY backtester
+├── usdjpy_pa_strategy.py                        # Live signal logic USDJPY
+├── live_trading_service.py                      # Server-side trading
+├── tradingview_loader.py                        # Data loader
+├── historical_data/                             # CSV data files
+├── optimization_results/                        # JSON results
+└── usdjpy_pa_cbots/
+    ├── ValidatedUSDJPY_PA_cBot.cs              # cBot USDJPY
+    └── GBPJPY_BreakoutPullback_cBot.cs         # cBot GBPJPY
 ```
 
-## Stratégies Implémentées
+### Améliorations v2 du Backtester GBPJPY
+1. Multi-breakout tracking simultané
+2. Pre-scan H1 breakouts (200x plus rapide pour optimization)
+3. Binary search pour h1_index lookup
+4. Scan rétroactif H1 (breakouts hors-session)
+5. Niveaux clés multiples (3 swing + day high/low)
+6. Patterns de rejet enrichis (close near extreme, impulse 50%)
+7. Bug RSI corrigé (double filtre contradictoire)
+8. Session étendue (London+Gap+NY)
+9. Support precomputed breakouts pour grid search
 
-### USDJPY Intraday Price Action (VALIDÉE ✅ DÉPLOYÉE)
-- **BREAKOUT**: +0.288%/sem, PF=1.23, robustesse 100% (12/12)
-- **BOUNCE**: +0.653%/sem, PF=1.26, robustesse 92% (11/12)
-- **Combiné réaliste**: ~0.78-0.94%/semaine
-- **FTMO compliant**: ✅ dans tous les scénarios
-- **4/4 trimestres profitables** pour les deux stratégies
-- **Déployé**: dans live_trading_service.py avec endpoints API
+## Données Historiques
+- GBPJPY: H1 (2024-01 → 2026-02), M30 (2025-01 → 2026-02), M15, M5, D1
+- USDJPY: données validées
 
-### Swing Trading (TESTÉ — NON VIABLE)
-- GBPJPY: Échec total (overfitting massif, 0 profitable OOS)
-- AUDCAD: Marginal (0 robuste)
-- USDJPY Swing: 2 robustes mais rendement quasi-nul (+0.016%/sem)
+## Règles FTMO
+- Risque par trade: 1%
+- Perte journalière max: 4.5%
+- Drawdown total max: 8%
+- Objectif profit: >2%/semaine (en cours)
 
 ## Tâches Complétées
-- [x] Pivot vers Price Action (S/R + Candlestick)
-- [x] Stratégie USDJPY validée et verrouillée (+0.94%/sem réaliste)
-- [x] Audit de robustesse complet (perturbation + sous-périodes)
-- [x] Intégration dans live_trading_service.py
-- [x] Endpoints API: GET /api/live/pa-strategy, PUT /api/live/strategies
-- [x] Initialisation automatique données H1/M30 au démarrage
-- [x] Optimisation Swing sur 3 paires (résultats: non viable)
-- [x] Testing agent: 14/14 tests passent
+- [x] Stratégie USDJPY PA validée et déployée (cBot + Cloud)
+- [x] Stratégie GBPJPY Breakout-Pullback développée
+- [x] Optimisation walk-forward GBPJPY (3072 combos, 9.3 min)
+- [x] Monte Carlo + stress test GBPJPY
+- [x] cBot C# GBPJPY créé et déployé sur cTrader Cloud
+- [x] Guide utilisateur pas-à-pas fourni
 
 ## Backlog
-- [ ] **P1**: Rapports email quotidiens/hebdomadaires (nerro_samy@live.fr)
-- [ ] **P2**: Stratégies alternatives pour GBPJPY/AUDCAD (mean reversion, momentum)
-- [ ] **P3**: Dashboard frontend avec résultats stratégies
-- [ ] **P4**: Nettoyage code (archiver v2, consolider)
-- [ ] **P5**: Corriger warning FIX API NumInGroup
+- [ ] **P2**: Rapports email quotidiens/hebdomadaires (nerro_samy@live.fr)
+- [ ] **P2**: 3ème stratégie haute fréquence (scalping M5 ou mean reversion)
+- [ ] **P3**: Dashboard frontend amélioré
+- [ ] **P4**: Nettoyage code (archiver v2, v4 backtesters)
+- [ ] **P5**: Warning FIX API NumInGroup
+
+## Projets Futurs (demandés par l'utilisateur)
+- Outils d'investissement
+- Suivi des dépenses
+- Suivi sport/poids/calories
