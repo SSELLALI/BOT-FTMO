@@ -1,0 +1,1666 @@
+{
+  "BASE (no filter)": {
+    "pairs": {
+      "GBPJPY": {
+        "n": 52,
+        "pnl_pct": 3.69,
+        "wr": 42.3,
+        "pf": 1.18,
+        "dd": 4.26,
+        "weekly": 0.17,
+        "weeks": 21.1,
+        "tp": 9,
+        "sl": 16,
+        "time": 26
+      },
+      "GBPUSD": {
+        "n": 21,
+        "pnl_pct": -5.23,
+        "wr": 28.6,
+        "pf": 0.44,
+        "dd": 5.23,
+        "weekly": -0.25,
+        "weeks": 21.0,
+        "tp": 1,
+        "sl": 8,
+        "time": 12
+      },
+      "USDJPY": {
+        "n": 61,
+        "pnl_pct": 6.39,
+        "wr": 47.5,
+        "pf": 1.31,
+        "dd": 5.16,
+        "weekly": 0.26,
+        "weeks": 24.9,
+        "tp": 4,
+        "sl": 16,
+        "time": 41
+      },
+      "EURUSD": {
+        "n": 11,
+        "pnl_pct": -1.21,
+        "wr": 36.4,
+        "pf": 0.68,
+        "dd": 3.26,
+        "weekly": -0.05,
+        "weeks": 23.3,
+        "tp": 1,
+        "sl": 3,
+        "time": 7
+      }
+    },
+    "total": {
+      "n": 145,
+      "pnl_pct": 3.64,
+      "wr": 42.1,
+      "pf": 1.07,
+      "dd": 13.19,
+      "weekly": 0.14,
+      "weeks": 25.4,
+      "tp": 15,
+      "sl": 43,
+      "time": 86
+    }
+  },
+  "A_NoMon": {
+    "pairs": {
+      "GBPJPY": {
+        "n": 41,
+        "pnl_pct": -0.37,
+        "wr": 41.5,
+        "pf": 0.98,
+        "dd": 6.91,
+        "weekly": -0.02,
+        "weeks": 21.1,
+        "tp": 7,
+        "sl": 15,
+        "time": 18
+      },
+      "GBPUSD": {
+        "n": 17,
+        "pnl_pct": -5.92,
+        "wr": 23.5,
+        "pf": 0.31,
+        "dd": 5.92,
+        "weekly": -0.28,
+        "weeks": 21.0,
+        "tp": 1,
+        "sl": 8,
+        "time": 8
+      },
+      "USDJPY": {
+        "n": 48,
+        "pnl_pct": 2.81,
+        "wr": 45.8,
+        "pf": 1.17,
+        "dd": 4.55,
+        "weekly": 0.11,
+        "weeks": 24.9,
+        "tp": 3,
+        "sl": 13,
+        "time": 32
+      },
+      "EURUSD": {
+        "n": 7,
+        "pnl_pct": 0.34,
+        "wr": 28.6,
+        "pf": 1.19,
+        "dd": 1.75,
+        "weekly": 0.01,
+        "weeks": 23.3,
+        "tp": 1,
+        "sl": 1,
+        "time": 5
+      }
+    },
+    "total": {
+      "n": 113,
+      "pnl_pct": -3.14,
+      "wr": 39.8,
+      "pf": 0.93,
+      "dd": 13.8,
+      "weekly": -0.12,
+      "weeks": 25.4,
+      "tp": 12,
+      "sl": 37,
+      "time": 63
+    }
+  },
+  "B_Trend": {
+    "pairs": {
+      "GBPJPY": {
+        "n": 25,
+        "pnl_pct": -1.74,
+        "wr": 36.0,
+        "pf": 0.85,
+        "dd": 5.54,
+        "weekly": -0.1,
+        "weeks": 17.7,
+        "tp": 3,
+        "sl": 10,
+        "time": 12
+      },
+      "GBPUSD": {
+        "n": 9,
+        "pnl_pct": -3.64,
+        "wr": 33.3,
+        "pf": 0.21,
+        "dd": 4.01,
+        "weekly": -0.24,
+        "weeks": 15.0,
+        "tp": 0,
+        "sl": 4,
+        "time": 5
+      },
+      "USDJPY": {
+        "n": 29,
+        "pnl_pct": -0.91,
+        "wr": 37.9,
+        "pf": 0.92,
+        "dd": 6.36,
+        "weekly": -0.04,
+        "weeks": 20.9,
+        "tp": 2,
+        "sl": 10,
+        "time": 17
+      },
+      "EURUSD": {
+        "n": 5,
+        "pnl_pct": -0.74,
+        "wr": 20.0,
+        "pf": 0.02,
+        "dd": 0.74,
+        "weekly": -0.04,
+        "weeks": 18.1,
+        "tp": 0,
+        "sl": 0,
+        "time": 5
+      }
+    },
+    "total": {
+      "n": 68,
+      "pnl_pct": -7.03,
+      "wr": 35.3,
+      "pf": 0.75,
+      "dd": 14.78,
+      "weekly": -0.34,
+      "weeks": 20.9,
+      "tp": 5,
+      "sl": 24,
+      "time": 39
+    }
+  },
+  "C_ATR_D": {
+    "pairs": {
+      "GBPJPY": {
+        "n": 28,
+        "pnl_pct": 4.02,
+        "wr": 46.4,
+        "pf": 1.36,
+        "dd": 3.06,
+        "weekly": 0.19,
+        "weeks": 20.9,
+        "tp": 5,
+        "sl": 10,
+        "time": 13
+      },
+      "GBPUSD": {
+        "n": 9,
+        "pnl_pct": -2.36,
+        "wr": 22.2,
+        "pf": 0.49,
+        "dd": 3.68,
+        "weekly": -0.16,
+        "weeks": 15.0,
+        "tp": 1,
+        "sl": 4,
+        "time": 4
+      },
+      "USDJPY": {
+        "n": 20,
+        "pnl_pct": -0.74,
+        "wr": 45.0,
+        "pf": 0.9,
+        "dd": 4.55,
+        "weekly": -0.04,
+        "weeks": 21.0,
+        "tp": 1,
+        "sl": 6,
+        "time": 13
+      },
+      "EURUSD": {
+        "n": 2,
+        "pnl_pct": -1.53,
+        "wr": 0.0,
+        "pf": 0.0,
+        "dd": 1.53,
+        "weekly": -0.63,
+        "weeks": 2.4,
+        "tp": 0,
+        "sl": 1,
+        "time": 1
+      }
+    },
+    "total": {
+      "n": 59,
+      "pnl_pct": -0.61,
+      "wr": 40.7,
+      "pf": 0.98,
+      "dd": 10.56,
+      "weekly": -0.03,
+      "weeks": 21.0,
+      "tp": 7,
+      "sl": 21,
+      "time": 31
+    }
+  },
+  "D_Margin": {
+    "pairs": {
+      "GBPJPY": {
+        "n": 42,
+        "pnl_pct": -1.78,
+        "wr": 38.1,
+        "pf": 0.91,
+        "dd": 7.5,
+        "weekly": -0.09,
+        "weeks": 20.4,
+        "tp": 7,
+        "sl": 17,
+        "time": 17
+      },
+      "GBPUSD": {
+        "n": 9,
+        "pnl_pct": -0.22,
+        "wr": 44.4,
+        "pf": 0.88,
+        "dd": 1.0,
+        "weekly": -0.01,
+        "weeks": 20.1,
+        "tp": 0,
+        "sl": 1,
+        "time": 8
+      },
+      "USDJPY": {
+        "n": 43,
+        "pnl_pct": 4.21,
+        "wr": 41.9,
+        "pf": 1.27,
+        "dd": 5.4,
+        "weekly": 0.17,
+        "weeks": 24.9,
+        "tp": 4,
+        "sl": 11,
+        "time": 28
+      },
+      "EURUSD": {
+        "n": 3,
+        "pnl_pct": -0.82,
+        "wr": 66.7,
+        "pf": 0.18,
+        "dd": 1.0,
+        "weekly": -0.04,
+        "weeks": 18.6,
+        "tp": 0,
+        "sl": 1,
+        "time": 2
+      }
+    },
+    "total": {
+      "n": 97,
+      "pnl_pct": 1.4,
+      "wr": 41.2,
+      "pf": 1.04,
+      "dd": 10.44,
+      "weekly": 0.06,
+      "weeks": 25.1,
+      "tp": 11,
+      "sl": 30,
+      "time": 55
+    }
+  },
+  "E_ATR_SL": {
+    "pairs": {
+      "GBPJPY": {
+        "n": 52,
+        "pnl_pct": 9.95,
+        "wr": 42.3,
+        "pf": 1.39,
+        "dd": 5.55,
+        "weekly": 0.47,
+        "weeks": 21.1,
+        "tp": 16,
+        "sl": 22,
+        "time": 13
+      },
+      "GBPUSD": {
+        "n": 21,
+        "pnl_pct": -3.9,
+        "wr": 28.6,
+        "pf": 0.67,
+        "dd": 4.11,
+        "weekly": -0.19,
+        "weeks": 21.0,
+        "tp": 3,
+        "sl": 11,
+        "time": 7
+      },
+      "USDJPY": {
+        "n": 61,
+        "pnl_pct": 17.05,
+        "wr": 42.6,
+        "pf": 1.56,
+        "dd": 5.04,
+        "weekly": 0.69,
+        "weeks": 24.9,
+        "tp": 19,
+        "sl": 24,
+        "time": 18
+      },
+      "EURUSD": {
+        "n": 11,
+        "pnl_pct": -1.57,
+        "wr": 27.3,
+        "pf": 0.72,
+        "dd": 3.5,
+        "weekly": -0.07,
+        "weeks": 23.3,
+        "tp": 2,
+        "sl": 5,
+        "time": 4
+      }
+    },
+    "total": {
+      "n": 145,
+      "pnl_pct": 21.53,
+      "wr": 39.3,
+      "pf": 1.29,
+      "dd": 8.88,
+      "weekly": 0.85,
+      "weeks": 25.4,
+      "tp": 40,
+      "sl": 62,
+      "time": 42
+    }
+  },
+  "A_NoMon + B_Trend": {
+    "pairs": {
+      "GBPJPY": {
+        "n": 19,
+        "pnl_pct": -2.89,
+        "wr": 31.6,
+        "pf": 0.72,
+        "dd": 6.87,
+        "weekly": -0.16,
+        "weeks": 17.7,
+        "tp": 3,
+        "sl": 9,
+        "time": 7
+      },
+      "GBPUSD": {
+        "n": 7,
+        "pnl_pct": -3.89,
+        "wr": 28.6,
+        "pf": 0.09,
+        "dd": 4.26,
+        "weekly": -0.26,
+        "weeks": 15.0,
+        "tp": 0,
+        "sl": 4,
+        "time": 3
+      },
+      "USDJPY": {
+        "n": 23,
+        "pnl_pct": 0.57,
+        "wr": 43.5,
+        "pf": 1.07,
+        "dd": 4.53,
+        "weekly": 0.03,
+        "weeks": 20.9,
+        "tp": 2,
+        "sl": 8,
+        "time": 13
+      },
+      "EURUSD": {
+        "n": 4,
+        "pnl_pct": -0.75,
+        "wr": 0.0,
+        "pf": 0.0,
+        "dd": 0.75,
+        "weekly": -0.04,
+        "weeks": 18.1,
+        "tp": 0,
+        "sl": 0,
+        "time": 4
+      }
+    },
+    "total": {
+      "n": 53,
+      "pnl_pct": -6.97,
+      "wr": 34.0,
+      "pf": 0.71,
+      "dd": 13.67,
+      "weekly": -0.33,
+      "weeks": 20.9,
+      "tp": 5,
+      "sl": 21,
+      "time": 27
+    }
+  },
+  "A_NoMon + C_ATR_D": {
+    "pairs": {
+      "GBPJPY": {
+        "n": 24,
+        "pnl_pct": 3.11,
+        "wr": 45.8,
+        "pf": 1.31,
+        "dd": 3.06,
+        "weekly": 0.15,
+        "weeks": 20.9,
+        "tp": 5,
+        "sl": 9,
+        "time": 10
+      },
+      "GBPUSD": {
+        "n": 8,
+        "pnl_pct": -2.04,
+        "wr": 25.0,
+        "pf": 0.53,
+        "dd": 3.35,
+        "weekly": -0.14,
+        "weeks": 15.0,
+        "tp": 1,
+        "sl": 4,
+        "time": 3
+      },
+      "USDJPY": {
+        "n": 16,
+        "pnl_pct": 0.08,
+        "wr": 50.0,
+        "pf": 1.01,
+        "dd": 4.1,
+        "weekly": 0.0,
+        "weeks": 21.0,
+        "tp": 1,
+        "sl": 5,
+        "time": 10
+      },
+      "EURUSD": {
+        "n": 1,
+        "pnl_pct": -0.53,
+        "wr": 0.0,
+        "pf": 0.0,
+        "dd": 0.53,
+        "weekly": -0.53,
+        "weeks": 1,
+        "tp": 0,
+        "sl": 0,
+        "time": 1
+      }
+    },
+    "total": {
+      "n": 49,
+      "pnl_pct": 0.61,
+      "wr": 42.9,
+      "pf": 1.03,
+      "dd": 9.36,
+      "weekly": 0.03,
+      "weeks": 21.0,
+      "tp": 7,
+      "sl": 18,
+      "time": 24
+    }
+  },
+  "A_NoMon + D_Margin": {
+    "pairs": {
+      "GBPJPY": {
+        "n": 34,
+        "pnl_pct": -0.7,
+        "wr": 41.2,
+        "pf": 0.96,
+        "dd": 5.15,
+        "weekly": -0.03,
+        "weeks": 20.4,
+        "tp": 6,
+        "sl": 14,
+        "time": 13
+      },
+      "GBPUSD": {
+        "n": 7,
+        "pnl_pct": -1.39,
+        "wr": 28.6,
+        "pf": 0.25,
+        "dd": 1.39,
+        "weekly": -0.07,
+        "weeks": 20.1,
+        "tp": 0,
+        "sl": 1,
+        "time": 6
+      },
+      "USDJPY": {
+        "n": 32,
+        "pnl_pct": 3.5,
+        "wr": 40.6,
+        "pf": 1.3,
+        "dd": 3.35,
+        "weekly": 0.14,
+        "weeks": 24.9,
+        "tp": 3,
+        "sl": 8,
+        "time": 21
+      },
+      "EURUSD": {
+        "n": 1,
+        "pnl_pct": 0.12,
+        "wr": 100.0,
+        "pf": 125000.0,
+        "dd": 0,
+        "weekly": 0.12,
+        "weeks": 1,
+        "tp": 0,
+        "sl": 0,
+        "time": 1
+      }
+    },
+    "total": {
+      "n": 74,
+      "pnl_pct": 1.54,
+      "wr": 40.5,
+      "pf": 1.05,
+      "dd": 6.84,
+      "weekly": 0.06,
+      "weeks": 25.1,
+      "tp": 9,
+      "sl": 23,
+      "time": 41
+    }
+  },
+  "A_NoMon + E_ATR_SL": {
+    "pairs": {
+      "GBPJPY": {
+        "n": 25,
+        "pnl_pct": -4.78,
+        "wr": 32.0,
+        "pf": 0.68,
+        "dd": 8.49,
+        "weekly": -0.38,
+        "weeks": 12.7,
+        "tp": 4,
+        "sl": 15,
+        "time": 6
+      },
+      "GBPUSD": {
+        "n": 17,
+        "pnl_pct": -5.3,
+        "wr": 23.5,
+        "pf": 0.47,
+        "dd": 6.21,
+        "weekly": -0.25,
+        "weeks": 21.0,
+        "tp": 2,
+        "sl": 9,
+        "time": 6
+      },
+      "USDJPY": {
+        "n": 48,
+        "pnl_pct": 11.79,
+        "wr": 41.7,
+        "pf": 1.51,
+        "dd": 5.04,
+        "weekly": 0.47,
+        "weeks": 24.9,
+        "tp": 14,
+        "sl": 19,
+        "time": 15
+      },
+      "EURUSD": {
+        "n": 7,
+        "pnl_pct": -1.57,
+        "wr": 14.3,
+        "pf": 0.56,
+        "dd": 3.5,
+        "weekly": -0.07,
+        "weeks": 23.3,
+        "tp": 1,
+        "sl": 3,
+        "time": 3
+      }
+    },
+    "total": {
+      "n": 97,
+      "pnl_pct": 0.15,
+      "wr": 34.0,
+      "pf": 1.0,
+      "dd": 11.51,
+      "weekly": 0.01,
+      "weeks": 25.1,
+      "tp": 21,
+      "sl": 46,
+      "time": 30
+    }
+  },
+  "B_Trend + C_ATR_D": {
+    "pairs": {
+      "GBPJPY": {
+        "n": 11,
+        "pnl_pct": 0.57,
+        "wr": 36.4,
+        "pf": 1.13,
+        "dd": 2.3,
+        "weekly": 0.04,
+        "weeks": 16.1,
+        "tp": 1,
+        "sl": 4,
+        "time": 6
+      },
+      "GBPUSD": {
+        "n": 6,
+        "pnl_pct": -3.26,
+        "wr": 16.7,
+        "pf": 0.1,
+        "dd": 3.62,
+        "weekly": -0.22,
+        "weeks": 15.0,
+        "tp": 0,
+        "sl": 3,
+        "time": 3
+      },
+      "USDJPY": {
+        "n": 13,
+        "pnl_pct": 0.24,
+        "wr": 46.2,
+        "pf": 1.04,
+        "dd": 4.16,
+        "weekly": 0.01,
+        "weeks": 20.9,
+        "tp": 1,
+        "sl": 5,
+        "time": 7
+      },
+      "EURUSD": {
+        "n": 1,
+        "pnl_pct": -0.53,
+        "wr": 0.0,
+        "pf": 0.0,
+        "dd": 0.53,
+        "weekly": -0.53,
+        "weeks": 1,
+        "tp": 0,
+        "sl": 0,
+        "time": 1
+      }
+    },
+    "total": {
+      "n": 31,
+      "pnl_pct": -2.99,
+      "wr": 35.5,
+      "pf": 0.79,
+      "dd": 9.89,
+      "weekly": -0.14,
+      "weeks": 20.9,
+      "tp": 2,
+      "sl": 12,
+      "time": 17
+    }
+  },
+  "B_Trend + D_Margin": {
+    "pairs": {
+      "GBPJPY": {
+        "n": 20,
+        "pnl_pct": -4.51,
+        "wr": 30.0,
+        "pf": 0.64,
+        "dd": 7.57,
+        "weekly": -0.27,
+        "weeks": 16.9,
+        "tp": 3,
+        "sl": 11,
+        "time": 6
+      },
+      "GBPUSD": {
+        "n": 3,
+        "pnl_pct": -0.15,
+        "wr": 66.7,
+        "pf": 0.57,
+        "dd": 0.34,
+        "weekly": -0.01,
+        "weeks": 11.7,
+        "tp": 0,
+        "sl": 0,
+        "time": 3
+      },
+      "USDJPY": {
+        "n": 23,
+        "pnl_pct": -1.72,
+        "wr": 34.8,
+        "pf": 0.82,
+        "dd": 6.28,
+        "weekly": -0.08,
+        "weeks": 20.9,
+        "tp": 2,
+        "sl": 8,
+        "time": 13
+      },
+      "EURUSD": {
+        "n": 0,
+        "pnl_pct": 0,
+        "wr": 0,
+        "pf": 0,
+        "dd": 0,
+        "weekly": 0,
+        "weeks": 0,
+        "tp": 0,
+        "sl": 0,
+        "time": 0
+      }
+    },
+    "total": {
+      "n": 46,
+      "pnl_pct": -6.38,
+      "wr": 34.8,
+      "pf": 0.71,
+      "dd": 12.53,
+      "weekly": -0.31,
+      "weeks": 20.9,
+      "tp": 5,
+      "sl": 19,
+      "time": 22
+    }
+  },
+  "B_Trend + E_ATR_SL": {
+    "pairs": {
+      "GBPJPY": {
+        "n": 25,
+        "pnl_pct": 2.41,
+        "wr": 36.0,
+        "pf": 1.18,
+        "dd": 6.96,
+        "weekly": 0.14,
+        "weeks": 17.7,
+        "tp": 7,
+        "sl": 13,
+        "time": 5
+      },
+      "GBPUSD": {
+        "n": 9,
+        "pnl_pct": -3.38,
+        "wr": 33.3,
+        "pf": 0.4,
+        "dd": 4.11,
+        "weekly": -0.23,
+        "weeks": 15.0,
+        "tp": 0,
+        "sl": 5,
+        "time": 4
+      },
+      "USDJPY": {
+        "n": 29,
+        "pnl_pct": 1.66,
+        "wr": 34.5,
+        "pf": 1.11,
+        "dd": 7.4,
+        "weekly": 0.08,
+        "weeks": 20.9,
+        "tp": 6,
+        "sl": 13,
+        "time": 10
+      },
+      "EURUSD": {
+        "n": 5,
+        "pnl_pct": -1.51,
+        "wr": 20.0,
+        "pf": 0.02,
+        "dd": 1.51,
+        "weekly": -0.08,
+        "weeks": 18.1,
+        "tp": 0,
+        "sl": 1,
+        "time": 4
+      }
+    },
+    "total": {
+      "n": 68,
+      "pnl_pct": -0.83,
+      "wr": 33.8,
+      "pf": 0.98,
+      "dd": 11.82,
+      "weekly": -0.04,
+      "weeks": 20.9,
+      "tp": 13,
+      "sl": 32,
+      "time": 23
+    }
+  },
+  "C_ATR_D + D_Margin": {
+    "pairs": {
+      "GBPJPY": {
+        "n": 22,
+        "pnl_pct": 2.1,
+        "wr": 40.9,
+        "pf": 1.21,
+        "dd": 3.12,
+        "weekly": 0.1,
+        "weeks": 20.1,
+        "tp": 4,
+        "sl": 9,
+        "time": 9
+      },
+      "GBPUSD": {
+        "n": 2,
+        "pnl_pct": 0.1,
+        "wr": 50.0,
+        "pf": 1.3,
+        "dd": 0.34,
+        "weekly": 0.01,
+        "weeks": 10.6,
+        "tp": 0,
+        "sl": 0,
+        "time": 2
+      },
+      "USDJPY": {
+        "n": 16,
+        "pnl_pct": -2.21,
+        "wr": 31.2,
+        "pf": 0.67,
+        "dd": 5.76,
+        "weekly": -0.11,
+        "weeks": 21.0,
+        "tp": 1,
+        "sl": 5,
+        "time": 10
+      },
+      "EURUSD": {
+        "n": 1,
+        "pnl_pct": -1.0,
+        "wr": 0.0,
+        "pf": 0.0,
+        "dd": 1.0,
+        "weekly": -1.0,
+        "weeks": 1,
+        "tp": 0,
+        "sl": 1,
+        "time": 0
+      }
+    },
+    "total": {
+      "n": 41,
+      "pnl_pct": -1.01,
+      "wr": 36.6,
+      "pf": 0.94,
+      "dd": 8.19,
+      "weekly": -0.05,
+      "weeks": 21.0,
+      "tp": 5,
+      "sl": 15,
+      "time": 21
+    }
+  },
+  "C_ATR_D + E_ATR_SL": {
+    "pairs": {
+      "GBPJPY": {
+        "n": 28,
+        "pnl_pct": 9.34,
+        "wr": 46.4,
+        "pf": 1.74,
+        "dd": 3.88,
+        "weekly": 0.45,
+        "weeks": 20.9,
+        "tp": 10,
+        "sl": 12,
+        "time": 6
+      },
+      "GBPUSD": {
+        "n": 9,
+        "pnl_pct": -3.05,
+        "wr": 22.2,
+        "pf": 0.47,
+        "dd": 4.71,
+        "weekly": -0.2,
+        "weeks": 15.0,
+        "tp": 1,
+        "sl": 5,
+        "time": 3
+      },
+      "USDJPY": {
+        "n": 20,
+        "pnl_pct": 5.14,
+        "wr": 45.0,
+        "pf": 1.55,
+        "dd": 4.01,
+        "weekly": 0.24,
+        "weeks": 21.0,
+        "tp": 5,
+        "sl": 8,
+        "time": 7
+      },
+      "EURUSD": {
+        "n": 2,
+        "pnl_pct": -1.99,
+        "wr": 0.0,
+        "pf": 0.0,
+        "dd": 1.99,
+        "weekly": -0.82,
+        "weeks": 2.4,
+        "tp": 0,
+        "sl": 2,
+        "time": 0
+      }
+    },
+    "total": {
+      "n": 59,
+      "pnl_pct": 9.45,
+      "wr": 40.7,
+      "pf": 1.32,
+      "dd": 6.88,
+      "weekly": 0.45,
+      "weeks": 21.0,
+      "tp": 16,
+      "sl": 27,
+      "time": 16
+    }
+  },
+  "D_Margin + E_ATR_SL": {
+    "pairs": {
+      "GBPJPY": {
+        "n": 42,
+        "pnl_pct": 2.29,
+        "wr": 38.1,
+        "pf": 1.1,
+        "dd": 7.3,
+        "weekly": 0.11,
+        "weeks": 20.4,
+        "tp": 12,
+        "sl": 20,
+        "time": 9
+      },
+      "GBPUSD": {
+        "n": 9,
+        "pnl_pct": 0.57,
+        "wr": 44.4,
+        "pf": 1.2,
+        "dd": 1.64,
+        "weekly": 0.03,
+        "weeks": 20.1,
+        "tp": 1,
+        "sl": 1,
+        "time": 7
+      },
+      "USDJPY": {
+        "n": 21,
+        "pnl_pct": 0.64,
+        "wr": 33.3,
+        "pf": 1.06,
+        "dd": 8.24,
+        "weekly": 0.05,
+        "weeks": 12.0,
+        "tp": 4,
+        "sl": 9,
+        "time": 8
+      },
+      "EURUSD": {
+        "n": 3,
+        "pnl_pct": -2.97,
+        "wr": 0.0,
+        "pf": 0.0,
+        "dd": 2.97,
+        "weekly": -0.16,
+        "weeks": 18.6,
+        "tp": 0,
+        "sl": 3,
+        "time": 0
+      }
+    },
+    "total": {
+      "n": 75,
+      "pnl_pct": 0.53,
+      "wr": 36.0,
+      "pf": 1.01,
+      "dd": 12.48,
+      "weekly": 0.02,
+      "weeks": 25.1,
+      "tp": 17,
+      "sl": 33,
+      "time": 24
+    }
+  },
+  "A_NoMon + B_Trend + C_ATR_D": {
+    "pairs": {
+      "GBPJPY": {
+        "n": 7,
+        "pnl_pct": -0.32,
+        "wr": 28.6,
+        "pf": 0.9,
+        "dd": 3.16,
+        "weekly": -0.02,
+        "weeks": 16.1,
+        "tp": 1,
+        "sl": 3,
+        "time": 3
+      },
+      "GBPUSD": {
+        "n": 5,
+        "pnl_pct": -2.93,
+        "wr": 20.0,
+        "pf": 0.11,
+        "dd": 3.3,
+        "weekly": -0.2,
+        "weeks": 15.0,
+        "tp": 0,
+        "sl": 3,
+        "time": 2
+      },
+      "USDJPY": {
+        "n": 10,
+        "pnl_pct": 1.81,
+        "wr": 60.0,
+        "pf": 1.44,
+        "dd": 2.97,
+        "weekly": 0.09,
+        "weeks": 20.9,
+        "tp": 1,
+        "sl": 4,
+        "time": 5
+      },
+      "EURUSD": {
+        "n": 1,
+        "pnl_pct": -0.53,
+        "wr": 0.0,
+        "pf": 0.0,
+        "dd": 0.53,
+        "weekly": -0.53,
+        "weeks": 1,
+        "tp": 0,
+        "sl": 0,
+        "time": 1
+      }
+    },
+    "total": {
+      "n": 23,
+      "pnl_pct": -1.98,
+      "wr": 39.1,
+      "pf": 0.82,
+      "dd": 8.96,
+      "weekly": -0.09,
+      "weeks": 20.9,
+      "tp": 2,
+      "sl": 10,
+      "time": 11
+    }
+  },
+  "A_NoMon + B_Trend + D_Margin": {
+    "pairs": {
+      "GBPJPY": {
+        "n": 16,
+        "pnl_pct": -3.62,
+        "wr": 31.2,
+        "pf": 0.64,
+        "dd": 6.71,
+        "weekly": -0.21,
+        "weeks": 16.9,
+        "tp": 3,
+        "sl": 9,
+        "time": 4
+      },
+      "GBPUSD": {
+        "n": 2,
+        "pnl_pct": -0.33,
+        "wr": 50.0,
+        "pf": 0.03,
+        "dd": 0.34,
+        "weekly": -0.03,
+        "weeks": 11.7,
+        "tp": 0,
+        "sl": 0,
+        "time": 2
+      },
+      "USDJPY": {
+        "n": 18,
+        "pnl_pct": 0.4,
+        "wr": 38.9,
+        "pf": 1.06,
+        "dd": 3.8,
+        "weekly": 0.02,
+        "weeks": 20.9,
+        "tp": 2,
+        "sl": 6,
+        "time": 10
+      },
+      "EURUSD": {
+        "n": 0,
+        "pnl_pct": 0,
+        "wr": 0,
+        "pf": 0,
+        "dd": 0,
+        "weekly": 0,
+        "weeks": 0,
+        "tp": 0,
+        "sl": 0,
+        "time": 0
+      }
+    },
+    "total": {
+      "n": 36,
+      "pnl_pct": -3.55,
+      "wr": 36.1,
+      "pf": 0.8,
+      "dd": 9.43,
+      "weekly": -0.17,
+      "weeks": 20.9,
+      "tp": 5,
+      "sl": 15,
+      "time": 16
+    }
+  },
+  "A_NoMon + B_Trend + E_ATR_SL": {
+    "pairs": {
+      "GBPJPY": {
+        "n": 19,
+        "pnl_pct": -1.46,
+        "wr": 31.6,
+        "pf": 0.87,
+        "dd": 7.79,
+        "weekly": -0.08,
+        "weeks": 17.7,
+        "tp": 4,
+        "sl": 11,
+        "time": 4
+      },
+      "GBPUSD": {
+        "n": 7,
+        "pnl_pct": -3.85,
+        "wr": 28.6,
+        "pf": 0.17,
+        "dd": 4.57,
+        "weekly": -0.26,
+        "weeks": 15.0,
+        "tp": 0,
+        "sl": 4,
+        "time": 3
+      },
+      "USDJPY": {
+        "n": 23,
+        "pnl_pct": 3.64,
+        "wr": 39.1,
+        "pf": 1.33,
+        "dd": 4.67,
+        "weekly": 0.17,
+        "weeks": 20.9,
+        "tp": 5,
+        "sl": 10,
+        "time": 8
+      },
+      "EURUSD": {
+        "n": 4,
+        "pnl_pct": -1.54,
+        "wr": 0.0,
+        "pf": 0.0,
+        "dd": 1.54,
+        "weekly": -0.09,
+        "weeks": 18.1,
+        "tp": 0,
+        "sl": 1,
+        "time": 3
+      }
+    },
+    "total": {
+      "n": 53,
+      "pnl_pct": -3.21,
+      "wr": 32.1,
+      "pf": 0.89,
+      "dd": 11.78,
+      "weekly": -0.15,
+      "weeks": 20.9,
+      "tp": 9,
+      "sl": 26,
+      "time": 18
+    }
+  },
+  "A_NoMon + C_ATR_D + D_Margin": {
+    "pairs": {
+      "GBPJPY": {
+        "n": 19,
+        "pnl_pct": 2.03,
+        "wr": 42.1,
+        "pf": 1.24,
+        "dd": 3.12,
+        "weekly": 0.1,
+        "weeks": 20.1,
+        "tp": 4,
+        "sl": 8,
+        "time": 7
+      },
+      "GBPUSD": {
+        "n": 2,
+        "pnl_pct": 0.1,
+        "wr": 50.0,
+        "pf": 1.3,
+        "dd": 0.34,
+        "weekly": 0.01,
+        "weeks": 10.6,
+        "tp": 0,
+        "sl": 0,
+        "time": 2
+      },
+      "USDJPY": {
+        "n": 13,
+        "pnl_pct": -1.01,
+        "wr": 30.8,
+        "pf": 0.81,
+        "dd": 4.61,
+        "weekly": -0.05,
+        "weeks": 21.0,
+        "tp": 1,
+        "sl": 4,
+        "time": 8
+      },
+      "EURUSD": {
+        "n": 0,
+        "pnl_pct": 0,
+        "wr": 0,
+        "pf": 0,
+        "dd": 0,
+        "weekly": 0,
+        "weeks": 0,
+        "tp": 0,
+        "sl": 0,
+        "time": 0
+      }
+    },
+    "total": {
+      "n": 34,
+      "pnl_pct": 1.12,
+      "wr": 38.2,
+      "pf": 1.08,
+      "dd": 6.14,
+      "weekly": 0.05,
+      "weeks": 21.0,
+      "tp": 5,
+      "sl": 12,
+      "time": 17
+    }
+  },
+  "A_NoMon + C_ATR_D + E_ATR_SL": {
+    "pairs": {
+      "GBPJPY": {
+        "n": 24,
+        "pnl_pct": 7.23,
+        "wr": 45.8,
+        "pf": 1.69,
+        "dd": 3.13,
+        "weekly": 0.35,
+        "weeks": 20.9,
+        "tp": 8,
+        "sl": 10,
+        "time": 6
+      },
+      "GBPUSD": {
+        "n": 8,
+        "pnl_pct": -2.07,
+        "wr": 25.0,
+        "pf": 0.57,
+        "dd": 3.75,
+        "weekly": -0.14,
+        "weeks": 15.0,
+        "tp": 1,
+        "sl": 4,
+        "time": 3
+      },
+      "USDJPY": {
+        "n": 16,
+        "pnl_pct": 8.24,
+        "wr": 56.2,
+        "pf": 2.28,
+        "dd": 4.01,
+        "weekly": 0.39,
+        "weeks": 21.0,
+        "tp": 5,
+        "sl": 6,
+        "time": 5
+      },
+      "EURUSD": {
+        "n": 1,
+        "pnl_pct": -1.0,
+        "wr": 0.0,
+        "pf": 0.0,
+        "dd": 1.0,
+        "weekly": -1.0,
+        "weeks": 1,
+        "tp": 0,
+        "sl": 1,
+        "time": 0
+      }
+    },
+    "total": {
+      "n": 49,
+      "pnl_pct": 12.41,
+      "wr": 44.9,
+      "pf": 1.55,
+      "dd": 6.27,
+      "weekly": 0.59,
+      "weeks": 21.0,
+      "tp": 14,
+      "sl": 21,
+      "time": 14
+    }
+  },
+  "A_NoMon + D_Margin + E_ATR_SL": {
+    "pairs": {
+      "GBPJPY": {
+        "n": 34,
+        "pnl_pct": 3.99,
+        "wr": 41.2,
+        "pf": 1.23,
+        "dd": 4.9,
+        "weekly": 0.2,
+        "weeks": 20.4,
+        "tp": 10,
+        "sl": 16,
+        "time": 7
+      },
+      "GBPUSD": {
+        "n": 7,
+        "pnl_pct": -1.86,
+        "wr": 28.6,
+        "pf": 0.35,
+        "dd": 1.86,
+        "weekly": -0.09,
+        "weeks": 20.1,
+        "tp": 0,
+        "sl": 1,
+        "time": 6
+      },
+      "USDJPY": {
+        "n": 32,
+        "pnl_pct": 9.02,
+        "wr": 40.6,
+        "pf": 1.61,
+        "dd": 5.91,
+        "weekly": 0.36,
+        "weeks": 24.9,
+        "tp": 9,
+        "sl": 11,
+        "time": 12
+      },
+      "EURUSD": {
+        "n": 1,
+        "pnl_pct": -1.0,
+        "wr": 0.0,
+        "pf": 0.0,
+        "dd": 1.0,
+        "weekly": -1.0,
+        "weeks": 1,
+        "tp": 0,
+        "sl": 1,
+        "time": 0
+      }
+    },
+    "total": {
+      "n": 74,
+      "pnl_pct": 10.15,
+      "wr": 39.2,
+      "pf": 1.28,
+      "dd": 7.21,
+      "weekly": 0.4,
+      "weeks": 25.1,
+      "tp": 19,
+      "sl": 29,
+      "time": 25
+    }
+  },
+  "B_Trend + C_ATR_D + D_Margin": {
+    "pairs": {
+      "GBPJPY": {
+        "n": 8,
+        "pnl_pct": -1.1,
+        "wr": 25.0,
+        "pf": 0.77,
+        "dd": 3.04,
+        "weekly": -0.07,
+        "weeks": 15.3,
+        "tp": 1,
+        "sl": 4,
+        "time": 3
+      },
+      "GBPUSD": {
+        "n": 1,
+        "pnl_pct": -0.34,
+        "wr": 0.0,
+        "pf": 0.0,
+        "dd": 0.34,
+        "weekly": -0.34,
+        "weeks": 1,
+        "tp": 0,
+        "sl": 0,
+        "time": 1
+      },
+      "USDJPY": {
+        "n": 11,
+        "pnl_pct": -0.41,
+        "wr": 36.4,
+        "pf": 0.91,
+        "dd": 4.57,
+        "weekly": -0.02,
+        "weeks": 20.9,
+        "tp": 1,
+        "sl": 4,
+        "time": 6
+      },
+      "EURUSD": {
+        "n": 0,
+        "pnl_pct": 0,
+        "wr": 0,
+        "pf": 0,
+        "dd": 0,
+        "weekly": 0,
+        "weeks": 0,
+        "tp": 0,
+        "sl": 0,
+        "time": 0
+      }
+    },
+    "total": {
+      "n": 20,
+      "pnl_pct": -1.85,
+      "wr": 30.0,
+      "pf": 0.81,
+      "dd": 7.79,
+      "weekly": -0.09,
+      "weeks": 20.9,
+      "tp": 2,
+      "sl": 8,
+      "time": 10
+    }
+  },
+  "B_Trend + C_ATR_D + E_ATR_SL": {
+    "pairs": {
+      "GBPJPY": {
+        "n": 11,
+        "pnl_pct": 5.14,
+        "wr": 45.5,
+        "pf": 2.16,
+        "dd": 1.99,
+        "weekly": 0.32,
+        "weeks": 16.1,
+        "tp": 4,
+        "sl": 4,
+        "time": 3
+      },
+      "GBPUSD": {
+        "n": 6,
+        "pnl_pct": -3.87,
+        "wr": 16.7,
+        "pf": 0.16,
+        "dd": 4.59,
+        "weekly": -0.26,
+        "weeks": 15.0,
+        "tp": 0,
+        "sl": 4,
+        "time": 2
+      },
+      "USDJPY": {
+        "n": 13,
+        "pnl_pct": 6.68,
+        "wr": 53.8,
+        "pf": 2.31,
+        "dd": 1.99,
+        "weekly": 0.32,
+        "weeks": 20.9,
+        "tp": 4,
+        "sl": 4,
+        "time": 5
+      },
+      "EURUSD": {
+        "n": 1,
+        "pnl_pct": -1.0,
+        "wr": 0.0,
+        "pf": 0.0,
+        "dd": 1.0,
+        "weekly": -1.0,
+        "weeks": 1,
+        "tp": 0,
+        "sl": 1,
+        "time": 0
+      }
+    },
+    "total": {
+      "n": 31,
+      "pnl_pct": 6.95,
+      "wr": 41.9,
+      "pf": 1.46,
+      "dd": 5.66,
+      "weekly": 0.33,
+      "weeks": 20.9,
+      "tp": 8,
+      "sl": 13,
+      "time": 10
+    }
+  },
+  "B_Trend + D_Margin + E_ATR_SL": {
+    "pairs": {
+      "GBPJPY": {
+        "n": 20,
+        "pnl_pct": -2.8,
+        "wr": 30.0,
+        "pf": 0.79,
+        "dd": 7.06,
+        "weekly": -0.17,
+        "weeks": 16.9,
+        "tp": 5,
+        "sl": 13,
+        "time": 2
+      },
+      "GBPUSD": {
+        "n": 3,
+        "pnl_pct": -0.2,
+        "wr": 66.7,
+        "pf": 0.71,
+        "dd": 0.68,
+        "weekly": -0.02,
+        "weeks": 11.7,
+        "tp": 0,
+        "sl": 0,
+        "time": 3
+      },
+      "USDJPY": {
+        "n": 23,
+        "pnl_pct": 2.8,
+        "wr": 39.1,
+        "pf": 1.26,
+        "dd": 6.08,
+        "weekly": 0.13,
+        "weeks": 20.9,
+        "tp": 4,
+        "sl": 9,
+        "time": 10
+      },
+      "EURUSD": {
+        "n": 0,
+        "pnl_pct": 0,
+        "wr": 0,
+        "pf": 0,
+        "dd": 0,
+        "weekly": 0,
+        "weeks": 0,
+        "tp": 0,
+        "sl": 0,
+        "time": 0
+      }
+    },
+    "total": {
+      "n": 46,
+      "pnl_pct": -0.21,
+      "wr": 37.0,
+      "pf": 0.99,
+      "dd": 11.66,
+      "weekly": -0.01,
+      "weeks": 20.9,
+      "tp": 9,
+      "sl": 22,
+      "time": 15
+    }
+  },
+  "C_ATR_D + D_Margin + E_ATR_SL": {
+    "pairs": {
+      "GBPJPY": {
+        "n": 22,
+        "pnl_pct": 7.86,
+        "wr": 45.5,
+        "pf": 1.75,
+        "dd": 1.99,
+        "weekly": 0.39,
+        "weeks": 20.1,
+        "tp": 9,
+        "sl": 10,
+        "time": 3
+      },
+      "GBPUSD": {
+        "n": 2,
+        "pnl_pct": 0.3,
+        "wr": 50.0,
+        "pf": 1.44,
+        "dd": 0.68,
+        "weekly": 0.03,
+        "weeks": 10.6,
+        "tp": 0,
+        "sl": 0,
+        "time": 2
+      },
+      "USDJPY": {
+        "n": 16,
+        "pnl_pct": 3.81,
+        "wr": 43.8,
+        "pf": 1.56,
+        "dd": 3.1,
+        "weekly": 0.18,
+        "weeks": 21.0,
+        "tp": 3,
+        "sl": 5,
+        "time": 8
+      },
+      "EURUSD": {
+        "n": 1,
+        "pnl_pct": -1.0,
+        "wr": 0.0,
+        "pf": 0.0,
+        "dd": 1.0,
+        "weekly": -1.0,
+        "weeks": 1,
+        "tp": 0,
+        "sl": 1,
+        "time": 0
+      }
+    },
+    "total": {
+      "n": 41,
+      "pnl_pct": 10.98,
+      "wr": 43.9,
+      "pf": 1.58,
+      "dd": 4.03,
+      "weekly": 0.52,
+      "weeks": 21.0,
+      "tp": 12,
+      "sl": 16,
+      "time": 13
+    }
+  }
+}
