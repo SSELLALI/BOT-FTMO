@@ -522,19 +522,27 @@ def print_full(pair, stats, skip, mc, st, wf, config_name):
     print(f"  {pair} — {config_name}")
     print(f"{'█' * W}")
 
-    print(f"\n  ┌─ PERFORMANCE ────────────────────────────────┐")
-    print(f"  │ Trades:           {stats['n']:<30}│")
-    print(f"  │ Wins/Losses:      {stats['wins']}/{stats['losses']} (WR: {stats['wr']}%){' '*(18-len(f'{stats[\"wins\"]}/{stats[\"losses\"]} (WR: {stats[\"wr\"]}%)'))}│")
-    print(f"  │ Profit Factor:    {stats['pf']:<30}│")
-    print(f"  │ P&L:              {stats['pnl']:+,.2f} ({stats['pnl_pct']:+.2f}%){' '*(16-len(f'{stats[\"pnl\"]:+,.2f} ({stats[\"pnl_pct\"]:+.2f}%)'))}│")
-    print(f"  │ Pips:             {stats['pips']:+.1f} (avg {stats['avg_pips']:+.1f}){' '*(17-len(f'{stats[\"pips\"]:+.1f} (avg {stats[\"avg_pips\"]:+.1f})'))}│")
-    print(f"  │ Max Drawdown:     {stats['mdd_pct']:.2f}%{' '*(25-len(f'{stats[\"mdd_pct\"]:.2f}%'))}│")
-    print(f"  │ WEEKLY RETURN:    {stats['weekly']:+.3f}%{' '*(24-len(f'{stats[\"weekly\"]:+.3f}%'))}│")
-    print(f"  │ Avg SL/TP:        {stats['avg_sl']}/{stats['avg_tp']} pips{' '*(21-len(f'{stats[\"avg_sl\"]}/{stats[\"avg_tp\"]} pips'))}│")
-    print(f"  │ Expectancy/trade: {stats['expectancy']:+.2f}{' '*(25-len(f'{stats[\"expectancy\"]:+.2f}'))}│")
-    print(f"  │ Avg win/loss:     {stats['avg_win']:+.2f} / {stats['avg_loss']:+.2f}{' '*(13-len(f'{stats[\"avg_win\"]:+.2f} / {stats[\"avg_loss\"]:+.2f}'))}│")
-    print(f"  │ Semaines pos:     {stats['pos_weeks']}/{stats['tot_weeks']} ({stats['pos_weeks_pct']}%){' '*(17-len(f'{stats[\"pos_weeks\"]}/{stats[\"tot_weeks\"]} ({stats[\"pos_weeks_pct\"]}%)'))}│")
-    print(f"  └────────────────────────────────────────────────┘")
+    wl = f"{stats['wins']}/{stats['losses']} (WR: {stats['wr']}%)"
+    pnl_s = f"{stats['pnl']:+,.2f} ({stats['pnl_pct']:+.2f}%)"
+    pip_s = f"{stats['pips']:+.1f} (avg {stats['avg_pips']:+.1f})"
+    dd_s = f"{stats['mdd_pct']:.2f}%"
+    wk_s = f"{stats['weekly']:+.3f}%"
+    sl_s = f"{stats['avg_sl']}/{stats['avg_tp']} pips"
+    ex_s = f"{stats['expectancy']:+.2f}"
+    awl = f"{stats['avg_win']:+.2f} / {stats['avg_loss']:+.2f}"
+    pw_s = f"{stats['pos_weeks']}/{stats['tot_weeks']} ({stats['pos_weeks_pct']}%)"
+    print(f"\n  PERFORMANCE:")
+    print(f"    Trades:           {stats['n']}")
+    print(f"    Wins/Losses:      {wl}")
+    print(f"    Profit Factor:    {stats['pf']}")
+    print(f"    P&L:              {pnl_s}")
+    print(f"    Pips:             {pip_s}")
+    print(f"    Max Drawdown:     {dd_s}")
+    print(f"    WEEKLY RETURN:    {wk_s}")
+    print(f"    Avg SL/TP:        {sl_s}")
+    print(f"    Expectancy/trade: {ex_s}")
+    print(f"    Avg win/loss:     {awl}")
+    print(f"    Semaines pos:     {pw_s}")
 
     print(f"\n  Direction: L={stats['longs']}(WR={stats['l_wr']}%) S={stats['shorts']}(WR={stats['s_wr']}%)")
     print(f"  Consec: max wins={stats['mcw']}, max losses={stats['mcl']}")
